@@ -1587,14 +1587,15 @@
             "node": "Bot Found?",
             "type": "main",
             "index": 0
-          },
+          }
+        ],
+        [
           {
             "node": "ERR — Source Lookup Bot",
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "Bot Found?": {
@@ -1909,7 +1910,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "d1f48da5-b9a2-44a7-ad11-a74ee6fcf23c",
+  "versionId": "2c794195-899d-4705-b580-c6c69e4d3b19",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
