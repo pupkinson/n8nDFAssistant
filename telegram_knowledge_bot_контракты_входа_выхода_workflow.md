@@ -3,16 +3,20 @@
 Цель этого документа — зафиксировать **стабильные I/O контракты** между workflow, чтобы при генерации новых WF не копировать чужую логику, а опираться на заранее согласованные схемы.
 
 Базовая среда:
+
 - **n8n:** 2.4.8
 - **DB:** PostgreSQL + pgvector (схема из `SQL.txt`)
 - **Credentials:** строго из `Credentials.json`
-- **n8n справочник:** MCP connection `n8n-mcp`
+- **n8n справочник:** 2×MCP (см. canvas «Telegram Knowledge Bot — единый регламент проекта (n8n 2.4.8) + 2×MCP»)
+  - MCP#1: `n8n-mcp`
+  - MCP#2: второй MCP сервера проекта (имя/правила — в «едином регламенте»)
 
 ---
 
 ## 0) Общие типы и соглашения
 
 ### 0.1 Идентификаторы
+
 - `tenant_id`: uuid
 - `chat_id`: bigint (Telegram chat)
 - `tg_user_id`: bigint (Telegram user)
@@ -25,19 +29,30 @@
 - `trace_id`: string|null (внешний trace, если есть)
 
 ### 0.2 Visibility и приватность
+
 Используется `core.visibility_scope`:
+
 - `group`: данные из групп/каналов доступны участникам (с учётом allowlist в `core.tenant_users` и фактического membership в `tg.chat_memberships_current`).
 - `dm`: данные из лички доступны только владельцу (`dm_owner_user_id`) и админам (роль в `core.tenant_users`).
 
 ### 0.3 Канонические envelopes
-Все workflow **должны** возвращать один из двух форматов.
+
+Канонический формат обмена между workflow:
+
+1. На **success** любой workflow возвращает **SuccessEnvelope**.
+2. На **I/O ошибке** (Postgres/HTTP/Telegram) рабочие workflow **не строят ErrorEnvelope сами**. Они обязаны:
+   - на error-ветке **явно** проставить источник ошибки (`_err.*`) и **приклеить** контекст,
+   - вызвать **WF99** (Execute Workflow),
+   - завершить ветку через **StopAndError**.
+3. **ErrorEnvelope формируется и возвращается только WF99** (ErrorPipe Contract v1). fileciteturn20file0
 
 **SuccessEnvelope**
+
 ```json
 {
   "ok": true,
   "status_code": 200,
-  "data": { },
+  "data": {},
   "error": null,
   "meta": {
     "source": "WFxx",
@@ -55,7 +70,8 @@
 }
 ```
 
-**ErrorEnvelope** (упрощённый v1 для проекта)
+**ErrorEnvelope v1 (только WF99)**
+
 ```json
 {
   "ok": false,
@@ -65,10 +81,14 @@
     "kind": "db|upstream|auth|rate_limit|unknown",
     "message": "<short>",
     "retryable": false,
-    "details": { }
+    "details": {
+      "ctx": {},
+      "error_context": {},
+      "raw_error": {}
+    }
   },
   "meta": {
-    "source": "WFxx",
+    "source": "WF99",
     "ts": "<ISO>",
     "correlation": {
       "correlation_id": "<uuid>",
@@ -79,14 +99,22 @@
       "workflow": "<string|null>",
       "node": "<string|null>"
     }
+  },
+  "_internal": {
+    "persist_failed": false,
+    "ops_error_id": "<bigint|null>"
   }
 }
 ```
 
+**Инвариант:** `error.details.*` — **объекты**, а не строки (никаких stringify / raw jsonOutput). fileciteturn20file0
+
 ### 0.4 Общий `ctx`
-`ctx` — это не «любая корзина», а **нормализованный контекст** для ACL/приватности/маршрутизации.
+
+`ctx` — нормализованный контекст для ACL/приватности/маршрутизации. Каноническое имя в меж-WF контрактах — ``. `_ctx` допустим только как внутренний контейнер внутри одного WF.
 
 Минимальный контракт `ctx`:
+
 ```json
 {
   "tenant_id": "<uuid>",
@@ -98,7 +126,11 @@
   "role": "admin|user|blocked",
   "is_allowed": true,
   "trace_id": "<string|null>",
-  "correlation_id": "<uuid>"
+  "correlation_id": "<uuid>",
+  "job_id": "<number|null>",
+  "contracts": {
+    "errorpipe": 1
+  }
 }
 ```
 
@@ -107,11 +139,13 @@
 ## 1) Список workflow проекта (канонический)
 
 ### WF00c — Context Loader (ACL + Chat Policy + Visibility)
+
 **Назначение:** единое место нормализации `ctx` для всех WF.
 
 **Trigger:** Execute Workflow Trigger (sub-workflow).
 
 **Input (1 item):**
+
 ```json
 {
   "req": {
@@ -126,26 +160,31 @@
 ```
 
 **Output:** SuccessEnvelope с `data.ctx`.
+
 ```json
 { "ctx": { "tenant_id": "...", "role": "...", "is_allowed": true, "visibility": "group|dm", "chat_policy": {"allow_url_fetch":true, "allow_file_download":true, "allow_embedding":true, "retention_days_raw":90, "retention_days_documents":3650 } } }
 ```
 
 **DB side-effects:**
+
 - READ: `core.tenant_users` (required), `core.tenant_chats` (required для group), `core.chat_policies` (optional → defaults).
 - READ: `tg.chat_memberships_current` (required для group доступа).
 
 **Ошибки:**
+
 - 403: пользователь не в allowlist / blocked.
 - 404: чат не зарегистрирован/disabled для tenant.
 
 ---
 
 ### WF11 — Bot Transport Watchdog (Webhook health + mode state)
+
 **Назначение:** мониторинг webhook/polling и запись состояния транспорта.
 
 **Trigger:** Schedule.
 
 **Input:**
+
 ```json
 { "req": { "tenant_id": "<uuid>", "bot_id": "<uuid>", "trace_id": null } }
 ```
@@ -153,12 +192,14 @@
 **Output:** SuccessEnvelope (metrics/snapshot ids).
 
 **DB side-effects:**
+
 - READ: `core.bot_transport_config`, `core.bot_transport_state`, `core.bots`
 - WRITE: `ops.webhook_health_snapshots`, `ops.bot_transport_events`, UPDATE `core.bot_transport_state`
 
 ---
 
 ### WF10 — Telegram Ingest (Webhook Receiver)
+
 **Назначение:** принять Telegram update, записать RAW и поставить задачу на обработку в очередь.
 
 **Trigger:** Webhook (Telegram → n8n).
@@ -168,25 +209,34 @@
 **Output:** SuccessEnvelope с `data.job_id`.
 
 **DB side-effects:**
+
 - WRITE: RAW таблицы `raw.telegram_updates` и `raw.telegram_update_keys`
-- WRITE: `ops.jobs` (job_type: обработка Telegram update; payload = raw update + мета)
+- WRITE: `ops.jobs` (job\_type: обработка Telegram update; payload = raw update + мета)
+
+**ErrorPipe v1 (обязательно):** WF10 является источником правды для `error_context` при DB-ошибках своих Postgres-нод:
+
+- Postgres error output → Set `ERR — Source <NodeName>` (includeOtherFields=true) с `_err.node/_err.operation/_err.table` + приклейка `ctx` → Set `ERR — Prepare ErrorPipe v1` (создаёт `error_context.*`, копирует `ctx`) → Execute WF99 → StopAndError. fileciteturn20file0
 
 **Примечания:**
+
 - Никакой «тяжёлой логики» в WF10. Только валидация + RAW + enqueue.
 
 ---
 
-### WF20 — Update Processor (Upsert tg.* + content discovery)
-**Назначение:** разобрать update, записать факты в tg.* и создать задачи на контент (urls/files).
+### WF20 — Update Processor (Upsert tg.\* + content discovery)
+
+**Назначение:** разобрать update, записать факты в tg.\* и создать задачи на контент (urls/files).
 
 **Trigger:** Execute Workflow Trigger (запускается Job Runner’ом с job payload).
 
 **Input:**
+
 ```json
 { "req": { "tenant_id":"<uuid>", "update": { /* raw telegram update */ }, "trace_id":"<string|null>" } }
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 {
   "data": {
@@ -200,24 +250,28 @@
 ```
 
 **DB side-effects:**
+
 - UPSERT/UPDATE: `tg.users`, `tg.chats`
 - INSERT: `tg.messages` (identity), `tg.message_versions`, `tg.message_attachments`
-- UPSERT/UPDATE: `tg.files`, `tg.file_instances` (если есть file_id)
+- UPSERT/UPDATE: `tg.files`, `tg.file_instances` (если есть file\_id)
 - INSERT: `tg.chat_member_events` и UPDATE `tg.chat_memberships_current` (если update о member’ах)
 - WRITE: `ops.jobs` для URL/file/download/extract, если найден контент
 
 **Idempotency:**
+
 - `tg.messages` уникален по `(tenant_id, chat_id, message_id)`
 - `tg.message_versions` уникален по `(message_fk, version_no)`
 
 ---
 
 ### WF30 — URL Normalizer (Message → content.urls + fetch job)
+
 **Назначение:** принять URL, нормализовать, upsert `content.urls`, создать `content.url_fetches` через job.
 
 **Trigger:** Execute Workflow Trigger.
 
 **Input:**
+
 ```json
 {
   "req": {
@@ -229,151 +283,179 @@
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 { "data": { "url_id": 123, "normalized_url":"...", "fetch_job_id": 456 } }
 ```
 
 **DB side-effects:**
+
 - UPSERT: `content.urls`
-- WRITE: `ops.jobs` (job_type: url_fetch)
+- WRITE: `ops.jobs` (job\_type: url\_fetch)
 
 ---
 
 ### WF31 — URL Fetcher (Fetch → blob + documents)
+
 **Назначение:** скачать URL, записать fetch, сохранить body в `content.blob_objects` (если нужно), создать/обновить `content.documents`.
 
 **Trigger:** Execute Workflow Trigger (job).
 
 **Input:**
+
 ```json
 { "req": { "tenant_id":"<uuid>", "url_id": 123, "ctx": {"visibility":"group|dm", "dm_owner_user_id":123, "chat_id":456, "message_version_id":789 } } }
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 { "data": { "url_fetch_id": 10, "document_id": 99, "status": "pending|done|error" } }
 ```
 
 **DB side-effects:**
+
 - INSERT: `content.url_fetches`
 - UPSERT/INSERT: `content.blob_objects` (по sha256)
-- INSERT: `content.documents` (doc_type=url)
+- INSERT: `content.documents` (doc\_type=url)
 - WRITE: `ops.jobs` для extract/chunk/embed (в зависимости от policy)
 
 ---
 
 ### WF32 — Telegram File Downloader (getFile + download → blob + documents)
+
 **Назначение:** получить путь файла, скачать, сохранить blob, создать/обновить document.
 
 **Trigger:** Execute Workflow Trigger (job).
 
 **Input:**
+
 ```json
 { "req": { "tenant_id":"<uuid>", "file_id":"<string>", "file_unique_id":"<string>", "ctx": {"visibility":"group|dm", "dm_owner_user_id":123, "chat_id":456, "message_version_id":789 } } }
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 { "data": { "blob_object_id": 77, "document_id": 101, "file_unique_id":"..." } }
 ```
 
 **DB side-effects:**
-- UPDATE: `tg.file_instances` (tg_file_path, last_seen_at)
+
+- UPDATE: `tg.file_instances` (tg\_file\_path, last\_seen\_at)
 - UPSERT: `content.blob_objects`
-- INSERT: `content.documents` (doc_type=file)
+- INSERT: `content.documents` (doc\_type=file)
 - WRITE: `ops.jobs` на extract/chunk/embed
 
 ---
 
 ### WF33 — Document Extractor (documents.pending → documents.text)
+
 **Назначение:** извлечь текст (PDF/DOCX/HTML/изображения по необходимости), заполнить `content.documents.text`, выставить status.
 
 **Trigger:** Execute Workflow Trigger (job).
 
 **Input:**
+
 ```json
 { "req": { "tenant_id":"<uuid>", "document_id": 101 } }
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 { "data": { "document_id": 101, "status": "done|error", "token_count": 1234 } }
 ```
 
 **DB side-effects:**
-- UPDATE: `content.documents` (text, text_sha256, token_count, status, error)
-- WRITE: `ops.jobs` на chunk/embed (если policy allow_embedding=true)
+
+- UPDATE: `content.documents` (text, text\_sha256, token\_count, status, error)
+- WRITE: `ops.jobs` на chunk/embed (если policy allow\_embedding=true)
 
 ---
 
 ### WF40 — Chunker (documents.done → kg.chunks)
+
 **Назначение:** нарезать document.text в чанки и записать `kg.chunks`.
 
 **Trigger:** Execute Workflow Trigger (job).
 
 **Input:**
+
 ```json
 { "req": { "tenant_id":"<uuid>", "document_id": 101, "chunking": {"max_chars": 1200, "overlap": 120} } }
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 { "data": { "document_id": 101, "chunks_created": 24 } }
 ```
 
 **DB side-effects:**
-- INSERT/UPSERT: `kg.chunks` (idempotent по (document_id, chunk_no))
+
+- INSERT/UPSERT: `kg.chunks` (idempotent по (document\_id, chunk\_no))
 - WRITE: `ops.jobs` на embed
 
 ---
 
-### WF41 — Embedder (kg.chunks → kg.chunk_embeddings_1536)
+### WF41 — Embedder (kg.chunks → kg.chunk\_embeddings\_1536)
+
 **Назначение:** получить embeddings (Gemini), записать в pgvector таблицу.
 
 **Trigger:** Execute Workflow Trigger (job).
 
 **Input:**
+
 ```json
 { "req": { "tenant_id":"<uuid>", "document_id": 101, "model_id": 1 } }
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 { "data": { "document_id": 101, "model_id": 1, "embeddings_upserted": 24 } }
 ```
 
 **DB side-effects:**
+
 - READ: `kg.embedding_models`, `kg.chunks`
-- UPSERT: `kg.chunk_embeddings_1536` (PK chunk_id+model_id)
+- UPSERT: `kg.chunk_embeddings_1536` (PK chunk\_id+model\_id)
 
 ---
 
-### WF50 — QA Session Upserter (audit.qa_sessions)
+### WF50 — QA Session Upserter (audit.qa\_sessions)
+
 **Назначение:** открыть/обновить сессию диалога вопрос-ответ.
 
 **Trigger:** Execute Workflow Trigger (sub-workflow).
 
 **Input:**
+
 ```json
 { "req": { "tenant_id":"<uuid>", "tg_user_id":123, "channel":"group|dm", "chat_id":456, "meta":{} } }
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 { "data": { "session_id": "<uuid>" } }
 ```
 
 **DB side-effects:**
-- UPSERT/UPDATE: `audit.qa_sessions` (last_at, meta)
+
+- UPSERT/UPDATE: `audit.qa_sessions` (last\_at, meta)
 
 ---
 
 ### WF51 — Answerer (Mention/DM question → answer + citations)
+
 **Назначение:** принять вопрос, проверить ACL через WF00c, найти релевантные chunks (pgvector), сформировать ответ, записать turn+citations, ответить в Telegram.
 
 **Trigger:** Execute Workflow Trigger (job) ИЛИ напрямую из Update Processor для упоминания.
 
 **Input:**
+
 ```json
 {
   "req": {
@@ -389,6 +471,7 @@
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 {
   "data": {
@@ -401,18 +484,21 @@
 ```
 
 **DB side-effects:**
-- CALL: WF00c (required) → ctx.is_allowed
+
+- CALL: WF00c (required) → ctx.is\_allowed
 - WRITE: `audit.qa_turns`, `audit.qa_citations`
 - READ: `kg.chunk_embeddings_1536` + join `kg.chunks` + join `content.documents` (с фильтрами visibility/tenant)
 
 ---
 
 ### WF60 — Retention & Pruning (policy-driven)
+
 **Назначение:** удаление/архивация данных по retention политикам (raw vs documents).
 
 **Trigger:** Schedule.
 
 **Input:**
+
 ```json
 { "req": { "tenant_id":"<uuid>", "chat_id":456 } }
 ```
@@ -420,66 +506,96 @@
 **Output:** SuccessEnvelope (counts).
 
 **DB side-effects:**
+
 - READ: `core.chat_policies`
 - DELETE: по политике из `tg.*`, `content.*`, `kg.*`, `audit.*` (строго без Execute Query; допускается пакетная обработка через jobs).
 
 ---
 
 ### WF90 — Job Runner (ops.jobs executor)
+
 **Назначение:** выбирать задачи из очереди и исполнять соответствующие worker workflow.
 
 **Trigger:** Schedule (часто) + manual.
 
 **Input:**
+
 ```json
 { "req": { "tenant_id":"<uuid>", "limit": 50, "worker_id":"<string>" } }
 ```
 
 **Output:** SuccessEnvelope:
+
 ```json
 { "data": { "picked": 10, "succeeded": 9, "failed": 1 } }
 ```
 
 **DB side-effects:**
+
 - SELECT/UPDATE: `ops.jobs` (lock/pick)
 - INSERT: `ops.job_runs`
-- UPDATE: `ops.jobs` status/attempts/next_run_at
+- UPDATE: `ops.jobs` status/attempts/next\_run\_at
 - CALL: WF20/WF31/WF32/WF33/WF40/WF41/WF51
 
 ---
 
 ### WF99 — Global ERR Handler
-**Назначение:** единый обработчик ошибок: ErrorEnvelope + запись в `ops.errors` + (опционально) job failure фиксация.
+
+**Назначение:** единый обработчик ошибок (ErrorPipe Contract v1): нормализация ошибки → запись в `ops.errors` **всегда** → (опционально) фиксация job failure → возврат канонического ErrorEnvelope. fileciteturn20file0
 
 **Trigger:** Execute Workflow Trigger (sub-workflow).
 
-**Input:**
-```json
-{ "ctx": {"tenant_id":"<uuid>","workflow":"WFxx","node":"...","op":"...","job_id":123,"trace_id":null}, "errorMessage":"...", "statusCode": 429, "error": { } }
-```
+**Input (ErrorPipe Contract v1):** WF99 обязан корректно обработать любой из вариантов:
 
-**Output:** всегда ErrorEnvelope.
+- `ctx` (object, опционально)
+  - `ctx.correlation_id` (uuid, может отсутствовать → WF99 генерирует)
+  - `ctx.job_id` (number, может отсутствовать)
+- `error_context` (object, рекомендуется)
+  - `node` (string, точное имя ноды-источника)
+  - `operation` (string: select/insert/update/delete/upsert)
+  - `table` (string: schema.table)
+  - `correlation_id` (uuid, дублирование)
+  - `error_message` (string)
+  - `status_code` (number)
+- сырые поля error output / upstream (как есть, опционально):
+  - `message` (string)
+  - `description` (string)
+  - `error` (object)
+  - `n8nDetails` (object)
+  - любые иные поля
+
+**Выход:** ErrorEnvelope v1 (канонический), `meta.source="WF99"`, `error.details` — объект. fileciteturn20file0
 
 **DB side-effects:**
-- INSERT best-effort: `ops.errors`
-- optional: UPDATE `ops.jobs` status='failed' + INSERT `ops.job_runs`
 
----
+- INSERT **всегда** (best-effort): `ops.errors` (детали как json/jsonb объекты, без stringify). fileciteturn20file0
+- Если `ctx.job_id` задан:
+  - UPDATE `ops.jobs` (status='failed' и связанные поля по схеме)
+  - INSERT `ops.job_runs` (с фиксацией ошибки)
+- Если `ctx.job_id` отсутствует — job-path **не выполняется**.
+
+**Инварианты:**
+
+- `correlation_id` переиспользуется: если пришёл во входе — не заменять.
+- Если запись в `ops.errors` не удалась — WF99 не должен падать; в выходе пометить `_internal.persist_failed=true`. fileciteturn20file0
 
 ## 2) Правило эволюции контрактов
-1) Любой новый workflow добавляется в этот документ отдельной секцией.
-2) Любое изменение контрактов — через версионирование полей (добавление — ок, удаление/переименование — только с миграцией и указанием даты).
-3) Все меж-WF вызовы должны передавать **минимальный payload** согласно контракту.
+
+1. Любой новый workflow добавляется в этот документ отдельной секцией.
+2. Любое изменение контрактов — через версионирование полей (добавление — ок, удаление/переименование — только с миграцией и указанием даты).
+3. Все меж-WF вызовы должны передавать **минимальный payload** согласно контракту.
 
 ---
 
 ## 3) Минимальный набор данных для "ответа со ссылками"
+
 Чтобы бот мог отвечать аргументированно и с источниками, цепочка должна обеспечивать:
-- `tg.message_versions` хранит оригинальный payload и text/caption (и normalized_text)
-- `content.documents` хранит извлечённый текст/мета + связи с message_version/url/file
-- `kg.chunks` хранит чанки текста, привязанные к document_id
+
+- `tg.message_versions` хранит оригинальный payload и text/caption (и normalized\_text)
+- `content.documents` хранит извлечённый текст/мета + связи с message\_version/url/file
+- `kg.chunks` хранит чанки текста, привязанные к document\_id
 - `kg.chunk_embeddings_1536` хранит embeddings чанков
-- `audit.qa_turns`/`audit.qa_citations` фиксируют Q/A и ссылки на chunk_id + snippet/source_ref
+- `audit.qa_turns`/`audit.qa_citations` фиксируют Q/A и ссылки на chunk\_id + snippet/source\_ref
 
 Это и есть минимально достаточный контур "knowledge bot".
 

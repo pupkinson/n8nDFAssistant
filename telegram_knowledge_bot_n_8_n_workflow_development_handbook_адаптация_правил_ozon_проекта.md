@@ -66,12 +66,44 @@
 - `data`: результат (в т.ч. `answer`, `sources`, `actions` если есть)
 - `meta.correlation`: обязателен
 
-### 3.2 ErrorEnvelope (канон)
-- `ok: false`, `status_code: 4xx|5xx`
-- `error.kind`, `error.message`, `error.retryable`, `error.details`
-- `meta.correlation`: обязателен
+### 3.2 ErrorEnvelope v1 (канон, **только WF99**)
 
-### 3.3 Retry policy
+В проекте действует **ErrorPipe Contract v1**: единый `ErrorEnvelope` формирует и возвращает **только WF99**.
+
+- Рабочие workflow **не** собирают ErrorEnvelope «у себя» (особенно на I/O ошибках).
+- Любая I/O ошибка (Postgres/HTTP/Telegram) обязана уходить в WF99 через Execute Workflow, после чего ветка завершается StopAndError.
+
+**Форма ErrorEnvelope v1 (возвращает WF99):**
+- `ok: false`
+- `status_code: number`
+- `data: null`
+- `error.kind: string`
+- `error.message: string`
+- `error.retryable: boolean`
+- `error.details` (объект):
+  - `ctx: object`
+  - `raw_error: object` (например `{ message, http_code, node_type }`)
+  - `error_context: object | null`
+  - `test_mode/test_case` (если используется)
+- `meta.source = "WF99"`
+- `_internal` (служебное)
+
+**Критично:** `error.details.*` всегда пишется/передаётся как **объект**, не строка (никаких stringify / raw-json-only).
+
+### 3.3 ErrorPipe Contract v1 (как вызывать WF99)
+
+На error-ветке всегда:
+1) Явно штамповать источник ошибки (строками): `_err.node/_err.operation/_err.table`.
+2) На error output нельзя рассчитывать, что контекст сохранился → **приклеить `_ctx`** Set-нодой (`includeOtherFields=true`).
+3) Подготовить `error_context.*` и обеспечить `ctx = _ctx`.
+4) Вызвать WF99 (Execute Workflow):
+   - предпочтительно `passThrough`;
+   - если `defineBelow` — запрещён пустой `{}`; обязательно маппить `ctx`, `error_context` и поля error output.
+5) После WF99 — StopAndError.
+
+В `ctx` всегда поддерживать `ctx.contracts.errorpipe = 1`.
+
+### 3.4 Retry policy
 - 429, временные 5xx, timeout → `retryable: true` + backoff
 - 401/403, validation, not_found → `retryable: false`
 
@@ -118,11 +150,24 @@
 2) `CTL — IF rows==0` → `SET — Default (dot)` (создать 1 item)
 3) `MERGE — Choose actual/default` (в результате всегда 1 item)
 
-### 5.6 Обработка ошибок Postgres (обязательно)
-**Единственный стандарт:**
-1) На каждой Postgres ноде: **On Error: Continue using error output**
-2) Error output → общий блок `ERR — Normalize Error (dot)` → `ERR — Build ErrorEnvelope (dot)` → `ERR — StopAndError`
-3) Success output идёт по нормальному пути
+### 5.6 Обработка ошибок Postgres (обязательно, ErrorPipe v1)
+
+**Единственный стандарт для I/O ошибок (DB):**
+
+1) На каждой Postgres ноде: **On Error: Continue using error output**.
+2) Error output → `ERR — Source <Exact NodeName>` (Set/Edit Fields)
+   - `includeOtherFields=true` (не теряем `message/error/description/n8nDetails`)
+   - задать строками:
+     - `_err.node = "<Exact NodeName>"`
+     - `_err.operation = "select|insert|update|delete|upsert"`
+     - `_err.table = "schema.table"`
+   - приклеить `_ctx` (взять из ранней точки контекста).
+3) `ERR — Prepare DB Error (v1)` (Set + dotNotation)
+   - `ctx = _ctx`
+   - `ctx.contracts.errorpipe = 1`
+   - `error_context.node/operation/table/error_message/status_code/correlation_id`
+   - **не резать item целиком** (никаких raw-json-only).
+4) `ERR — Call WF99` (Execute Workflow) → **StopAndError**.
 
 **Запрет:** продолжать success-ветку после I/O ошибки.
 
@@ -134,8 +179,16 @@
 
 ## 6) HTTP (Telegram, Gemini, Web) — строгая политика
 
-### 6.1 Ошибки HTTP: error output → общий ERR handler
-- Любая HTTP-нода: On Error → error output → общий `ERR handler`.
+### 6.1 Ошибки HTTP/Telegram/Gemini: error output → WF99 (ErrorPipe v1)
+
+Любая HTTP/Telegram/Gemini нода:
+1) On Error → **Continue using error output**.
+2) Error output → `ERR — Source <Exact NodeName>` (includeOtherFields=true) + приклейка `_ctx`.
+3) `ERR — Prepare Upstream Error (v1)`:
+   - `ctx = _ctx` + `ctx.contracts.errorpipe = 1`
+   - `error_context.node/operation/table` (для HTTP table можно оставить null, operation = "http")
+   - `status_code` берём из `statusCode/httpCode` если есть, иначе 500
+4) Execute Workflow → **WF99** → StopAndError.
 
 ### 6.2 Коды (канон)
 - 429 → `rate_limit`, retryable=true
@@ -181,12 +234,12 @@
 - результаты (counts, duration)
 - ошибки (kind/message/details)
 
-### 8.2 ops_jobs / job queue
+### 8.2 `ops.jobs` / job queue
 - Любая тяжелая работа (fetch/extract/embed) идёт через очередь задач.
 - Поля: `status`, `attempts`, `next_retry_at`, `last_error`.
 
 ### 8.3 Запрет «тихих» фейлов
-- Если I/O упал — workflow обязан завершаться ErrorEnvelope и фиксировать ошибку в ops_errors/audit.
+- Если I/O упал — workflow обязан завершаться ErrorEnvelope и фиксировать ошибку в `ops.errors`/audit.
 
 ---
 
@@ -202,11 +255,21 @@
 - Выделяет вложения/ссылки.
 - Планирует jobs на fetch/extract/embed.
 
-### 9.3 WF99 — Global ERR Handler
-- Нормализует ошибки из Postgres/HTTP/Telegram.
-- Ставит retry там, где `retryable=true`.
-- Пишет ops_errors + audit.
+### 9.3 WF99 — Global ERR Handler (ErrorPipe Contract v1)
+- WF99 — **единственная точка**, которая нормализует ошибки и возвращает канонический ErrorEnvelope v1.
+- WF99 **всегда** пытается записать ошибку в `ops.errors`.
+- Job-path выполняется **только если** `ctx.job_id` задан:
+  - update `ops.jobs`
+  - insert `ops.job_runs`
+- `correlation_id`:
+  - если пришёл в `ctx.correlation_id` или `error_context.correlation_id` → использовать его;
+  - генерировать новый UUID только если его нет.
+- Если запись в `ops.errors` не удалась — WF99 не должен падать; помечает `_internal.persist_failed=true`.
+- Рабочим workflow запрещено собирать ErrorEnvelope на I/O ошибках — только через вызов WF99.
 
+---
+
+## 10) Тест-харнесс (внутри workflow)
 ---
 
 ## 10) Тест-харнесс (внутри workflow)

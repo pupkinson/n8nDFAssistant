@@ -6,7 +6,9 @@
 
 - **DB схема:** `SQL.txt`
 - **Credentials / версии нод:** `Credentials.json`
-- **Справочник по нодам n8n:** MCP connection `n8n-mcp`
+- **Справочник по нодам n8n:** 2×MCP (см. canvas «Telegram Knowledge Bot — единый регламент проекта (n8n 2.4.8) + 2×MCP»)
+  - MCP#1: `n8n-mcp` (параметры/версии нод, справочник)
+  - MCP#2: второй MCP сервера проекта (имя и правила использования — в «едином регламенте»)
 
 ---
 
@@ -14,7 +16,7 @@
 
 1. **Secrets НЕ хранить в БД.** Всё — только в **n8n Credentials**.
 2. Исключения (если и появятся) фиксируются отдельным решением и документируются.
-3. **\$env.\***** в workflow запрещён** (в любых выражениях и полях).
+3. **\$env.\***\*\* в workflow запрещён\*\* (в любых выражениях и полях).
 
 ---
 
@@ -89,20 +91,58 @@
 
 ## 6) STRICT обработка ошибок I/O (Postgres/HTTP/Telegram)
 
-Цель: любая I/O ошибка даёт управляемый ErrorEnvelope и не ведёт к «частичным успехам».
+Цель: любая I/O ошибка даёт управляемый ErrorEnvelope, **всегда** логируется через `ops.errors` и не ведёт к «частичным успехам». Формат и поведение строго соответствуют **ErrorPipe Contract v1**.
 
-### PATTERN A (по умолчанию)
+### 6.1 Инварианты ErrorPipe Contract v1
+
+1. **WF99 — единственная точка нормализации ошибок и сборки ErrorEnvelope.** Рабочим workflow запрещено «изобретать» свои форматы ErrorEnvelope.
+2. На error-ветках нельзя рассчитывать, что контекст сохранился — его нужно **явно приклеивать**.
+3. `correlation_id`:
+   - если на входе уже есть `ctx.correlation_id` или `error_context.correlation_id` — использовать **его**;
+   - генерировать новый UUID только если его нет.
+4. **ErrorEnvelope и error.details пишутся как объекты (json/jsonb), не строки.**
+   - запрещены `JSON.stringify(...)` там, где ожидаются объекты;
+   - запрещены `raw jsonOutput`, который затирает item целиком;
+   - запрещены object-literal в выражениях (`={{ {a:1} }}`) — сборка объектов только через Set + dotNotation.
+5. Job-path (ops.jobs/ops.job\_runs) выполняется **только если **``** задан**.
+
+### 6.2 PATTERN A (по умолчанию) — ErrorPipe через WF99
+
+Для каждой I/O ноды (Postgres/HTTP/Telegram):
 
 1. На I/O ноде включить **Continue using error output**.
-2. Сразу после — `IF — has_error` (проверяет наличие `errorMessage/errorDescription/n8nDetails` и т.п.).
-3. TRUE → Build ErrorEnvelope → **StopAndError**.
-4. FALSE → normal path.
+2. Error output → **Set: **``
+   - `includeOtherFields=true` (чтобы не потерять `message/error/description/n8nDetails`)
+   - записать строками:
+     - `_err.node = "<Exact NodeName>"` (точное имя ноды)
+     - `_err.operation = "select|insert|update|delete|upsert"` (для Postgres)
+     - `_err.table = "schema.table"` (для Postgres)
+   - приклеить `_ctx` (или `ctx`) из ранней точки контекста (см. раздел про контракты).
+3. **Set: **`` (nocode, dotNotation)
+   - `ctx = _ctx` (каноническое имя для меж-WF контрактов)
+   - `ctx.contracts.errorpipe = 1`
+   - `error_context.node = _err.node`
+   - `error_context.operation = _err.operation`
+   - `error_context.table = _err.table`
+   - `error_context.correlation_id = ctx.correlation_id`
+   - `error_context.error_message` = взять из `message`/`errorMessage`/`description` (что есть)
+   - `error_context.status_code` = если есть `statusCode/httpCode`, иначе 500
+   - не «резать» item: сохранять исходные поля ошибки (message/error/description/n8nDetails).
+4. **Execute Workflow: WF99 — Global ERR Handler**
+   - предпочтительно `passThrough`.
+   - если используется `defineBelow`, запрещён пустой `{}`; обязательно маппить `ctx` и `error_context` и поля ошибки.
+5. После вызова WF99 — **StopAndError** (успешный путь после ошибки запрещён).
 
-### Retry On Fail
+### 6.3 Исключение (только внутри WF99)
+
+- WF99 обязан **пытаться писать в **``** всегда**; если запись не удалась, WF99 не должен падать, но обязан отметить `persist_failed=true` в details.
+
+### 6.4 Retry On Fail
 
 - Включать только на I/O нодах и только если есть понятная стратегия (кол-во попыток/задержка) и WHY в Notes.
+- Retry не отменяет ErrorPipe: после исчерпания попыток ошибка всё равно уходит в WF99.
 
-### Минимальная классификация
+### 6.5 Минимальная классификация
 
 - `kind`: `db | upstream | auth | rate_limit | unknown`
 - `retryable=true` только для временных проблем (timeout/connection reset/deadlock/serialization/temporary unavailable/429).
@@ -147,9 +187,11 @@
 ### Требование для промптов генерации workflow
 
 В каждый промпт генерации workflow ОБЯЗАТЕЛЬНО включать правило:
+
 - «Если в workflow есть Merge с 3+ входами — выставь `parameters.numberInputs = N`, где N = число входящих связей. Иначе JSON считается неверным и должен быть исправлен до выдачи.»
 
 Также в промпте обязателен пункт **IMPORT SAFETY CHECK**:
+
 - перед финальным выводом JSON выполнить самопроверку: ни одна Merge-нода не имеет больше входящих связей, чем указано в `numberInputs`.
 
 ---
@@ -160,12 +202,19 @@
 
 1. Все credentials names строго из `Credentials.json`.
 2. Нет `$env.*`.
-3. Каждая I/O нода (Postgres/HTTP/Telegram) имеет error-output handling (Pattern A).
-4. Merge ноды: `numberInputs` соответствует входящим связям.
-5. Нет Execute Query (если это не отдельное явно разрешённое исключение, зафиксированное решением).
-6. Есть тестовая ветка (Manual Trigger) с записью в БД + verify + cleanup.
-
----
+3. Каждая I/O нода (Postgres/HTTP/Telegram) имеет error-output handling и **ErrorPipe v1**:
+   - `_ctx/ctx` сформирован до I/O,
+   - на error-ветке есть `ERR — Source <NodeName>` (includeOtherFields=true) + `ERR — Prepare ErrorPipe v1`,
+   - вызов WF99 сделан с passThrough (или корректным defineBelow), затем StopAndError.
+4. Ни в одном workflow (кроме WF99) нет «самодельного» ErrorEnvelope.
+5. Не используются запрещённые практики:
+   - `raw jsonOutput`/«резать item целиком»,
+   - `JSON.stringify(...)` для json/jsonb,
+   - object-literal в выражениях.
+6. Merge ноды: `numberInputs` соответствует входящим связям.
+7. Нет Execute Query (если это не отдельное явно разрешённое исключение, зафиксированное решением).
+8. Есть тестовая ветка (Manual Trigger) с записью в БД + verify + cleanup.
+9. Любой workflow, который используется как sub-workflow, документирует вход/выход в canvas «Контракты входа/выхода workflow» и использует канонические имена (`ctx`, `error_context`, `req`).
 
 ## 9) Связанные документы
 
