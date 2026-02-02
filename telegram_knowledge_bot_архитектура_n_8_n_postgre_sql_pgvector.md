@@ -66,11 +66,24 @@ Telegram Reply
 - Используем **2×MCP** (см. единый регламент проекта):
   - `n8n-mcp`
   - второй MCP сервера проекта
+
+**Основной механизм ошибок (обязательный): ErrorPipe Contract v1**
+
 - Ошибки I/O обрабатываются строго по **ErrorPipe Contract v1**:
   - На каждой Postgres/HTTP/Telegram ноде: **On Error: Continue using error output**
   - Error output → `ERR — Source <NodeName>` (includeOtherFields=true, `_err.node/_err.operation/_err.table`) + приклейка `ctx`
   - затем `ERR — Prepare ErrorPipe v1` → **Execute Workflow (WF99)** → **StopAndError**
   - **ErrorEnvelope формирует только WF99**.
+
+**Последний рубеж (рекомендуется): n8n Error Workflow (fallback)**
+
+- Для критических «неуправляемых» падений execution (ошибка конфигурации ноды, внутреннее исключение n8n и т.п.) включаем **workflow-level Error Workflow**.
+- Error Workflow запускает отдельный workflow **WF98 — Platform Error Catcher** (с нодой **Error Trigger**).
+- WF98 обязан:
+  - сформировать минимальный `ctx` (workflow="WF98", correlation\_id, ts, execution\_id, исходный workflow\_name),
+  - сформировать `error_context` из payload Error Trigger,
+  - вызвать **WF99** и завершиться.
+- Важно: Error Workflow **не заменяет** ErrorPipe v1, а только страхует случаи, когда ErrorPipe не успел отработать.
 
 ### 4.3 Хранилище: PostgreSQL + pgvector
 
@@ -94,7 +107,7 @@ Telegram Reply
 
 ## 5) Данные и сущности (сопоставление с текущей DDL)
 
-**Источник истины по именам схем/таблиц/колонок — файл **``**.** Ниже — логическая группировка данных *в терминах реально существующих таблиц*.
+**Источник истины по именам схем/таблиц/колонок — файл ****SQL.txt****.**
 
 ### 5.1 Core (тенантность, боты, доступ, политики)
 
@@ -242,17 +255,30 @@ Telegram Reply
   - выбирает и исполняет задачи очереди, пишет `ops.job_runs`.
 - **WF92 — Reindex/Reprocess (batch jobs)**
   - массовая переобработка по фильтрам (чат/период/модель эмбеддинга) через постановку задач в `ops.jobs`.
+- **WF98 — Platform Error Catcher (n8n Error Workflow)**
+  - стартует от **Error Trigger** как workflow-level Error Workflow.
+  - предназначен для «неуправляемых» падений execution, которые обходят ErrorPipe.
+  - нормализует минимальный `ctx`/`error_context` и вызывает **WF99**.
 - **WF99 — Global ERR Handler (ErrorPipe Contract v1)**
   - единая нормализация ошибок + запись в `ops.errors` (best-effort) + опциональный job-path (только если есть `ctx.job_id`).
 
 ## 9) Ошибки, корреляция, идемпотентность
 
 - Каждое событие/задача несёт **correlation\_id**.
+
+**Основной путь ошибок (обязательный): ErrorPipe v1 → WF99**
+
 - Любая I/O ошибка обрабатывается по **ErrorPipe Contract v1**:
   - error output → `ERR — Source <NodeName>` (includeOtherFields=true, `_err.*`) + приклейка `ctx`
   - `ERR — Prepare ErrorPipe v1` → Execute Workflow (WF99) → StopAndError
   - **ErrorEnvelope возвращает только WF99**.
+
+**Fallback (последний рубеж): n8n Error Workflow → WF98 → WF99**
+
+- Если execution падает «неуправляемо» (обходя ErrorPipe), срабатывает workflow-level Error Workflow и запускает **WF98**, который передаёт ошибку в **WF99**.
+
 - Все критичные записи — **upsert** по естественным ключам.
+
 - Повторная обработка безопасна (at-least-once delivery).
 
 ## 10) Масштабирование
@@ -285,6 +311,7 @@ Telegram Reply
 
 1. Слои данных: RAW → Canonical → Knowledge → Facts → Audit.
 2. ACL применяется **до** генерации ответов.
-3. Все Postgres nodes обрабатывают ошибки через error output и общий ERR handler.
-4. Минимизировать Code node, по максимуму собирать логику стандартными нодами.
+3. Основной механизм ошибок: **ErrorPipe Contract v1 → WF99** (error output + `ERR — Source` + `ERR — Prepare ErrorPipe v1` + Execute WF99 + StopAndError).
+4. Дополнительный последний рубеж: **n8n Error Workflow → WF98 (Error Trigger) → WF99** для «неуправляемых» падений execution.
+5. Минимизировать Code node, по максимуму собирать логику стандартными нодами.
 
