@@ -1,0 +1,3927 @@
+{
+  "name": "WF99 — Global ERR Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "bb6f474c-515a-461f-b4b2-b225c856db30",
+      "name": "IN — Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1904,
+        432
+      ],
+      "notes": "PROD ENTRY POINT.\n\nПринимает item из error output любой ноды (Postgres/HTTP/Telegram).\n\nВход: ctx (optional: tenant_id, workflow, node, op, job_id, trace_id), error/err object, errorMessage, httpCode/statusCode.\n\nВыход: Raw error item для нормализации."
+    },
+    {
+      "parameters": {},
+      "id": "74171371-423c-4346-8965-c8817559004e",
+      "name": "TEST — Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2880,
+        1264
+      ],
+      "notes": "TEST ENTRY POINT.\n\nЗапускает тестовый сценарий вручную.\n\nВход: нет.\nВыход: пустой item для генерации тест-кейсов."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-t3-setup",
+              "leftValue": "={{ $json.details.needs_job_setup }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "404992a2-ae5f-48e7-8c02-c59f12c43119",
+      "name": "TEST — IF Needs Job Setup",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2448,
+        1264
+      ],
+      "notes": "Разделяет тестовые items:\n\nTRUE: T3 требует создания тестовой job в БД.\nFALSE: T1/T2 идут напрямую в pipeline.\n\nВход: 3 test items.\nВыход: TRUE (T3) / FALSE (T1, T2)."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json.ctx.tenant_id || '00000000-0000-0000-0000-000000000001' }}",
+            "job_type": "test_job",
+            "status": "running",
+            "payload": "={{ JSON.stringify({ test: true, test_case: 'T3' }) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "test_job",
+                  "value": "test_job"
+                },
+                {
+                  "name": "reembed_model_migration",
+                  "value": "reembed_model_migration"
+                },
+                {
+                  "name": "answer_query",
+                  "value": "answer_query"
+                },
+                {
+                  "name": "embed_chunks",
+                  "value": "embed_chunks"
+                },
+                {
+                  "name": "chunk_document",
+                  "value": "chunk_document"
+                },
+                {
+                  "name": "build_document",
+                  "value": "build_document"
+                },
+                {
+                  "name": "extract_text",
+                  "value": "extract_text"
+                },
+                {
+                  "name": "fetch_url",
+                  "value": "fetch_url"
+                },
+                {
+                  "name": "fetch_tg_file",
+                  "value": "fetch_tg_file"
+                },
+                {
+                  "name": "upsert_membership",
+                  "value": "upsert_membership"
+                },
+                {
+                  "name": "normalize_update",
+                  "value": "normalize_update"
+                }
+              ]
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "dead",
+                  "value": "dead"
+                },
+                {
+                  "name": "failed",
+                  "value": "failed"
+                },
+                {
+                  "name": "succeeded",
+                  "value": "succeeded"
+                },
+                {
+                  "name": "running",
+                  "value": "running"
+                },
+                {
+                  "name": "queued",
+                  "value": "queued"
+                }
+              ]
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "next_run_at",
+              "displayName": "next_run_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "locked_at",
+              "displayName": "locked_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "locked_by",
+              "displayName": "locked_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "correlation_id",
+              "displayName": "correlation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "0ac3945d-1955-4749-8ee8-5af15aac5aa3",
+      "name": "TEST — Insert Test Job",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2224,
+        1168
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Создаёт тестовую job в ops.jobs для T3.\n\nВход: T3 item с needs_job_setup=true.\nВыход: Созданная job с id.\n\nWHY On Error = Continue: Позволяет обработать ошибку создания job в тестах."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST SETUP FAILED: Cannot create test job in ops.jobs: {{ $json.error?.message || 'Unknown error' }}"
+      },
+      "id": "c205f7e9-266b-41e3-93d4-3855f1601714",
+      "name": "TEST — StopAndError Job Setup",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -2000,
+        1536
+      ],
+      "notes": "Останавливает тест при ошибке создания job.\n\nВход: Error item от INSERT.\nВыход: Workflow останавливается с ошибкой."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-job-id",
+              "name": "ctx.job_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "assign-ctx-tenant",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('TEST — Build Test Cases').item.json.ctx.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-ctx-trace",
+              "name": "ctx.trace_id",
+              "value": "={{ $('TEST — Build Test Cases').item.json.ctx.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-ctx-workflow",
+              "name": "ctx.workflow",
+              "value": "={{ $('TEST — Build Test Cases').item.json.ctx.workflow }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-ctx-node",
+              "name": "ctx.node",
+              "value": "={{ $('TEST — Build Test Cases').item.json.ctx.node }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-error-msg",
+              "name": "errorMessage",
+              "value": "={{ $('TEST — Build Test Cases').item.json.errorMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-details",
+              "name": "details",
+              "value": "={{ $('TEST — Build Test Cases').item.json.details }}",
+              "type": "object"
+            },
+            {
+              "id": "assign-test-job-id",
+              "name": "_test_job_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "336e9a6a-b210-464b-9cba-9ebda91c6d07",
+      "name": "TEST — Set Job ID in Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1792,
+        1232
+      ],
+      "notes": "Добавляет job_id в ctx для T3.\n\nВход: Успешный результат INSERT с id.\nВыход: Item с ctx.job_id и _test_job_id для cleanup.\n\nWHY dotNotation=true: Позволяет устанавливать вложенные поля ctx.job_id."
+    },
+    {
+      "parameters": {},
+      "id": "96f6902f-347d-4536-bfdd-b1e8c25b6a30",
+      "name": "TEST — Merge Test Items",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1584,
+        1376
+      ],
+      "notes": "Объединяет все тестовые items (T1, T2, T3 с job_id).\n\nВход 1: T1, T2 (без job setup).\nВход 2: T3 (с job_id).\nВыход: 3 items для core pipeline."
+    },
+    {
+      "parameters": {},
+      "id": "131d4601-10bf-42e9-8498-140cab45e691",
+      "name": "PIPE — Merge PROD + TEST",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1088,
+        448
+      ],
+      "notes": "Объединяет PROD и TEST входы в единый pipeline.\n\nВход 1: PROD item от Execute Workflow Trigger.\nВход 2: TEST items от Merge Test Items.\nВыход: Items для обработки ошибок."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-has-any-input",
+              "leftValue": "={{ $json !== undefined && $json !== null }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "id": "b216151d-e474-403c-bde7-441bb727a9cb",
+      "name": "PIPE — GUARD — Ensure Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        448
+      ],
+      "notes": "Проверяет наличие входных данных.\n\nTRUE: Есть данные → продолжаем.\nFALSE: Пустой input → StopAndError.\n\nВход: Merged items.\nВыход: Валидные items для нормализации."
+    },
+    {
+      "parameters": {
+        "errorMessage": "WF99: No input data received. Cannot process empty error."
+      },
+      "id": "71b2945b-55bb-4bd6-94e8-d0d1dbdcdd48",
+      "name": "PIPE — StopAndError No Input",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        560
+      ],
+      "notes": "Останавливает workflow при пустом входе.\n\nВход: FALSE от GUARD.\nВыход: Workflow останавливается."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "norm-ctx",
+              "name": "_ctx",
+              "value": "={{ $json.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "norm-error-obj",
+              "name": "_error_obj",
+              "value": "={{ $json.error || $json.err || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "norm-error-msg",
+              "name": "_error_message",
+              "value": "={{ $json.errorMessage || $json.errorDescription || $json.message || $json.error?.message || $json.err?.message || 'Unknown error' }}",
+              "type": "string"
+            },
+            {
+              "id": "norm-http-code",
+              "name": "_http_code",
+              "value": "={{ $json.httpCode || $json.statusCode || $json.error?.statusCode || $json.error?.httpCode || null }}",
+              "type": "number"
+            },
+            {
+              "id": "norm-node-type",
+              "name": "_node_type",
+              "value": "={{ $json.n8nDetails?.nodeType || $json.error?.nodeType || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "norm-details",
+              "name": "_raw_details",
+              "value": "={{ $json.details || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "norm-test-mode",
+              "name": "_test_mode",
+              "value": "={{ $json.details?.test_mode === true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "norm-test-case",
+              "name": "_test_case",
+              "value": "={{ $json.details?.test_case || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "norm-test-job-id",
+              "name": "_test_job_id",
+              "value": "={{ $json._test_job_id || null }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "5e5d6257-a15d-4847-93e0-95e5ad11f06f",
+      "name": "PIPE — Normalize Raw Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -640,
+        352
+      ],
+      "notes": "Нормализует различные форматы ошибок в единую структуру.\n\nИзвлекает:\n- _ctx: контекст (tenant_id, job_id, trace_id и т.д.)\n- _error_message: сообщение об ошибке\n- _http_code: HTTP код (если есть)\n- _node_type: тип ноды (для определения Postgres)\n- _test_mode/_test_case: для тестов\n\nВход: Raw error item.\nВыход: Нормализованный item с _ полями."
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "_correlation_id"
+      },
+      "id": "6e349d8a-1741-4bcf-a5ba-7f4e1abed9ea",
+      "name": "PIPE — Generate Correlation ID",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        352
+      ],
+      "notes": "Генерирует UUID v4 для correlation_id.\n\nВход: Нормализованный item.\nВыход: Item с _correlation_id (UUID v4)."
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json._http_code }}",
+                    "rightValue": 429,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rate_limit"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json._http_code }}",
+                    "rightValue": 401,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "auth"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json._http_code }}",
+                    "rightValue": 403,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "auth_403"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json._http_code >= 500 && $json._http_code <= 599 }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "upstream_5xx"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json._http_code >= 400 && $json._http_code <= 499 }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "upstream_4xx"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json._node_type }}",
+                    "rightValue": "postgres",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "db"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "unknown"
+        }
+      },
+      "id": "d5201f27-5242-4c0f-92d3-2e9076062a92",
+      "name": "PIPE — Switch Error Kind",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -208,
+        352
+      ],
+      "notes": "Классифицирует ошибку по kind:\n\n1. rate_limit: HTTP 429 → retryable=true\n2. auth: HTTP 401 → retryable=false\n3. auth_403: HTTP 403 → retryable=false\n4. upstream_5xx: HTTP 500-599 → retryable=true\n5. upstream_4xx: HTTP 400-499 → retryable=false\n6. db: nodeType contains 'postgres' → retryable=true\n7. unknown (fallback) → retryable=false\n\nВход: Item с _http_code и _node_type.\nВыход: По соответствующему output."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "kind-rate-limit",
+              "name": "_kind",
+              "value": "rate_limit",
+              "type": "string"
+            },
+            {
+              "id": "status-429",
+              "name": "_status_code",
+              "value": 429,
+              "type": "number"
+            },
+            {
+              "id": "retryable-true",
+              "name": "_retryable",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ca9fdfd2-bca9-4210-bad4-55633170bdb4",
+      "name": "PIPE — Set Kind rate_limit",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        16
+      ],
+      "notes": "Устанавливает kind=rate_limit для HTTP 429.\n\nstatus_code=429, retryable=true.\n\nВход: Switch output rate_limit.\nВыход: Item с _kind, _status_code, _retryable."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "kind-auth",
+              "name": "_kind",
+              "value": "auth",
+              "type": "string"
+            },
+            {
+              "id": "status-403",
+              "name": "_status_code",
+              "value": 403,
+              "type": "number"
+            },
+            {
+              "id": "retryable-false",
+              "name": "_retryable",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "f2d8bc23-3ada-4d79-ab54-239e14e91464",
+      "name": "PIPE — Set Kind auth",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        192
+      ],
+      "notes": "Устанавливает kind=auth для HTTP 401.\n\nstatus_code=403, retryable=false.\n\nВход: Switch output auth.\nВыход: Item с _kind, _status_code, _retryable."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "kind-auth-403",
+              "name": "_kind",
+              "value": "auth",
+              "type": "string"
+            },
+            {
+              "id": "status-403-2",
+              "name": "_status_code",
+              "value": 403,
+              "type": "number"
+            },
+            {
+              "id": "retryable-false-2",
+              "name": "_retryable",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "976f3e9f-15ed-4404-8eef-278980fc0c48",
+      "name": "PIPE — Set Kind auth 403",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        352
+      ],
+      "notes": "Устанавливает kind=auth для HTTP 403.\n\nstatus_code=403, retryable=false.\n\nВход: Switch output auth_403.\nВыход: Item с _kind, _status_code, _retryable."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "kind-upstream-5xx",
+              "name": "_kind",
+              "value": "upstream",
+              "type": "string"
+            },
+            {
+              "id": "status-502",
+              "name": "_status_code",
+              "value": "={{ $json._http_code || 502 }}",
+              "type": "number"
+            },
+            {
+              "id": "retryable-true-5xx",
+              "name": "_retryable",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "46b018a8-9363-4c09-a029-872889fb625e",
+      "name": "PIPE — Set Kind upstream 5xx",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        512
+      ],
+      "notes": "Устанавливает kind=upstream для HTTP 5xx.\n\nstatus_code=исходный 5xx или 502, retryable=true.\n\nВход: Switch output upstream_5xx.\nВыход: Item с _kind, _status_code, _retryable."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "kind-upstream-4xx",
+              "name": "_kind",
+              "value": "upstream",
+              "type": "string"
+            },
+            {
+              "id": "status-422",
+              "name": "_status_code",
+              "value": "={{ $json._http_code || 422 }}",
+              "type": "number"
+            },
+            {
+              "id": "retryable-false-4xx",
+              "name": "_retryable",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "70575b96-5079-4a08-88a9-a5f03327ebb9",
+      "name": "PIPE — Set Kind upstream 4xx",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        656
+      ],
+      "notes": "Устанавливает kind=upstream для HTTP 4xx (кроме 401/403/429).\n\nstatus_code=исходный 4xx или 422, retryable=false.\n\nВход: Switch output upstream_4xx.\nВыход: Item с _kind, _status_code, _retryable."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "kind-db",
+              "name": "_kind",
+              "value": "db",
+              "type": "string"
+            },
+            {
+              "id": "status-503-db",
+              "name": "_status_code",
+              "value": 503,
+              "type": "number"
+            },
+            {
+              "id": "retryable-true-db",
+              "name": "_retryable",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "0fed7af6-b871-4e01-a31a-401e715c7681",
+      "name": "PIPE — Set Kind db",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        800
+      ],
+      "notes": "Устанавливает kind=db для Postgres ошибок.\n\nstatus_code=503, retryable=true.\n\nВход: Switch output db.\nВыход: Item с _kind, _status_code, _retryable."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "kind-unknown",
+              "name": "_kind",
+              "value": "unknown",
+              "type": "string"
+            },
+            {
+              "id": "status-500-unknown",
+              "name": "_status_code",
+              "value": 500,
+              "type": "number"
+            },
+            {
+              "id": "retryable-false-unknown",
+              "name": "_retryable",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "25b392e5-8515-473e-a53c-75630184715f",
+      "name": "PIPE — Set Kind unknown",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        960
+      ],
+      "notes": "Устанавливает kind=unknown для неклассифицированных ошибок.\n\nstatus_code=500, retryable=false.\n\nВход: Switch fallback output.\nВыход: Item с _kind, _status_code, _retryable."
+    },
+    {
+      "parameters": {
+        "numberInputs": 7
+      },
+      "id": "c45542ac-7442-4984-9327-853f97134d43",
+      "name": "PIPE — Merge Classified",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        240,
+        448
+      ],
+      "notes": "Объединяет все классифицированные ошибки в один поток.\n\nВход: 7 выходов от Set Kind нод.\nВыход: Items с _kind, _status_code, _retryable."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"ok\": false,\n  \"status_code\": {{ $json._status_code }},\n  \"data\": null,\n  \"error\": {\n    \"kind\": \"{{ $json._kind }}\",\n    \"message\": {{ JSON.stringify($json._error_message) }},\n    \"retryable\": {{ $json._retryable }},\n    \"details\": {\n      \"ctx\": {{ JSON.stringify($json._ctx) }},\n      \"raw_error\": {{ JSON.stringify({ message: $json._error_message, http_code: $json._http_code, node_type: $json._node_type }) }},\n      \"test_mode\": {{ $json._test_mode }},\n      \"test_case\": {{ JSON.stringify($json._test_case) }}\n    }\n  },\n  \"meta\": {\n    \"source\": \"WF99\",\n    \"correlation\": {\n      \"correlation_id\": \"{{ $json._correlation_id }}\",\n      \"trace_id\": {{ JSON.stringify($json._ctx.trace_id || null) }},\n      \"workflow\": {{ JSON.stringify($json._ctx.workflow || null) }},\n      \"node\": {{ JSON.stringify($json._ctx.node || null) }}\n    },\n    \"ts\": \"{{ new Date().toISOString() }}\"\n  },\n  \"_internal\": {\n    \"correlation_id\": \"{{ $json._correlation_id }}\",\n    \"tenant_id\": {{ JSON.stringify($json._ctx.tenant_id || null) }},\n    \"job_id\": {{ $json._ctx.job_id || 'null' }},\n    \"test_mode\": {{ $json._test_mode }},\n    \"test_case\": {{ JSON.stringify($json._test_case) }},\n    \"_test_job_id\": {{ $json._test_job_id || 'null' }}\n  }\n}",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "id": "33dc1c1a-a708-4f91-b526-bee6614340b0",
+      "name": "PIPE — Build ErrorEnvelope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        448
+      ],
+      "notes": "Строит канонический ErrorEnvelope согласно контракту:\n\n- ok: false\n- status_code: number\n- data: null\n- error.kind/message/retryable/details\n- meta.source/correlation/ts\n- _internal: служебные поля для DB операций\n\nВход: Classified item.\nВыход: ErrorEnvelope structure."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "errors"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json._internal.tenant_id }}",
+            "correlation_id": "={{ $json._internal.correlation_id }}",
+            "kind": "={{ $json.error.kind }}",
+            "message": "={{ $json.error.message }}",
+            "details": "={{ JSON.stringify($json.error.details) }}",
+            "retryable": "={{ $json.error.retryable }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "correlation_id",
+              "displayName": "correlation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "kind",
+              "displayName": "kind",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "details",
+              "displayName": "details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retryable",
+              "displayName": "retryable",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "5c041048-7dcf-4813-98d6-70b19ce42f49",
+      "name": "PIPE — DB Insert ops.errors",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        688,
+        448
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Best-effort запись ошибки в ops.errors.\n\nПоля из SQL.txt:\n- tenant_id (uuid, nullable)\n- correlation_id (uuid)\n- kind (text)\n- message (text)\n- details (jsonb)\n- retryable (boolean)\n- created_at — DEFAULT now()\n\nWHY On Error = Continue: ИСКЛЮЧЕНИЕ! Внутри WF99 при ошибке записи в ops.errors мы НЕ вызываем сам WF99 (рекурсия), а продолжаем с persist_failed=true.\n\nВход: ErrorEnvelope.\nВыход: Success или Error item."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "persist-failed",
+              "name": "error.details.persist_failed",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "persist-error-msg",
+              "name": "error.details.persist_error.message",
+              "value": "={{ $json.error?.message || 'Failed to write to ops.errors' }}",
+              "type": "string"
+            },
+            {
+              "id": "persist-error-node",
+              "name": "error.details.persist_error.node",
+              "value": "PIPE — DB Insert ops.errors",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "b1a15701-9e23-44e0-a09b-cb758a54cf41",
+      "name": "PIPE — Set persist_failed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        576
+      ],
+      "notes": "Добавляет persist_failed=true к envelope при ошибке записи.\n\nЭто ИСКЛЮЧЕНИЕ из правила StopAndError: WF99 не может вызвать себя рекурсивно, поэтому продолжаем с флагом.\n\nВход: Error item от INSERT.\nВыход: Envelope с persist_failed=true."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "restore-envelope",
+              "name": "envelope",
+              "value": "={{ $('PIPE — Build ErrorEnvelope').item.json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "id": "75756c4f-ea36-44a5-aa0d-c8307b20d4fe",
+      "name": "PIPE — Restore Envelope Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        288
+      ],
+      "notes": "Восстанавливает оригинальный envelope после успешной записи в ops.errors.\n\nПотому что Postgres node заменяет output.\n\nВход: Success item от INSERT.\nВыход: Оригинальный envelope для продолжения."
+    },
+    {
+      "parameters": {},
+      "id": "0dfce9e5-f024-4b4e-89d4-ee5ab5acdd40",
+      "name": "PIPE — Merge After DB Insert",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1344,
+        448
+      ],
+      "notes": "Объединяет success и persist_failed пути.\n\nВход 1: persist_failed envelope.\nВход 2: Success envelope.\nВыход: Envelope для job path проверки."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-has-job-id",
+              "leftValue": "={{ ($json.envelope?._internal?.job_id || $json._internal?.job_id) !== null && ($json.envelope?._internal?.job_id || $json._internal?.job_id) !== undefined }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "df24b806-a180-4d03-ac06-5a6cd1255b07",
+      "name": "PIPE — IF Has Job ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1552,
+        496
+      ],
+      "notes": "Проверяет наличие job_id в контексте.\n\nTRUE: job_id есть → выполнить job failure path.\nFALSE: job_id нет → пропустить job path.\n\nВход: Envelope (может быть вложен в .envelope).\nВыход: TRUE (job path) / FALSE (skip)."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "extract-job-id",
+              "name": "_job_id",
+              "value": "={{ $json.envelope?._internal?.job_id || $json._internal?.job_id }}",
+              "type": "number"
+            },
+            {
+              "id": "extract-envelope",
+              "name": "_envelope",
+              "value": "={{ $json.envelope || $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "e170f3b1-39e4-4f97-ab8f-04075883371a",
+      "name": "PIPE — Extract Job ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1808,
+        336
+      ],
+      "notes": "Извлекает job_id и envelope для job path.\n\nВход: TRUE от IF Has Job ID.\nВыход: Item с _job_id и _envelope."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "jobs"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json._job_id }}"
+            }
+          ]
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "a94f2baa-858a-43a6-9153-8df3b9dcb0e2",
+      "name": "PIPE — DB Select Job",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2048,
+        336
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Проверяет существование job в ops.jobs.\n\nRequired lookup, AOD=OFF (по умолчанию).\nЕсли job не найдена — set job_missing=true.\n\nВход: Item с _job_id.\nВыход: Job row или пустой результат/ошибка."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=WF99: DB error selecting job id={{ $('PIPE — Extract Job ID').item.json._job_id }}: {{ $json.error?.message || 'Unknown error' }}"
+      },
+      "id": "fd52248a-e615-4adc-a953-a638dd9fc2fd",
+      "name": "PIPE — StopAndError Job Select",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        912
+      ],
+      "notes": "Останавливает workflow при ошибке SELECT ops.jobs.\n\nВход: Error item.\nВыход: Workflow останавливается."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-job-found",
+              "leftValue": "={{ $json.id !== undefined }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "bc00f44c-13af-4cfa-9fba-bdf3b4a11af0",
+      "name": "PIPE — IF Job Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2352,
+        448
+      ],
+      "notes": "Проверяет, найдена ли job.\n\nTRUE: Job найдена → update/insert.\nFALSE: Job не найдена → set job_missing=true.\n\nВход: SELECT result.\nВыход: TRUE (found) / FALSE (missing)."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-job-missing",
+              "name": "_envelope.error.details.job_missing",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "26a3167e-df33-49ee-9639-175f5adae48f",
+      "name": "PIPE — Set job_missing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2656,
+        560
+      ],
+      "notes": "Устанавливает job_missing=true когда job не найдена.\n\nЭто не ошибка — job могла быть удалена.\n\nВход: FALSE от IF Job Found.\nВыход: Envelope с job_missing=true."
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('PIPE — Extract Job ID').item.json._job_id }}",
+            "status": "failed",
+            "last_error": "={{ JSON.stringify($('PIPE — Extract Job ID').item.json._envelope.error.details) }}",
+            "updated_at": "={{ new Date().toISOString() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": []
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "d8ee8546-3a91-4db5-8c0b-2126195a4984",
+      "name": "PIPE — DB Update Job Failed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2656,
+        352
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Обновляет ops.jobs:\n- status='failed'\n- last_error=error.details (jsonb)\n- updated_at=now\n\nПоля из SQL.txt.\n\nВход: TRUE от IF Job Found.\nВыход: Update result."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=WF99: DB error updating job id={{ $('PIPE — Extract Job ID').item.json._job_id }}: {{ $json.error?.message || 'Unknown error' }}"
+      },
+      "id": "31991b3e-0b0f-4992-b45b-d5286539a469",
+      "name": "PIPE — StopAndError Job Update",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2992,
+        944
+      ],
+      "notes": "Останавливает workflow при ошибке UPDATE ops.jobs.\n\nВход: Error item.\nВыход: Workflow останавливается."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "job_runs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_id": "={{ $('PIPE — Extract Job ID').item.json._job_id }}",
+            "status": "failed",
+            "finished_at": "={{ new Date().toISOString() }}",
+            "error": "={{ JSON.stringify($('PIPE — Extract Job ID').item.json._envelope.error.details) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "dead",
+                  "value": "dead"
+                },
+                {
+                  "name": "failed",
+                  "value": "failed"
+                },
+                {
+                  "name": "succeeded",
+                  "value": "succeeded"
+                },
+                {
+                  "name": "running",
+                  "value": "running"
+                },
+                {
+                  "name": "queued",
+                  "value": "queued"
+                }
+              ]
+            },
+            {
+              "id": "metrics",
+              "displayName": "metrics",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "208d5167-8003-4789-8429-bc945c741335",
+      "name": "PIPE — DB Insert Job Run",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3136,
+        336
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Создаёт запись в ops.job_runs:\n- job_id\n- status='failed'\n- finished_at=now\n- error=error.details (jsonb)\n\nstarted_at имеет DEFAULT now().\nmetrics имеет DEFAULT '{}'.\n\nВход: FALSE от IF Job Update Error.\nВыход: Insert result."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=WF99: DB error inserting job_run for job_id={{ $('PIPE — Extract Job ID').item.json._job_id }}: {{ $json.error?.message || 'Unknown error' }}"
+      },
+      "id": "d5b588f9-8cca-4702-ae13-faaf88d275c7",
+      "name": "PIPE — StopAndError Job Run",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3456,
+        976
+      ],
+      "notes": "Останавливает workflow при ошибке INSERT ops.job_runs.\n\nВход: Error item.\nВыход: Workflow останавливается."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "restore-env-job",
+              "name": "result",
+              "value": "={{ $('PIPE — Extract Job ID').item.json._envelope }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "785b138c-2a1e-4bc1-a01e-c95ad4bbef61",
+      "name": "PIPE — Restore Envelope Job Path",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3520,
+        400
+      ],
+      "notes": "Восстанавливает envelope после успешных job DB операций.\n\nВход: FALSE от IF Job Run Insert Error.\nВыход: result с оригинальным envelope."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "restore-env-skip",
+              "name": "result",
+              "value": "={{ $json.envelope || $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "625eb012-3b92-4083-b732-9d9172ddf012",
+      "name": "PIPE — Restore Envelope Skip Job",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1808,
+        720
+      ],
+      "notes": "Восстанавливает envelope когда job_id отсутствует.\n\nВход: FALSE от IF Has Job ID.\nВыход: result с envelope."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "restore-env-missing",
+              "name": "result",
+              "value": "={{ $json._envelope }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a6d066d4-e336-4952-b851-da9a20841d19",
+      "name": "PIPE — Restore Envelope Job Missing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2944,
+        608
+      ],
+      "notes": "Восстанавливает envelope с job_missing=true.\n\nВход: Output от Set job_missing.\nВыход: result с envelope."
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "a796e059-67bf-4aa2-b585-bcbbc8a51f86",
+      "name": "PIPE — Merge Job Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3744,
+        704
+      ],
+      "notes": "Объединяет все пути job обработки:\n- Job success path\n- Job missing path\n- Skip job path (no job_id)\n\nВход: 3 источника result.\nВыход: Final envelope."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.result }}",
+        "options": {}
+      },
+      "id": "09602c0c-8d40-4576-a109-e8b1ca1cd838",
+      "name": "PIPE — Return Envelope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3984,
+        448
+      ],
+      "notes": "ФИНАЛЬНЫЙ OUTPUT — возвращает ErrorEnvelope.\n\nСтруктура:\n- ok: false\n- status_code: number\n- data: null\n- error: { kind, message, retryable, details }\n- meta: { source, correlation, ts }\n\nВход: Merged result.\nВыход: Clean ErrorEnvelope для вызывающего workflow."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-test-mode",
+              "leftValue": "={{ $json.error?.details?.test_mode === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f8a8f1a0-f32b-4170-910d-87b64bcf04c9",
+      "name": "TEST — IF Test Mode",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4208,
+        448
+      ],
+      "notes": "Фильтрует тестовые items для assertions.\n\nTRUE: test_mode=true → run assertions.\nFALSE: PROD item → end (не выполнять тесты).\n\nВход: Final envelope.\nВыход: TRUE (test) / FALSE (prod)."
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.error?.details?.test_case }}",
+                    "rightValue": "T1",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "T1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.error?.details?.test_case }}",
+                    "rightValue": "T2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "T2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.error?.details?.test_case }}",
+                    "rightValue": "T3",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "T3"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "id": "1f9c5589-d3a9-4e5b-9b80-a94570e25783",
+      "name": "TEST — Switch Test Case",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        4560,
+        1392
+      ],
+      "notes": "Направляет тестовые items на соответствующие assertions.\n\nT1: HTTP 429 rate limit test.\nT2: Postgres error test.\nT3: Job path test.\n\nВход: TRUE от IF Test Mode.\nВыход: По test_case outputs."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "assert-t1-kind",
+              "leftValue": "={{ $json.error?.kind }}",
+              "rightValue": "rate_limit",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "assert-t1-status",
+              "leftValue": "={{ $json.status_code }}",
+              "rightValue": 429,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "assert-t1-retryable",
+              "leftValue": "={{ $json.error?.retryable }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "47e742f7-e9af-4fc7-899d-5acd11598c36",
+      "name": "TEST — Assert T1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4784,
+        1200
+      ],
+      "notes": "Проверяет T1 envelope:\n- kind=rate_limit\n- status_code=429\n- retryable=true\n\nTRUE: Pass.\nFALSE: Fail → StopAndError."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST T1 FAILED: Expected kind=rate_limit, status_code=429, retryable=true. Got: kind={{ $json.error?.kind }}, status_code={{ $json.status_code }}, retryable={{ $json.error?.retryable }}"
+      },
+      "id": "61b005be-d954-4748-8e6b-181500f1cb0f",
+      "name": "TEST — Fail T1",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5008,
+        1168
+      ],
+      "notes": "Тест T1 не прошёл.\n\nВход: FALSE от Assert T1."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "assert-t2-kind",
+              "leftValue": "={{ $json.error?.kind }}",
+              "rightValue": "db",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "assert-t2-status",
+              "leftValue": "={{ $json.status_code }}",
+              "rightValue": 503,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "assert-t2-retryable",
+              "leftValue": "={{ $json.error?.retryable }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "27879e6e-2f99-4dce-9b57-1a72f4bcf905",
+      "name": "TEST — Assert T2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4784,
+        1392
+      ],
+      "notes": "Проверяет T2 envelope:\n- kind=db\n- status_code=503\n- retryable=true\n\nTRUE: Pass.\nFALSE: Fail → StopAndError."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST T2 FAILED: Expected kind=db, status_code=503, retryable=true. Got: kind={{ $json.error?.kind }}, status_code={{ $json.status_code }}, retryable={{ $json.error?.retryable }}"
+      },
+      "id": "8f6da0b5-bb4e-45eb-9ed2-7fc4e3c478fc",
+      "name": "TEST — Fail T2",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5008,
+        1552
+      ],
+      "notes": "Тест T2 не прошёл.\n\nВход: FALSE от Assert T2."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "assert-t3-job-id",
+              "leftValue": "={{ $json.error?.details?.ctx?.job_id !== null && $json.error?.details?.ctx?.job_id !== undefined }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "e1f91d0b-04d3-45fa-bce5-aafc7a277342",
+      "name": "TEST — Assert T3 Has Job ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4784,
+        1600
+      ],
+      "notes": "Проверяет T3: ctx.job_id существует.\n\nTRUE: Pass.\nFALSE: Fail → StopAndError."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST T3 FAILED: Expected ctx.job_id to exist. Got: ctx.job_id={{ $json.error?.details?.ctx?.job_id }}"
+      },
+      "id": "0495ae9b-1161-43de-831d-51b9d1e49bb0",
+      "name": "TEST — Fail T3",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5024,
+        2000
+      ],
+      "notes": "Тест T3 не прошёл.\n\nВход: FALSE от Assert T3."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "extract-corr-id",
+              "name": "_verify_correlation_id",
+              "value": "={{ $json.meta?.correlation?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-test-job-id",
+              "name": "_verify_job_id",
+              "value": "={{ $json.error?.details?.ctx?.job_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "extract-test-case-verify",
+              "name": "_verify_test_case",
+              "value": "={{ $json.error?.details?.test_case }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "345ba93f-e95f-4693-877a-2890de7148f8",
+      "name": "TEST — Extract Verify IDs T1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5008,
+        992
+      ],
+      "notes": "Извлекает IDs для верификации DB записей T1.\n\nВход: TRUE от Assert T1.\nВыход: Item с _verify_correlation_id."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "extract-corr-id-t2",
+              "name": "_verify_correlation_id",
+              "value": "={{ $json.meta?.correlation?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-test-job-id-t2",
+              "name": "_verify_job_id",
+              "value": "={{ $json.error?.details?.ctx?.job_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "extract-test-case-verify-t2",
+              "name": "_verify_test_case",
+              "value": "={{ $json.error?.details?.test_case }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "1399feb1-54d2-4459-bf13-3804a3e00b30",
+      "name": "TEST — Extract Verify IDs T2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4992,
+        1328
+      ],
+      "notes": "Извлекает IDs для верификации DB записей T2.\n\nВход: TRUE от Assert T2.\nВыход: Item с _verify_correlation_id."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "extract-corr-id-t3",
+              "name": "_verify_correlation_id",
+              "value": "={{ $json.meta?.correlation?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-test-job-id-t3",
+              "name": "_verify_job_id",
+              "value": "={{ $json.error?.details?.ctx?.job_id }}",
+              "type": "number"
+            },
+            {
+              "id": "extract-test-case-verify-t3",
+              "name": "_verify_test_case",
+              "value": "={{ $json.error?.details?.test_case }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "d1f22705-e2e7-4950-b27c-00b1f9ceea84",
+      "name": "TEST — Extract Verify IDs T3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5008,
+        1760
+      ],
+      "notes": "Извлекает IDs для верификации DB записей T3.\n\nВход: TRUE от Assert T3.\nВыход: Item с _verify_correlation_id и _verify_job_id."
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "dccbc247-5c3b-4819-9cf2-e3f14e5555a2",
+      "name": "TEST — Merge Verify Items",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5232,
+        1392
+      ],
+      "notes": "Объединяет все прошедшие assertion items для DB верификации.\n\nВход: T1, T2, T3 verify items.\nВыход: Items для SELECT ops.errors."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "errors"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "correlation_id",
+              "value": "={{ $json._verify_correlation_id }}"
+            }
+          ]
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "75719433-e120-400f-adb8-e8ec01b67330",
+      "name": "TEST — Verify ops.errors",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5440,
+        1392
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Проверяет, что запись создана в ops.errors.\n\nSELECT по correlation_id.\nAOD=OFF (required lookup).\n\nВход: Verify item.\nВыход: Found row или error."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "verify-err-found",
+              "leftValue": "={{ $json.id !== undefined }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "2adba69e-00a8-4351-b01d-043db54f0ed1",
+      "name": "TEST — IF Error Record Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5664,
+        1360
+      ],
+      "notes": "Проверяет, что ops.errors запись найдена.\n\nTRUE: Found → continue.\nFALSE: Not found → StopAndError."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST DB VERIFY FAILED: ops.errors record not found for correlation_id={{ $('TEST — Merge Verify Items').item.json._verify_correlation_id }}"
+      },
+      "id": "add385d8-56fe-48ed-998a-a9093121dabb",
+      "name": "TEST — Fail DB Verify",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5872,
+        1664
+      ],
+      "notes": "DB верификация не прошла: запись в ops.errors не найдена.\n\nВход: FALSE от IF Error Record Found."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "restore-verify-ids",
+              "name": "_verify_correlation_id",
+              "value": "={{ $('TEST — Merge Verify Items').item.json._verify_correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "restore-verify-job-id",
+              "name": "_verify_job_id",
+              "value": "={{ $('TEST — Merge Verify Items').item.json._verify_job_id }}",
+              "type": "number"
+            },
+            {
+              "id": "restore-verify-case",
+              "name": "_verify_test_case",
+              "value": "={{ $('TEST — Merge Verify Items').item.json._verify_test_case }}",
+              "type": "string"
+            },
+            {
+              "id": "store-error-id",
+              "name": "_error_record_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "259fc71f-cdc2-450f-9d72-bed69c98633f",
+      "name": "TEST — Restore Verify IDs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5904,
+        1408
+      ],
+      "notes": "Восстанавливает verify IDs после успешной проверки ops.errors.\n\nВход: TRUE от IF Error Record Found.\nВыход: Item с IDs для дальнейшей верификации и cleanup."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-is-t3",
+              "leftValue": "={{ $json._verify_test_case }}",
+              "rightValue": "T3",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "8f849df0-fbe7-43e5-9af9-f9a80ec7cde4",
+      "name": "TEST — IF Is T3 Verify Job",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        6112,
+        1488
+      ],
+      "notes": "Проверяет, нужно ли верифицировать job записи (только T3).\n\nTRUE: T3 → verify ops.jobs status.\nFALSE: T1/T2 → skip to cleanup."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "jobs"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json._verify_job_id }}"
+            }
+          ]
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "4d928013-e347-4879-93ca-1803f1e48b23",
+      "name": "TEST — Verify Job Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        6320,
+        1408
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Проверяет, что ops.jobs.status='failed' для T3.\n\nВход: TRUE от IF Is T3.\nВыход: Job row."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "verify-job-failed",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "166c4d1c-481e-4287-8732-e4e221ed53af",
+      "name": "TEST — IF Job Status Failed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        6544,
+        1360
+      ],
+      "notes": "Проверяет, что job status='failed'.\n\nTRUE: Pass → verify job_runs.\nFALSE: Fail → StopAndError."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST T3 JOB VERIFY FAILED: Expected status='failed'. Got: status={{ $json.status }}"
+      },
+      "id": "a634353b-2ebb-4fe0-be51-7758542593b8",
+      "name": "TEST — Fail Job Status",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        6768,
+        1536
+      ],
+      "notes": "Job status verification failed.\n\nВход: FALSE от IF Job Status Failed."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "job_runs"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "job_id",
+              "value": "={{ $('TEST — IF Is T3 Verify Job').item.json._verify_job_id }}"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "id",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "708d6e82-8114-4075-9fc6-370b910f295d",
+      "name": "TEST — Verify Job Run",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        6752,
+        1328
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Проверяет, что job_run создан для T3 job.\n\nВход: TRUE от IF Job Status Failed.\nВыход: Job run row."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "verify-run-exists",
+              "leftValue": "={{ $json.id !== undefined }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "58d8ebd4-cd5e-4cfd-9cad-99d45bde49f1",
+      "name": "TEST — IF Job Run Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        6992,
+        1312
+      ],
+      "notes": "Проверяет, что job_run запись найдена.\n\nTRUE: Pass → cleanup.\nFALSE: Fail → StopAndError."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST T3 JOB RUN VERIFY FAILED: job_run not found for job_id={{ $('TEST — IF Is T3 Verify Job').item.json._verify_job_id }}"
+      },
+      "id": "229684a0-dcc2-4e97-a601-39152197d985",
+      "name": "TEST — Fail Job Run",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        7216,
+        1712
+      ],
+      "notes": "Job run verification failed.\n\nВход: FALSE от IF Job Run Found."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cleanup-ids",
+              "name": "_cleanup_job_id",
+              "value": "={{ $('TEST — IF Is T3 Verify Job').item.json._verify_job_id }}",
+              "type": "number"
+            },
+            {
+              "id": "cleanup-corr-id",
+              "name": "_cleanup_correlation_id",
+              "value": "={{ $('TEST — IF Is T3 Verify Job').item.json._verify_correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cleanup-job-run-id",
+              "name": "_cleanup_job_run_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "98441c1e-2c7a-40a6-ba39-fc34e4c9cc36",
+      "name": "TEST — Prepare Cleanup T3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7232,
+        1312
+      ],
+      "notes": "Подготавливает IDs для cleanup T3 (job + job_run + error).\n\nВход: TRUE от IF Job Run Found.\nВыход: Cleanup IDs."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cleanup-ids-t12",
+              "name": "_cleanup_job_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "cleanup-corr-id-t12",
+              "name": "_cleanup_correlation_id",
+              "value": "={{ $json._verify_correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cleanup-job-run-id-t12",
+              "name": "_cleanup_job_run_id",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e24963a0-2db1-416c-ae4f-7501819a4a9d",
+      "name": "TEST — Prepare Cleanup T1T2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6704,
+        1712
+      ],
+      "notes": "Подготавливает IDs для cleanup T1/T2 (только error).\n\nВход: FALSE от IF Is T3.\nВыход: Cleanup IDs (job_id и job_run_id пустые)."
+    },
+    {
+      "parameters": {},
+      "id": "40749b42-9e21-4825-8576-37abbb8743d3",
+      "name": "TEST — Merge Cleanup Items",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        7424,
+        1488
+      ],
+      "notes": "Объединяет cleanup items (T1/T2 и T3).\n\nВход: Cleanup items от Prepare Cleanup.\nВыход: Items для последовательного удаления."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "has-job-run-cleanup",
+              "leftValue": "={{ $json._cleanup_job_run_id !== '' && $json._cleanup_job_run_id !== null && $json._cleanup_job_run_id !== undefined }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "8e021478-ce50-4dde-943f-c4e5c961cda0",
+      "name": "TEST — IF Has Job Run Cleanup",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        7648,
+        1488
+      ],
+      "notes": "Проверяет, нужно ли удалять job_run (T3).\n\nTRUE: Есть job_run → delete.\nFALSE: Нет job_run → skip."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "job_runs"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json._cleanup_job_run_id }}"
+            }
+          ]
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "7ae3c5ff-51fd-4f38-b450-e9835c6d72bd",
+      "name": "TEST — Delete Job Run",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        7872,
+        1392
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Cleanup: удаляет тестовый job_run.\n\nВход: TRUE от IF Has Job Run Cleanup.\nВыход: Delete result."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST CLEANUP FAILED: Cannot delete job_run: {{ $json.error?.message }}"
+      },
+      "id": "767baec3-3d92-47ed-b622-03941dd69f00",
+      "name": "TEST — Fail Delete Run",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        8144,
+        1808
+      ],
+      "notes": "Cleanup failed: cannot delete job_run.\n\nВход: TRUE от IF Delete Run Error."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "restore-cleanup-after-run",
+              "name": "_cleanup_job_id",
+              "value": "={{ $('TEST — IF Has Job Run Cleanup').item.json._cleanup_job_id }}",
+              "type": "number"
+            },
+            {
+              "id": "restore-cleanup-corr",
+              "name": "_cleanup_correlation_id",
+              "value": "={{ $('TEST — IF Has Job Run Cleanup').item.json._cleanup_correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "171037ce-898f-4401-ad50-8ca737a8d705",
+      "name": "TEST — Restore After Run Delete",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8304,
+        1488
+      ],
+      "notes": "Восстанавливает cleanup IDs после удаления job_run.\n\nВход: FALSE от IF Delete Run Error.\nВыход: IDs для удаления job."
+    },
+    {
+      "parameters": {},
+      "id": "97e0b173-fcd1-4a3d-aea7-aa8fec0ca1b5",
+      "name": "TEST — Merge After Run Delete",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        8544,
+        1664
+      ],
+      "notes": "Объединяет пути после попытки удаления job_run.\n\nВход 1: Items без job_run (T1/T2).\nВход 2: Items после удаления job_run (T3).\nВыход: Items для удаления job."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "has-job-cleanup",
+              "leftValue": "={{ $json._cleanup_job_id !== '' && $json._cleanup_job_id !== null && $json._cleanup_job_id !== undefined && typeof $json._cleanup_job_id === 'number' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "5b3c90c9-2447-420a-8a01-b1eb666aa5ca",
+      "name": "TEST — IF Has Job Cleanup",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        8752,
+        1488
+      ],
+      "notes": "Проверяет, нужно ли удалять job (T3).\n\nTRUE: Есть job_id → delete.\nFALSE: Нет job_id → skip to error cleanup."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "jobs"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json._cleanup_job_id }}"
+            }
+          ]
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "10c97f91-340d-44c6-b356-a3c818aee94d",
+      "name": "TEST — Delete Job",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        8960,
+        1392
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Cleanup: удаляет тестовую job.\n\nВход: TRUE от IF Has Job Cleanup.\nВыход: Delete result."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST CLEANUP FAILED: Cannot delete job: {{ $json.error?.message }}"
+      },
+      "id": "79fefb81-37bd-4b73-8ba8-77b1dced1c50",
+      "name": "TEST — Fail Delete Job",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        9264,
+        1808
+      ],
+      "notes": "Cleanup failed: cannot delete job.\n\nВход: TRUE от IF Delete Job Error."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "restore-cleanup-after-job",
+              "name": "_cleanup_correlation_id",
+              "value": "={{ $('TEST — IF Has Job Cleanup').item.json._cleanup_correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "17fb723d-92b4-43ce-a407-c40454b5dd39",
+      "name": "TEST — Restore After Job Delete",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        9408,
+        1488
+      ],
+      "notes": "Восстанавливает cleanup IDs после удаления job.\n\nВход: FALSE от IF Delete Job Error.\nВыход: correlation_id для удаления error."
+    },
+    {
+      "parameters": {},
+      "id": "4a18f363-7d90-4ce9-a339-a32637a7506f",
+      "name": "TEST — Merge After Job Delete",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        9616,
+        1664
+      ],
+      "notes": "Объединяет пути после попытки удаления job.\n\nВход 1: Items без job (T1/T2).\nВход 2: Items после удаления job (T3).\nВыход: Items для удаления error."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "errors"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "correlation_id",
+              "value": "={{ $json._cleanup_correlation_id }}"
+            }
+          ]
+        },
+        "options": {
+          "queryBatching": "independently"
+        }
+      },
+      "id": "7b6886d1-658c-4dd8-8209-27ce9514696c",
+      "name": "TEST — Delete Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        9840,
+        1488
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Cleanup: удаляет тестовую запись из ops.errors.\n\nВход: Merged items.\nВыход: Delete result."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=TEST CLEANUP FAILED: Cannot delete error record: {{ $json.error?.message }}"
+      },
+      "id": "c044c883-ee00-4f38-bed1-510081ba0370",
+      "name": "TEST — Fail Delete Error",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        10272,
+        1744
+      ],
+      "notes": "Cleanup failed: cannot delete error record.\n\nВход: TRUE от IF Delete Error Error."
+    },
+    {
+      "parameters": {},
+      "id": "0df38e4b-1511-4627-b9e6-4022e4850ee2",
+      "name": "TEST — Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        10288,
+        1424
+      ],
+      "notes": "TEST COMPLETE — все тесты прошли, cleanup выполнен.\n\nВход: FALSE от IF Delete Error Error.\nВыход: Пустой output (тесты завершены успешно)."
+    },
+    {
+      "parameters": {},
+      "id": "914fad34-6886-4660-96ce-45b52ecc637c",
+      "name": "PROD — End",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4752,
+        464
+      ],
+      "notes": "PROD END — для PROD items (не test_mode).\n\nПосле IF Test Mode FALSE — workflow завершён для production.\n\nВход: FALSE от IF Test Mode.\nВыход: нет (endpoint)."
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n    \"ctx\": {\n      \"trace_id\": \"test-trace-T1\",\n      \"workflow\": \"WF99-TEST\",\n      \"node\": \"Test HTTP 429\"\n    },\n    \"httpCode\": 429,\n    \"errorMessage\": \"Rate limit exceeded\",\n    \"details\": {\n      \"test_mode\": true,\n      \"test_case\": \"T1\"\n    }\n  }\n  },\n  {\n    json: {\n    \"ctx\": {\n      \"trace_id\": \"test-trace-T2\",\n      \"workflow\": \"WF99-TEST\",\n      \"node\": \"Test Postgres Error\"\n    },\n    \"error\": {\n      \"message\": \"Connection refused\",\n      \"name\": \"PostgresError\"\n    },\n    \"n8nDetails\": {\n      \"nodeType\": \"n8n-nodes-base.postgres\"\n    },\n    \"details\": {\n      \"test_mode\": true,\n      \"test_case\": \"T2\"\n    }\n  }\n  },\n  {\n    json: {\n    \"ctx\": {\n      \"trace_id\": \"test-trace-T3\",\n      \"workflow\": \"WF99-TEST\",\n      \"node\": \"Test Job Path\",\n      \"tenant_id\": \"00000000-0000-0000-0000-000000000001\"\n    },\n    \"errorMessage\": \"Job processing failed\",\n    \"details\": {\n      \"test_mode\": true,\n      \"test_case\": \"T3\",\n      \"needs_job_setup\": true\n    }\n  }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2656,
+        1264
+      ],
+      "id": "8c11fee3-aa6c-4351-8bce-b042ecf667b9",
+      "name": "TEST — Build Test Cases",
+      "notes": "Генерирует 3 тестовых item:\n\nT1: HTTP 429 rate limit → kind=rate_limit, retryable=true\nT2: Postgres error → kind=db, retryable=true\nT3: Job path (требует setup) → проверка job failure flow\n\nВход: пустой item от Manual Trigger.\nВыход: 3 items для тестирования core pipeline"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "IN — Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge PROD + TEST",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "TEST — Build Test Cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — IF Needs Job Setup": {
+      "main": [
+        [
+          {
+            "node": "TEST — Insert Test Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Merge Test Items",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "TEST — Insert Test Job": {
+      "main": [
+        [
+          {
+            "node": "TEST — Set Job ID in Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — StopAndError Job Setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Set Job ID in Context": {
+      "main": [
+        [
+          {
+            "node": "TEST — Merge Test Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Merge Test Items": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge PROD + TEST",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "PIPE — Merge PROD + TEST": {
+      "main": [
+        [
+          {
+            "node": "PIPE — GUARD — Ensure Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — GUARD — Ensure Input": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Normalize Raw Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — StopAndError No Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Normalize Raw Error": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Generate Correlation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Generate Correlation ID": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Switch Error Kind",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Switch Error Kind": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Set Kind rate_limit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Set Kind auth",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Set Kind auth 403",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Set Kind upstream 5xx",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Set Kind upstream 4xx",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Set Kind db",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Set Kind unknown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Set Kind rate_limit": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Classified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Set Kind auth": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Classified",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "PIPE — Merge Classified": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Build ErrorEnvelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Build ErrorEnvelope": {
+      "main": [
+        [
+          {
+            "node": "PIPE — DB Insert ops.errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — DB Insert ops.errors": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Restore Envelope Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Set persist_failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Set persist_failed": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge After DB Insert",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "PIPE — Restore Envelope Success": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge After DB Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Merge After DB Insert": {
+      "main": [
+        [
+          {
+            "node": "PIPE — IF Has Job ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — IF Has Job ID": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Extract Job ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Restore Envelope Skip Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Extract Job ID": {
+      "main": [
+        [
+          {
+            "node": "PIPE — DB Select Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — DB Select Job": {
+      "main": [
+        [
+          {
+            "node": "PIPE — IF Job Found",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — StopAndError Job Select",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — IF Job Found": {
+      "main": [
+        [
+          {
+            "node": "PIPE — DB Update Job Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Set job_missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Set job_missing": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Restore Envelope Job Missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — DB Update Job Failed": {
+      "main": [
+        [
+          {
+            "node": "PIPE — DB Insert Job Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — StopAndError Job Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — DB Insert Job Run": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Restore Envelope Job Path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — StopAndError Job Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Restore Envelope Job Path": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Job Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Restore Envelope Skip Job": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Job Paths",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "PIPE — Merge Job Paths": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Return Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Return Envelope": {
+      "main": [
+        [
+          {
+            "node": "TEST — IF Test Mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — IF Test Mode": {
+      "main": [
+        [
+          {
+            "node": "TEST — Switch Test Case",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PROD — End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Switch Test Case": {
+      "main": [
+        [
+          {
+            "node": "TEST — Assert T1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Assert T2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Assert T3 Has Job ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Assert T1": {
+      "main": [
+        [
+          {
+            "node": "TEST — Extract Verify IDs T1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail T1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Assert T2": {
+      "main": [
+        [
+          {
+            "node": "TEST — Extract Verify IDs T2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail T2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Assert T3 Has Job ID": {
+      "main": [
+        [
+          {
+            "node": "TEST — Extract Verify IDs T3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail T3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Extract Verify IDs T1": {
+      "main": [
+        [
+          {
+            "node": "TEST — Merge Verify Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Extract Verify IDs T2": {
+      "main": [
+        [
+          {
+            "node": "TEST — Merge Verify Items",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "TEST — Merge Verify Items": {
+      "main": [
+        [
+          {
+            "node": "TEST — Verify ops.errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Verify ops.errors": {
+      "main": [
+        [
+          {
+            "node": "TEST — IF Error Record Found",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail DB Verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — IF Error Record Found": {
+      "main": [
+        [
+          {
+            "node": "TEST — Restore Verify IDs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail DB Verify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Restore Verify IDs": {
+      "main": [
+        [
+          {
+            "node": "TEST — IF Is T3 Verify Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — IF Is T3 Verify Job": {
+      "main": [
+        [
+          {
+            "node": "TEST — Verify Job Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Prepare Cleanup T1T2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Verify Job Status": {
+      "main": [
+        [
+          {
+            "node": "TEST — IF Job Status Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail Job Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — IF Job Status Failed": {
+      "main": [
+        [
+          {
+            "node": "TEST — Verify Job Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail Job Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Verify Job Run": {
+      "main": [
+        [
+          {
+            "node": "TEST — IF Job Run Found",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail Job Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — IF Job Run Found": {
+      "main": [
+        [
+          {
+            "node": "TEST — Prepare Cleanup T3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail Job Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Prepare Cleanup T3": {
+      "main": [
+        [
+          {
+            "node": "TEST — Merge Cleanup Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Prepare Cleanup T1T2": {
+      "main": [
+        [
+          {
+            "node": "TEST — Merge Cleanup Items",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "TEST — Merge Cleanup Items": {
+      "main": [
+        [
+          {
+            "node": "TEST — IF Has Job Run Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — IF Has Job Run Cleanup": {
+      "main": [
+        [
+          {
+            "node": "TEST — Delete Job Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Merge After Run Delete",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "TEST — Delete Job Run": {
+      "main": [
+        [
+          {
+            "node": "TEST — Restore After Run Delete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail Delete Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Restore After Run Delete": {
+      "main": [
+        [
+          {
+            "node": "TEST — Merge After Run Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Merge After Run Delete": {
+      "main": [
+        [
+          {
+            "node": "TEST — IF Has Job Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — IF Has Job Cleanup": {
+      "main": [
+        [
+          {
+            "node": "TEST — Delete Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Merge After Job Delete",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "TEST — Delete Job": {
+      "main": [
+        [
+          {
+            "node": "TEST — Restore After Job Delete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail Delete Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Restore After Job Delete": {
+      "main": [
+        [
+          {
+            "node": "TEST — Merge After Job Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Merge After Job Delete": {
+      "main": [
+        [
+          {
+            "node": "TEST — Delete Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Delete Error": {
+      "main": [
+        [
+          {
+            "node": "TEST — Done",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEST — Fail Delete Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Set Kind auth 403": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Classified",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "PIPE — Set Kind upstream 5xx": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Classified",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "PIPE — Set Kind upstream 4xx": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Classified",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "PIPE — Set Kind db": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Classified",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "PIPE — Set Kind unknown": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Classified",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "TEST — Build Test Cases": {
+      "main": [
+        [
+          {
+            "node": "TEST — IF Needs Job Setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Extract Verify IDs T3": {
+      "main": [
+        [
+          {
+            "node": "TEST — Merge Verify Items",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "PIPE — Restore Envelope Job Missing": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Job Paths",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "1b590176-b29e-4d79-b0dc-55a134cddf01",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "RttZ5uj4BvAAHuwX0rrsd",
+  "tags": [
+    {
+      "updatedAt": "2026-02-01T18:55:37.464Z",
+      "createdAt": "2026-02-01T18:55:37.464Z",
+      "id": "a7WcVP8X9TmdS3mv",
+      "name": "error-handling"
+    },
+    {
+      "updatedAt": "2026-02-01T18:55:37.499Z",
+      "createdAt": "2026-02-01T18:55:37.499Z",
+      "id": "gZGuxNZw3DaVv615",
+      "name": "core"
+    }
+  ]
+}

@@ -1,0 +1,5473 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict LF31CCDeBltsb99np2G3jrEwUS8jSoXkgxxc4q7Fnd7WSh3KhM3PviNW9hQUKBl
+
+-- Dumped from database version 17.6
+-- Dumped by pg_dump version 17.7
+
+-- Started on 2026-02-01 21:31:57 UTC
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 12 (class 2615 OID 47564)
+-- Name: audit; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA audit;
+
+
+ALTER SCHEMA audit OWNER TO postgres;
+
+--
+-- TOC entry 10 (class 2615 OID 47561)
+-- Name: content; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA content;
+
+
+ALTER SCHEMA content OWNER TO postgres;
+
+--
+-- TOC entry 16 (class 2615 OID 47558)
+-- Name: core; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA core;
+
+
+ALTER SCHEMA core OWNER TO postgres;
+
+--
+-- TOC entry 11 (class 2615 OID 47562)
+-- Name: kg; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA kg;
+
+
+ALTER SCHEMA kg OWNER TO postgres;
+
+--
+-- TOC entry 17 (class 2615 OID 47563)
+-- Name: ops; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA ops;
+
+
+ALTER SCHEMA ops OWNER TO postgres;
+
+--
+-- TOC entry 13 (class 2615 OID 47559)
+-- Name: raw; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA raw;
+
+
+ALTER SCHEMA raw OWNER TO postgres;
+
+--
+-- TOC entry 14 (class 2615 OID 47560)
+-- Name: tg; Type: SCHEMA; Schema: -; Owner: postgres
+--
+
+CREATE SCHEMA tg;
+
+
+ALTER SCHEMA tg OWNER TO postgres;
+
+--
+-- TOC entry 5 (class 3079 OID 46685)
+-- Name: citext; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;
+
+
+--
+-- TOC entry 4288 (class 0 OID 0)
+-- Dependencies: 5
+-- Name: EXTENSION citext; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION citext IS 'data type for case-insensitive character strings';
+
+
+--
+-- TOC entry 3 (class 3079 OID 24595)
+-- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+
+
+--
+-- TOC entry 4289 (class 0 OID 0)
+-- Dependencies: 3
+-- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
+
+
+--
+-- TOC entry 6 (class 3079 OID 46794)
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+
+--
+-- TOC entry 4290 (class 0 OID 0)
+-- Dependencies: 6
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+
+--
+-- TOC entry 4 (class 3079 OID 24676)
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+
+
+--
+-- TOC entry 4291 (class 0 OID 0)
+-- Dependencies: 4
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+--
+-- TOC entry 2 (class 3079 OID 24256)
+-- Name: vector; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
+
+
+--
+-- TOC entry 4292 (class 0 OID 0)
+-- Dependencies: 2
+-- Name: EXTENSION vector; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION vector IS 'vector data type and ivfflat and hnsw access methods';
+
+
+--
+-- TOC entry 1182 (class 1247 OID 47652)
+-- Name: qa_channel; Type: TYPE; Schema: audit; Owner: postgres
+--
+
+CREATE TYPE audit.qa_channel AS ENUM (
+    'group_chat',
+    'dm'
+);
+
+
+ALTER TYPE audit.qa_channel OWNER TO postgres;
+
+--
+-- TOC entry 1173 (class 1247 OID 47628)
+-- Name: doc_type; Type: TYPE; Schema: content; Owner: postgres
+--
+
+CREATE TYPE content.doc_type AS ENUM (
+    'message',
+    'file',
+    'url'
+);
+
+
+ALTER TYPE content.doc_type OWNER TO postgres;
+
+--
+-- TOC entry 1179 (class 1247 OID 47644)
+-- Name: extract_status; Type: TYPE; Schema: content; Owner: postgres
+--
+
+CREATE TYPE content.extract_status AS ENUM (
+    'pending',
+    'succeeded',
+    'failed'
+);
+
+
+ALTER TYPE content.extract_status OWNER TO postgres;
+
+--
+-- TOC entry 1176 (class 1247 OID 47636)
+-- Name: fetch_status; Type: TYPE; Schema: content; Owner: postgres
+--
+
+CREATE TYPE content.fetch_status AS ENUM (
+    'pending',
+    'succeeded',
+    'failed'
+);
+
+
+ALTER TYPE content.fetch_status OWNER TO postgres;
+
+--
+-- TOC entry 1164 (class 1247 OID 47584)
+-- Name: chat_type; Type: TYPE; Schema: core; Owner: postgres
+--
+
+CREATE TYPE core.chat_type AS ENUM (
+    'private',
+    'group',
+    'supergroup',
+    'channel'
+);
+
+
+ALTER TYPE core.chat_type OWNER TO postgres;
+
+--
+-- TOC entry 1161 (class 1247 OID 47574)
+-- Name: principal_role; Type: TYPE; Schema: core; Owner: postgres
+--
+
+CREATE TYPE core.principal_role AS ENUM (
+    'admin',
+    'user',
+    'readonly',
+    'blocked'
+);
+
+
+ALTER TYPE core.principal_role OWNER TO postgres;
+
+--
+-- TOC entry 1158 (class 1247 OID 47566)
+-- Name: visibility_scope; Type: TYPE; Schema: core; Owner: postgres
+--
+
+CREATE TYPE core.visibility_scope AS ENUM (
+    'group',
+    'dm_private',
+    'admin_only'
+);
+
+
+ALTER TYPE core.visibility_scope OWNER TO postgres;
+
+--
+-- TOC entry 1167 (class 1247 OID 47594)
+-- Name: job_status; Type: TYPE; Schema: ops; Owner: postgres
+--
+
+CREATE TYPE ops.job_status AS ENUM (
+    'queued',
+    'running',
+    'succeeded',
+    'failed',
+    'dead'
+);
+
+
+ALTER TYPE ops.job_status OWNER TO postgres;
+
+--
+-- TOC entry 1170 (class 1247 OID 47606)
+-- Name: job_type; Type: TYPE; Schema: ops; Owner: postgres
+--
+
+CREATE TYPE ops.job_type AS ENUM (
+    'normalize_update',
+    'upsert_membership',
+    'fetch_tg_file',
+    'fetch_url',
+    'extract_text',
+    'build_document',
+    'chunk_document',
+    'embed_chunks',
+    'answer_query',
+    'reembed_model_migration',
+    'test_job'
+);
+
+
+ALTER TYPE ops.job_type OWNER TO postgres;
+
+--
+-- TOC entry 406 (class 1255 OID 48202)
+-- Name: set_updated_at(); Type: FUNCTION; Schema: core; Owner: postgres
+--
+
+CREATE FUNCTION core.set_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END $$;
+
+
+ALTER FUNCTION core.set_updated_at() OWNER TO postgres;
+
+--
+-- TOC entry 481 (class 1255 OID 48318)
+-- Name: tg_set_updated_at(); Type: FUNCTION; Schema: core; Owner: postgres
+--
+
+CREATE FUNCTION core.tg_set_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION core.tg_set_updated_at() OWNER TO postgres;
+
+--
+-- TOC entry 415 (class 1255 OID 25402)
+-- Name: calculate_unit_economics(uuid, numeric, numeric); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.calculate_unit_economics(p_product_id uuid, p_sale_price numeric, p_cost_price numeric) RETURNS TABLE(commission_amount numeric, logistics_fbo numeric, logistics_fbs numeric, last_mile numeric, acquiring numeric, profit_fbo numeric, profit_fbs numeric, margin_fbo numeric, margin_fbs numeric)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_product products%ROWTYPE;
+    v_commission_rate DECIMAL;
+    v_volume_liters DECIMAL;
+BEGIN
+    SELECT * INTO v_product FROM products WHERE id = p_product_id;
+    
+    -- Получаем ставку комиссии
+    v_commission_rate := COALESCE(v_product.commission_percent, 15) / 100;
+    
+    -- Объём в литрах
+    v_volume_liters := COALESCE(v_product.volume_liters, 1);
+    
+    -- Расчёт
+    commission_amount := p_sale_price * v_commission_rate;
+    
+    -- Логистика (упрощённый расчёт)
+    -- FBO: базовый тариф + за литры
+    logistics_fbo := CASE 
+        WHEN v_volume_liters <= 1 THEN 46
+        WHEN v_volume_liters <= 3 THEN 46 + (v_volume_liters - 1) * 10
+        ELSE 46 + 20 + (v_volume_liters - 3) * 15
+    END;
+    
+    -- FBS: базовый тариф + за литры
+    logistics_fbs := CASE 
+        WHEN v_volume_liters <= 1 THEN 80
+        WHEN v_volume_liters <= 3 THEN 80 + (v_volume_liters - 1) * 18
+        ELSE 80 + 36 + (v_volume_liters - 3) * 23
+    END;
+    
+    -- Последняя миля
+    last_mile := LEAST(p_sale_price * 0.055, 500);
+    
+    -- Эквайринг
+    acquiring := p_sale_price * 0.02;
+    
+    -- Прибыль
+    profit_fbo := p_sale_price - p_cost_price - commission_amount - logistics_fbo - last_mile - acquiring;
+    profit_fbs := p_sale_price - p_cost_price - commission_amount - logistics_fbs - last_mile - acquiring;
+    
+    -- Маржа
+    margin_fbo := CASE WHEN p_sale_price > 0 THEN (profit_fbo / p_sale_price) * 100 ELSE 0 END;
+    margin_fbs := CASE WHEN p_sale_price > 0 THEN (profit_fbs / p_sale_price) * 100 ELSE 0 END;
+    
+    RETURN NEXT;
+END;
+$$;
+
+
+ALTER FUNCTION public.calculate_unit_economics(p_product_id uuid, p_sale_price numeric, p_cost_price numeric) OWNER TO postgres;
+
+--
+-- TOC entry 326 (class 1255 OID 25401)
+-- Name: search_similar_products(public.vector, double precision, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.search_similar_products(query_embedding public.vector, match_threshold double precision DEFAULT 0.8, match_count integer DEFAULT 10) RETURNS TABLE(product_id uuid, name text, similarity double precision)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id,
+        p.name,
+        1 - (pe.embedding <=> query_embedding) AS similarity
+    FROM product_embeddings pe
+    JOIN products p ON p.id = pe.product_id
+    WHERE 1 - (pe.embedding <=> query_embedding) > match_threshold
+    ORDER BY pe.embedding <=> query_embedding
+    LIMIT match_count;
+END;
+$$;
+
+
+ALTER FUNCTION public.search_similar_products(query_embedding public.vector, match_threshold double precision, match_count integer) OWNER TO postgres;
+
+--
+-- TOC entry 377 (class 1255 OID 44324)
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.update_updated_at_column() OWNER TO postgres;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 272 (class 1259 OID 48184)
+-- Name: qa_citations; Type: TABLE; Schema: audit; Owner: postgres
+--
+
+CREATE TABLE audit.qa_citations (
+    turn_id bigint NOT NULL,
+    chunk_id bigint NOT NULL,
+    rank integer NOT NULL,
+    score double precision,
+    snippet text,
+    source_ref jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE audit.qa_citations OWNER TO postgres;
+
+--
+-- TOC entry 269 (class 1259 OID 48146)
+-- Name: qa_sessions; Type: TABLE; Schema: audit; Owner: postgres
+--
+
+CREATE TABLE audit.qa_sessions (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
+    tg_user_id bigint NOT NULL,
+    channel audit.qa_channel NOT NULL,
+    chat_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_at timestamp with time zone DEFAULT now() NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE audit.qa_sessions OWNER TO postgres;
+
+--
+-- TOC entry 271 (class 1259 OID 48164)
+-- Name: qa_turns; Type: TABLE; Schema: audit; Owner: postgres
+--
+
+CREATE TABLE audit.qa_turns (
+    id bigint NOT NULL,
+    session_id uuid NOT NULL,
+    question_text text NOT NULL,
+    question_msg_version_id bigint,
+    answer_text text,
+    answer_json jsonb,
+    model_used text,
+    latency_ms integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE audit.qa_turns OWNER TO postgres;
+
+--
+-- TOC entry 270 (class 1259 OID 48163)
+-- Name: qa_turns_id_seq; Type: SEQUENCE; Schema: audit; Owner: postgres
+--
+
+CREATE SEQUENCE audit.qa_turns_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE audit.qa_turns_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4540 (class 0 OID 0)
+-- Dependencies: 270
+-- Name: qa_turns_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: postgres
+--
+
+ALTER SEQUENCE audit.qa_turns_id_seq OWNED BY audit.qa_turns.id;
+
+
+--
+-- TOC entry 255 (class 1259 OID 47984)
+-- Name: blob_objects; Type: TABLE; Schema: content; Owner: postgres
+--
+
+CREATE TABLE content.blob_objects (
+    id bigint NOT NULL,
+    sha256 bytea NOT NULL,
+    byte_size bigint NOT NULL,
+    storage_kind text NOT NULL,
+    storage_key text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE content.blob_objects OWNER TO postgres;
+
+--
+-- TOC entry 254 (class 1259 OID 47983)
+-- Name: blob_objects_id_seq; Type: SEQUENCE; Schema: content; Owner: postgres
+--
+
+CREATE SEQUENCE content.blob_objects_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE content.blob_objects_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4541 (class 0 OID 0)
+-- Dependencies: 254
+-- Name: blob_objects_id_seq; Type: SEQUENCE OWNED BY; Schema: content; Owner: postgres
+--
+
+ALTER SEQUENCE content.blob_objects_id_seq OWNED BY content.blob_objects.id;
+
+
+--
+-- TOC entry 257 (class 1259 OID 47997)
+-- Name: documents; Type: TABLE; Schema: content; Owner: postgres
+--
+
+CREATE TABLE content.documents (
+    id bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    doc_type content.doc_type NOT NULL,
+    visibility core.visibility_scope DEFAULT 'group'::core.visibility_scope NOT NULL,
+    dm_owner_user_id bigint,
+    chat_id bigint,
+    message_version_id bigint,
+    file_unique_id text,
+    url_id bigint,
+    source_created_at timestamp with time zone,
+    title text,
+    language text,
+    text text,
+    text_sha256 bytea,
+    token_count integer,
+    status content.extract_status DEFAULT 'pending'::content.extract_status NOT NULL,
+    error jsonb,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE content.documents OWNER TO postgres;
+
+--
+-- TOC entry 256 (class 1259 OID 47996)
+-- Name: documents_id_seq; Type: SEQUENCE; Schema: content; Owner: postgres
+--
+
+CREATE SEQUENCE content.documents_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE content.documents_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4542 (class 0 OID 0)
+-- Dependencies: 256
+-- Name: documents_id_seq; Type: SEQUENCE OWNED BY; Schema: content; Owner: postgres
+--
+
+ALTER SEQUENCE content.documents_id_seq OWNED BY content.documents.id;
+
+
+--
+-- TOC entry 253 (class 1259 OID 47967)
+-- Name: url_fetches; Type: TABLE; Schema: content; Owner: postgres
+--
+
+CREATE TABLE content.url_fetches (
+    id bigint NOT NULL,
+    url_id bigint NOT NULL,
+    fetched_at timestamp with time zone DEFAULT now() NOT NULL,
+    status content.fetch_status NOT NULL,
+    http_status integer,
+    content_type text,
+    etag text,
+    last_modified text,
+    body_sha256 bytea,
+    storage_url text,
+    error jsonb,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE content.url_fetches OWNER TO postgres;
+
+--
+-- TOC entry 252 (class 1259 OID 47966)
+-- Name: url_fetches_id_seq; Type: SEQUENCE; Schema: content; Owner: postgres
+--
+
+CREATE SEQUENCE content.url_fetches_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE content.url_fetches_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4543 (class 0 OID 0)
+-- Dependencies: 252
+-- Name: url_fetches_id_seq; Type: SEQUENCE OWNED BY; Schema: content; Owner: postgres
+--
+
+ALTER SEQUENCE content.url_fetches_id_seq OWNED BY content.url_fetches.id;
+
+
+--
+-- TOC entry 251 (class 1259 OID 47954)
+-- Name: urls; Type: TABLE; Schema: content; Owner: postgres
+--
+
+CREATE TABLE content.urls (
+    id bigint NOT NULL,
+    normalized_url text NOT NULL,
+    canonical_url text,
+    first_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_seen_at timestamp with time zone,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE content.urls OWNER TO postgres;
+
+--
+-- TOC entry 250 (class 1259 OID 47953)
+-- Name: urls_id_seq; Type: SEQUENCE; Schema: content; Owner: postgres
+--
+
+CREATE SEQUENCE content.urls_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE content.urls_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4544 (class 0 OID 0)
+-- Dependencies: 250
+-- Name: urls_id_seq; Type: SEQUENCE OWNED BY; Schema: content; Owner: postgres
+--
+
+ALTER SEQUENCE content.urls_id_seq OWNED BY content.urls.id;
+
+
+--
+-- TOC entry 273 (class 1259 OID 48231)
+-- Name: bot_transport_config; Type: TABLE; Schema: core; Owner: postgres
+--
+
+CREATE TABLE core.bot_transport_config (
+    bot_id uuid NOT NULL,
+    desired_mode text DEFAULT 'webhook'::text NOT NULL,
+    webhook_url text,
+    webhook_path text,
+    max_connections integer,
+    allowed_updates jsonb DEFAULT '[]'::jsonb NOT NULL,
+    drop_pending_updates boolean DEFAULT false NOT NULL,
+    polling_timeout_sec integer DEFAULT 25 NOT NULL,
+    polling_limit integer DEFAULT 100 NOT NULL,
+    watchdog_interval_sec integer DEFAULT 60 NOT NULL,
+    unhealthy_pending_threshold integer DEFAULT 50 NOT NULL,
+    unhealthy_silence_sec integer DEFAULT 180 NOT NULL,
+    recovery_stable_sec integer DEFAULT 600 NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT bot_transport_config_desired_mode_check CHECK ((desired_mode = ANY (ARRAY['webhook'::text, 'polling'::text]))),
+    CONSTRAINT bot_transport_config_polling_limit_check CHECK (((polling_limit >= 1) AND (polling_limit <= 100))),
+    CONSTRAINT bot_transport_config_polling_timeout_sec_check CHECK (((polling_timeout_sec >= 0) AND (polling_timeout_sec <= 60))),
+    CONSTRAINT bot_transport_config_recovery_stable_sec_check CHECK (((recovery_stable_sec >= 60) AND (recovery_stable_sec <= 7200))),
+    CONSTRAINT bot_transport_config_unhealthy_pending_threshold_check CHECK ((unhealthy_pending_threshold >= 0)),
+    CONSTRAINT bot_transport_config_unhealthy_silence_sec_check CHECK (((unhealthy_silence_sec >= 30) AND (unhealthy_silence_sec <= 3600))),
+    CONSTRAINT bot_transport_config_watchdog_interval_sec_check CHECK (((watchdog_interval_sec >= 10) AND (watchdog_interval_sec <= 600)))
+);
+
+
+ALTER TABLE core.bot_transport_config OWNER TO postgres;
+
+--
+-- TOC entry 274 (class 1259 OID 48262)
+-- Name: bot_transport_state; Type: TABLE; Schema: core; Owner: postgres
+--
+
+CREATE TABLE core.bot_transport_state (
+    bot_id uuid NOT NULL,
+    mode text DEFAULT 'webhook'::text NOT NULL,
+    last_update_id bigint DEFAULT 0 NOT NULL,
+    last_webhook_seen_at timestamp with time zone,
+    last_poll_seen_at timestamp with time zone,
+    last_failover_at timestamp with time zone,
+    last_recovery_at timestamp with time zone,
+    last_switch_reason text,
+    hold_until timestamp with time zone,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT bot_transport_state_mode_check CHECK ((mode = ANY (ARRAY['webhook'::text, 'polling'::text])))
+);
+
+
+ALTER TABLE core.bot_transport_state OWNER TO postgres;
+
+--
+-- TOC entry 230 (class 1259 OID 47668)
+-- Name: bots; Type: TABLE; Schema: core; Owner: postgres
+--
+
+CREATE TABLE core.bots (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
+    tg_bot_user_id bigint,
+    username public.citext,
+    webhook_path text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE core.bots OWNER TO postgres;
+
+--
+-- TOC entry 233 (class 1259 OID 47715)
+-- Name: chat_policies; Type: TABLE; Schema: core; Owner: postgres
+--
+
+CREATE TABLE core.chat_policies (
+    tenant_id uuid NOT NULL,
+    chat_id bigint NOT NULL,
+    retention_days_raw integer DEFAULT 90 NOT NULL,
+    retention_days_documents integer DEFAULT 3650 NOT NULL,
+    allow_url_fetch boolean DEFAULT true NOT NULL,
+    allow_file_download boolean DEFAULT true NOT NULL,
+    allow_embedding boolean DEFAULT true NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE core.chat_policies OWNER TO postgres;
+
+--
+-- TOC entry 232 (class 1259 OID 47700)
+-- Name: tenant_chats; Type: TABLE; Schema: core; Owner: postgres
+--
+
+CREATE TABLE core.tenant_chats (
+    tenant_id uuid NOT NULL,
+    chat_id bigint NOT NULL,
+    chat_type core.chat_type NOT NULL,
+    title text,
+    username public.citext,
+    is_enabled boolean DEFAULT true NOT NULL,
+    added_by bigint,
+    added_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_seen_at timestamp with time zone,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE core.tenant_chats OWNER TO postgres;
+
+--
+-- TOC entry 231 (class 1259 OID 47686)
+-- Name: tenant_users; Type: TABLE; Schema: core; Owner: postgres
+--
+
+CREATE TABLE core.tenant_users (
+    tenant_id uuid NOT NULL,
+    tg_user_id bigint NOT NULL,
+    role core.principal_role DEFAULT 'user'::core.principal_role NOT NULL,
+    added_by bigint,
+    added_at timestamp with time zone DEFAULT now() NOT NULL,
+    note text
+);
+
+
+ALTER TABLE core.tenant_users OWNER TO postgres;
+
+--
+-- TOC entry 229 (class 1259 OID 47657)
+-- Name: tenants; Type: TABLE; Schema: core; Owner: postgres
+--
+
+CREATE TABLE core.tenants (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE core.tenants OWNER TO postgres;
+
+--
+-- TOC entry 262 (class 1259 OID 48070)
+-- Name: chunk_embeddings_1536; Type: TABLE; Schema: kg; Owner: postgres
+--
+
+CREATE TABLE kg.chunk_embeddings_1536 (
+    chunk_id bigint NOT NULL,
+    model_id smallint NOT NULL,
+    embedding public.vector(1536) NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE kg.chunk_embeddings_1536 OWNER TO postgres;
+
+--
+-- TOC entry 259 (class 1259 OID 48036)
+-- Name: chunks; Type: TABLE; Schema: kg; Owner: postgres
+--
+
+CREATE TABLE kg.chunks (
+    id bigint NOT NULL,
+    document_id bigint NOT NULL,
+    chunk_no integer NOT NULL,
+    char_start integer,
+    char_end integer,
+    text text NOT NULL,
+    tsv tsvector GENERATED ALWAYS AS (to_tsvector('simple'::regconfig, COALESCE(text, ''::text))) STORED,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE kg.chunks OWNER TO postgres;
+
+--
+-- TOC entry 258 (class 1259 OID 48035)
+-- Name: chunks_id_seq; Type: SEQUENCE; Schema: kg; Owner: postgres
+--
+
+CREATE SEQUENCE kg.chunks_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE kg.chunks_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4552 (class 0 OID 0)
+-- Dependencies: 258
+-- Name: chunks_id_seq; Type: SEQUENCE OWNED BY; Schema: kg; Owner: postgres
+--
+
+ALTER SEQUENCE kg.chunks_id_seq OWNED BY kg.chunks.id;
+
+
+--
+-- TOC entry 261 (class 1259 OID 48057)
+-- Name: embedding_models; Type: TABLE; Schema: kg; Owner: postgres
+--
+
+CREATE TABLE kg.embedding_models (
+    id smallint NOT NULL,
+    provider text NOT NULL,
+    model_key text NOT NULL,
+    task_type text,
+    output_dim integer NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE kg.embedding_models OWNER TO postgres;
+
+--
+-- TOC entry 260 (class 1259 OID 48056)
+-- Name: embedding_models_id_seq; Type: SEQUENCE; Schema: kg; Owner: postgres
+--
+
+CREATE SEQUENCE kg.embedding_models_id_seq
+    AS smallint
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE kg.embedding_models_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4553 (class 0 OID 0)
+-- Dependencies: 260
+-- Name: embedding_models_id_seq; Type: SEQUENCE OWNED BY; Schema: kg; Owner: postgres
+--
+
+ALTER SEQUENCE kg.embedding_models_id_seq OWNED BY kg.embedding_models.id;
+
+
+--
+-- TOC entry 278 (class 1259 OID 48299)
+-- Name: bot_transport_events; Type: TABLE; Schema: ops; Owner: postgres
+--
+
+CREATE TABLE ops.bot_transport_events (
+    id bigint NOT NULL,
+    bot_id uuid NOT NULL,
+    event_at timestamp with time zone DEFAULT now() NOT NULL,
+    event_type text NOT NULL,
+    from_mode text,
+    to_mode text,
+    reason text,
+    details jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT bot_transport_events_event_type_check CHECK ((event_type = ANY (ARRAY['failover_to_polling'::text, 'recovery_to_webhook'::text, 'hold_set'::text, 'hold_cleared'::text, 'manual_switch'::text]))),
+    CONSTRAINT bot_transport_events_from_mode_check CHECK ((from_mode = ANY (ARRAY['webhook'::text, 'polling'::text]))),
+    CONSTRAINT bot_transport_events_to_mode_check CHECK ((to_mode = ANY (ARRAY['webhook'::text, 'polling'::text])))
+);
+
+
+ALTER TABLE ops.bot_transport_events OWNER TO postgres;
+
+--
+-- TOC entry 277 (class 1259 OID 48298)
+-- Name: bot_transport_events_id_seq; Type: SEQUENCE; Schema: ops; Owner: postgres
+--
+
+CREATE SEQUENCE ops.bot_transport_events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE ops.bot_transport_events_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4555 (class 0 OID 0)
+-- Dependencies: 277
+-- Name: bot_transport_events_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
+--
+
+ALTER SEQUENCE ops.bot_transport_events_id_seq OWNED BY ops.bot_transport_events.id;
+
+
+--
+-- TOC entry 268 (class 1259 OID 48131)
+-- Name: errors; Type: TABLE; Schema: ops; Owner: postgres
+--
+
+CREATE TABLE ops.errors (
+    id bigint NOT NULL,
+    tenant_id uuid,
+    correlation_id uuid,
+    kind text,
+    message text,
+    details jsonb,
+    retryable boolean,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE ops.errors OWNER TO postgres;
+
+--
+-- TOC entry 267 (class 1259 OID 48130)
+-- Name: errors_id_seq; Type: SEQUENCE; Schema: ops; Owner: postgres
+--
+
+CREATE SEQUENCE ops.errors_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE ops.errors_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4558 (class 0 OID 0)
+-- Dependencies: 267
+-- Name: errors_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
+--
+
+ALTER SEQUENCE ops.errors_id_seq OWNED BY ops.errors.id;
+
+
+--
+-- TOC entry 266 (class 1259 OID 48114)
+-- Name: job_runs; Type: TABLE; Schema: ops; Owner: postgres
+--
+
+CREATE TABLE ops.job_runs (
+    id bigint NOT NULL,
+    job_id bigint NOT NULL,
+    started_at timestamp with time zone DEFAULT now() NOT NULL,
+    finished_at timestamp with time zone,
+    status ops.job_status NOT NULL,
+    metrics jsonb DEFAULT '{}'::jsonb NOT NULL,
+    error jsonb
+);
+
+
+ALTER TABLE ops.job_runs OWNER TO postgres;
+
+--
+-- TOC entry 265 (class 1259 OID 48113)
+-- Name: job_runs_id_seq; Type: SEQUENCE; Schema: ops; Owner: postgres
+--
+
+CREATE SEQUENCE ops.job_runs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE ops.job_runs_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4561 (class 0 OID 0)
+-- Dependencies: 265
+-- Name: job_runs_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
+--
+
+ALTER SEQUENCE ops.job_runs_id_seq OWNED BY ops.job_runs.id;
+
+
+--
+-- TOC entry 264 (class 1259 OID 48090)
+-- Name: jobs; Type: TABLE; Schema: ops; Owner: postgres
+--
+
+CREATE TABLE ops.jobs (
+    id bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    job_type ops.job_type NOT NULL,
+    status ops.job_status DEFAULT 'queued'::ops.job_status NOT NULL,
+    priority integer DEFAULT 100 NOT NULL,
+    payload jsonb NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    max_attempts integer DEFAULT 10 NOT NULL,
+    next_run_at timestamp with time zone DEFAULT now() NOT NULL,
+    locked_at timestamp with time zone,
+    locked_by text,
+    correlation_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    last_error jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE ops.jobs OWNER TO postgres;
+
+--
+-- TOC entry 263 (class 1259 OID 48089)
+-- Name: jobs_id_seq; Type: SEQUENCE; Schema: ops; Owner: postgres
+--
+
+CREATE SEQUENCE ops.jobs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE ops.jobs_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4564 (class 0 OID 0)
+-- Dependencies: 263
+-- Name: jobs_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
+--
+
+ALTER SEQUENCE ops.jobs_id_seq OWNED BY ops.jobs.id;
+
+
+--
+-- TOC entry 276 (class 1259 OID 48282)
+-- Name: webhook_health_snapshots; Type: TABLE; Schema: ops; Owner: postgres
+--
+
+CREATE TABLE ops.webhook_health_snapshots (
+    id bigint NOT NULL,
+    bot_id uuid NOT NULL,
+    snap_at timestamp with time zone DEFAULT now() NOT NULL,
+    url text,
+    has_custom_certificate boolean,
+    pending_update_count integer,
+    ip_address text,
+    last_error_date timestamp with time zone,
+    last_error_message text,
+    last_synchronization_error_date timestamp with time zone,
+    max_connections integer,
+    allowed_updates jsonb,
+    last_webhook_seen_at timestamp with time zone,
+    last_update_id bigint,
+    raw jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE ops.webhook_health_snapshots OWNER TO postgres;
+
+--
+-- TOC entry 275 (class 1259 OID 48281)
+-- Name: webhook_health_snapshots_id_seq; Type: SEQUENCE; Schema: ops; Owner: postgres
+--
+
+CREATE SEQUENCE ops.webhook_health_snapshots_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE ops.webhook_health_snapshots_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4567 (class 0 OID 0)
+-- Dependencies: 275
+-- Name: webhook_health_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
+--
+
+ALTER SEQUENCE ops.webhook_health_snapshots_id_seq OWNED BY ops.webhook_health_snapshots.id;
+
+
+--
+-- TOC entry 235 (class 1259 OID 47752)
+-- Name: telegram_update_keys; Type: TABLE; Schema: raw; Owner: postgres
+--
+
+CREATE TABLE raw.telegram_update_keys (
+    tenant_id uuid NOT NULL,
+    bot_id uuid NOT NULL,
+    update_id bigint NOT NULL,
+    first_received_at timestamp with time zone DEFAULT now() NOT NULL,
+    first_request_id uuid DEFAULT gen_random_uuid() NOT NULL
+);
+
+
+ALTER TABLE raw.telegram_update_keys OWNER TO postgres;
+
+--
+-- TOC entry 234 (class 1259 OID 47734)
+-- Name: telegram_updates; Type: TABLE; Schema: raw; Owner: postgres
+--
+
+CREATE TABLE raw.telegram_updates (
+    tenant_id uuid NOT NULL,
+    bot_id uuid NOT NULL,
+    update_id bigint NOT NULL,
+    update_type text NOT NULL,
+    received_at timestamp with time zone DEFAULT now() NOT NULL,
+    request_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    remote_ip inet,
+    headers jsonb DEFAULT '{}'::jsonb NOT NULL,
+    body jsonb NOT NULL,
+    body_sha256 bytea NOT NULL
+)
+PARTITION BY RANGE (received_at);
+
+
+ALTER TABLE raw.telegram_updates OWNER TO postgres;
+
+--
+-- TOC entry 236 (class 1259 OID 47770)
+-- Name: telegram_updates_default; Type: TABLE; Schema: raw; Owner: postgres
+--
+
+CREATE TABLE raw.telegram_updates_default (
+    tenant_id uuid NOT NULL,
+    bot_id uuid NOT NULL,
+    update_id bigint NOT NULL,
+    update_type text NOT NULL,
+    received_at timestamp with time zone DEFAULT now() NOT NULL,
+    request_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    remote_ip inet,
+    headers jsonb DEFAULT '{}'::jsonb NOT NULL,
+    body jsonb NOT NULL,
+    body_sha256 bytea NOT NULL
+);
+
+
+ALTER TABLE raw.telegram_updates_default OWNER TO postgres;
+
+--
+-- TOC entry 248 (class 1259 OID 47901)
+-- Name: chat_member_events; Type: TABLE; Schema: tg; Owner: postgres
+--
+
+CREATE TABLE tg.chat_member_events (
+    id bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    chat_id bigint NOT NULL,
+    tg_user_id bigint NOT NULL,
+    actor_user_id bigint,
+    event_at timestamp with time zone DEFAULT now() NOT NULL,
+    old_status text,
+    new_status text,
+    payload jsonb NOT NULL
+);
+
+
+ALTER TABLE tg.chat_member_events OWNER TO postgres;
+
+--
+-- TOC entry 247 (class 1259 OID 47900)
+-- Name: chat_member_events_id_seq; Type: SEQUENCE; Schema: tg; Owner: postgres
+--
+
+CREATE SEQUENCE tg.chat_member_events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE tg.chat_member_events_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4573 (class 0 OID 0)
+-- Dependencies: 247
+-- Name: chat_member_events_id_seq; Type: SEQUENCE OWNED BY; Schema: tg; Owner: postgres
+--
+
+ALTER SEQUENCE tg.chat_member_events_id_seq OWNED BY tg.chat_member_events.id;
+
+
+--
+-- TOC entry 249 (class 1259 OID 47928)
+-- Name: chat_memberships_current; Type: TABLE; Schema: tg; Owner: postgres
+--
+
+CREATE TABLE tg.chat_memberships_current (
+    tenant_id uuid NOT NULL,
+    chat_id bigint NOT NULL,
+    tg_user_id bigint NOT NULL,
+    status text NOT NULL,
+    role_payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE tg.chat_memberships_current OWNER TO postgres;
+
+--
+-- TOC entry 238 (class 1259 OID 47801)
+-- Name: chats; Type: TABLE; Schema: tg; Owner: postgres
+--
+
+CREATE TABLE tg.chats (
+    chat_id bigint NOT NULL,
+    chat_type core.chat_type NOT NULL,
+    title text,
+    username public.citext,
+    is_forum boolean,
+    parent_chat_id bigint,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE tg.chats OWNER TO postgres;
+
+--
+-- TOC entry 246 (class 1259 OID 47885)
+-- Name: file_instances; Type: TABLE; Schema: tg; Owner: postgres
+--
+
+CREATE TABLE tg.file_instances (
+    file_id text NOT NULL,
+    file_unique_id text NOT NULL,
+    tg_file_path text,
+    last_seen_at timestamp with time zone DEFAULT now() NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE tg.file_instances OWNER TO postgres;
+
+--
+-- TOC entry 245 (class 1259 OID 47876)
+-- Name: files; Type: TABLE; Schema: tg; Owner: postgres
+--
+
+CREATE TABLE tg.files (
+    file_unique_id text NOT NULL,
+    file_type text,
+    mime_type text,
+    file_name text,
+    file_size bigint,
+    sha256 bytea,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    meta jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE tg.files OWNER TO postgres;
+
+--
+-- TOC entry 244 (class 1259 OID 47859)
+-- Name: message_attachments; Type: TABLE; Schema: tg; Owner: postgres
+--
+
+CREATE TABLE tg.message_attachments (
+    id bigint NOT NULL,
+    message_version_id bigint NOT NULL,
+    attach_type text NOT NULL,
+    file_id text,
+    file_unique_id text,
+    mime_type text,
+    file_name text,
+    file_size bigint,
+    width integer,
+    height integer,
+    duration_sec integer,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE tg.message_attachments OWNER TO postgres;
+
+--
+-- TOC entry 243 (class 1259 OID 47858)
+-- Name: message_attachments_id_seq; Type: SEQUENCE; Schema: tg; Owner: postgres
+--
+
+CREATE SEQUENCE tg.message_attachments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE tg.message_attachments_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4580 (class 0 OID 0)
+-- Dependencies: 243
+-- Name: message_attachments_id_seq; Type: SEQUENCE OWNED BY; Schema: tg; Owner: postgres
+--
+
+ALTER SEQUENCE tg.message_attachments_id_seq OWNED BY tg.message_attachments.id;
+
+
+--
+-- TOC entry 242 (class 1259 OID 47833)
+-- Name: message_versions; Type: TABLE; Schema: tg; Owner: postgres
+--
+
+CREATE TABLE tg.message_versions (
+    id bigint NOT NULL,
+    message_fk bigint NOT NULL,
+    version_no integer NOT NULL,
+    sent_at timestamp with time zone NOT NULL,
+    edited_at timestamp with time zone,
+    from_user_id bigint,
+    via_bot_user_id bigint,
+    text text,
+    caption text,
+    entities jsonb,
+    caption_entities jsonb,
+    reply_to_message_id integer,
+    forward_from_user_id bigint,
+    forward_from_chat_id bigint,
+    forward_date timestamp with time zone,
+    has_media boolean DEFAULT false NOT NULL,
+    has_links boolean DEFAULT false NOT NULL,
+    normalized_text text,
+    content_sha256 bytea NOT NULL,
+    payload jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE tg.message_versions OWNER TO postgres;
+
+--
+-- TOC entry 241 (class 1259 OID 47832)
+-- Name: message_versions_id_seq; Type: SEQUENCE; Schema: tg; Owner: postgres
+--
+
+CREATE SEQUENCE tg.message_versions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE tg.message_versions_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4583 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: message_versions_id_seq; Type: SEQUENCE OWNED BY; Schema: tg; Owner: postgres
+--
+
+ALTER SEQUENCE tg.message_versions_id_seq OWNED BY tg.message_versions.id;
+
+
+--
+-- TOC entry 240 (class 1259 OID 47812)
+-- Name: messages; Type: TABLE; Schema: tg; Owner: postgres
+--
+
+CREATE TABLE tg.messages (
+    id bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    chat_id bigint NOT NULL,
+    message_id integer NOT NULL,
+    message_thread_id integer,
+    is_topic_message boolean,
+    visibility core.visibility_scope DEFAULT 'group'::core.visibility_scope NOT NULL,
+    dm_owner_user_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    current_version_id bigint
+);
+
+
+ALTER TABLE tg.messages OWNER TO postgres;
+
+--
+-- TOC entry 239 (class 1259 OID 47811)
+-- Name: messages_id_seq; Type: SEQUENCE; Schema: tg; Owner: postgres
+--
+
+CREATE SEQUENCE tg.messages_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE tg.messages_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4586 (class 0 OID 0)
+-- Dependencies: 239
+-- Name: messages_id_seq; Type: SEQUENCE OWNED BY; Schema: tg; Owner: postgres
+--
+
+ALTER SEQUENCE tg.messages_id_seq OWNED BY tg.messages.id;
+
+
+--
+-- TOC entry 237 (class 1259 OID 47790)
+-- Name: users; Type: TABLE; Schema: tg; Owner: postgres
+--
+
+CREATE TABLE tg.users (
+    tg_user_id bigint NOT NULL,
+    is_bot boolean DEFAULT false NOT NULL,
+    first_name text,
+    last_name text,
+    username public.citext,
+    language_code text,
+    is_premium boolean,
+    added_to_attach_menu boolean,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+ALTER TABLE tg.users OWNER TO postgres;
+
+--
+-- TOC entry 3838 (class 0 OID 0)
+-- Name: telegram_updates_default; Type: TABLE ATTACH; Schema: raw; Owner: postgres
+--
+
+ALTER TABLE ONLY raw.telegram_updates ATTACH PARTITION raw.telegram_updates_default DEFAULT;
+
+
+--
+-- TOC entry 3932 (class 2604 OID 48167)
+-- Name: qa_turns id; Type: DEFAULT; Schema: audit; Owner: postgres
+--
+
+ALTER TABLE ONLY audit.qa_turns ALTER COLUMN id SET DEFAULT nextval('audit.qa_turns_id_seq'::regclass);
+
+
+--
+-- TOC entry 3896 (class 2604 OID 47987)
+-- Name: blob_objects id; Type: DEFAULT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.blob_objects ALTER COLUMN id SET DEFAULT nextval('content.blob_objects_id_seq'::regclass);
+
+
+--
+-- TOC entry 3899 (class 2604 OID 48000)
+-- Name: documents id; Type: DEFAULT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.documents ALTER COLUMN id SET DEFAULT nextval('content.documents_id_seq'::regclass);
+
+
+--
+-- TOC entry 3893 (class 2604 OID 47970)
+-- Name: url_fetches id; Type: DEFAULT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.url_fetches ALTER COLUMN id SET DEFAULT nextval('content.url_fetches_id_seq'::regclass);
+
+
+--
+-- TOC entry 3890 (class 2604 OID 47957)
+-- Name: urls id; Type: DEFAULT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.urls ALTER COLUMN id SET DEFAULT nextval('content.urls_id_seq'::regclass);
+
+
+--
+-- TOC entry 3905 (class 2604 OID 48039)
+-- Name: chunks id; Type: DEFAULT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.chunks ALTER COLUMN id SET DEFAULT nextval('kg.chunks_id_seq'::regclass);
+
+
+--
+-- TOC entry 3909 (class 2604 OID 48060)
+-- Name: embedding_models id; Type: DEFAULT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.embedding_models ALTER COLUMN id SET DEFAULT nextval('kg.embedding_models_id_seq'::regclass);
+
+
+--
+-- TOC entry 3955 (class 2604 OID 48302)
+-- Name: bot_transport_events id; Type: DEFAULT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.bot_transport_events ALTER COLUMN id SET DEFAULT nextval('ops.bot_transport_events_id_seq'::regclass);
+
+
+--
+-- TOC entry 3926 (class 2604 OID 48134)
+-- Name: errors id; Type: DEFAULT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.errors ALTER COLUMN id SET DEFAULT nextval('ops.errors_id_seq'::regclass);
+
+
+--
+-- TOC entry 3923 (class 2604 OID 48117)
+-- Name: job_runs id; Type: DEFAULT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.job_runs ALTER COLUMN id SET DEFAULT nextval('ops.job_runs_id_seq'::regclass);
+
+
+--
+-- TOC entry 3914 (class 2604 OID 48093)
+-- Name: jobs id; Type: DEFAULT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.jobs ALTER COLUMN id SET DEFAULT nextval('ops.jobs_id_seq'::regclass);
+
+
+--
+-- TOC entry 3952 (class 2604 OID 48285)
+-- Name: webhook_health_snapshots id; Type: DEFAULT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.webhook_health_snapshots ALTER COLUMN id SET DEFAULT nextval('ops.webhook_health_snapshots_id_seq'::regclass);
+
+
+--
+-- TOC entry 3886 (class 2604 OID 47904)
+-- Name: chat_member_events id; Type: DEFAULT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_member_events ALTER COLUMN id SET DEFAULT nextval('tg.chat_member_events_id_seq'::regclass);
+
+
+--
+-- TOC entry 3879 (class 2604 OID 47862)
+-- Name: message_attachments id; Type: DEFAULT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.message_attachments ALTER COLUMN id SET DEFAULT nextval('tg.message_attachments_id_seq'::regclass);
+
+
+--
+-- TOC entry 3875 (class 2604 OID 47836)
+-- Name: message_versions id; Type: DEFAULT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.message_versions ALTER COLUMN id SET DEFAULT nextval('tg.message_versions_id_seq'::regclass);
+
+
+--
+-- TOC entry 3872 (class 2604 OID 47815)
+-- Name: messages id; Type: DEFAULT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.messages ALTER COLUMN id SET DEFAULT nextval('tg.messages_id_seq'::regclass);
+
+
+--
+-- TOC entry 4073 (class 2606 OID 48191)
+-- Name: qa_citations qa_citations_pkey; Type: CONSTRAINT; Schema: audit; Owner: postgres
+--
+
+ALTER TABLE ONLY audit.qa_citations
+    ADD CONSTRAINT qa_citations_pkey PRIMARY KEY (turn_id, rank);
+
+
+--
+-- TOC entry 4068 (class 2606 OID 48156)
+-- Name: qa_sessions qa_sessions_pkey; Type: CONSTRAINT; Schema: audit; Owner: postgres
+--
+
+ALTER TABLE ONLY audit.qa_sessions
+    ADD CONSTRAINT qa_sessions_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4071 (class 2606 OID 48172)
+-- Name: qa_turns qa_turns_pkey; Type: CONSTRAINT; Schema: audit; Owner: postgres
+--
+
+ALTER TABLE ONLY audit.qa_turns
+    ADD CONSTRAINT qa_turns_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4033 (class 2606 OID 47993)
+-- Name: blob_objects blob_objects_pkey; Type: CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.blob_objects
+    ADD CONSTRAINT blob_objects_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4035 (class 2606 OID 47995)
+-- Name: blob_objects blob_objects_sha256_key; Type: CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.blob_objects
+    ADD CONSTRAINT blob_objects_sha256_key UNIQUE (sha256);
+
+
+--
+-- TOC entry 4037 (class 2606 OID 48009)
+-- Name: documents documents_pkey; Type: CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.documents
+    ADD CONSTRAINT documents_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4031 (class 2606 OID 47976)
+-- Name: url_fetches url_fetches_pkey; Type: CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.url_fetches
+    ADD CONSTRAINT url_fetches_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4026 (class 2606 OID 47965)
+-- Name: urls urls_normalized_url_key; Type: CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.urls
+    ADD CONSTRAINT urls_normalized_url_key UNIQUE (normalized_url);
+
+
+--
+-- TOC entry 4028 (class 2606 OID 47963)
+-- Name: urls urls_pkey; Type: CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.urls
+    ADD CONSTRAINT urls_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4075 (class 2606 OID 48256)
+-- Name: bot_transport_config bot_transport_config_pkey; Type: CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.bot_transport_config
+    ADD CONSTRAINT bot_transport_config_pkey PRIMARY KEY (bot_id);
+
+
+--
+-- TOC entry 4077 (class 2606 OID 48274)
+-- Name: bot_transport_state bot_transport_state_pkey; Type: CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.bot_transport_state
+    ADD CONSTRAINT bot_transport_state_pkey PRIMARY KEY (bot_id);
+
+
+--
+-- TOC entry 3972 (class 2606 OID 47678)
+-- Name: bots bots_pkey; Type: CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.bots
+    ADD CONSTRAINT bots_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3974 (class 2606 OID 47680)
+-- Name: bots bots_tenant_id_username_key; Type: CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.bots
+    ADD CONSTRAINT bots_tenant_id_username_key UNIQUE (tenant_id, username);
+
+
+--
+-- TOC entry 3980 (class 2606 OID 47728)
+-- Name: chat_policies chat_policies_pkey; Type: CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.chat_policies
+    ADD CONSTRAINT chat_policies_pkey PRIMARY KEY (tenant_id, chat_id);
+
+
+--
+-- TOC entry 3978 (class 2606 OID 47709)
+-- Name: tenant_chats tenant_chats_pkey; Type: CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.tenant_chats
+    ADD CONSTRAINT tenant_chats_pkey PRIMARY KEY (tenant_id, chat_id);
+
+
+--
+-- TOC entry 3976 (class 2606 OID 47694)
+-- Name: tenant_users tenant_users_pkey; Type: CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.tenant_users
+    ADD CONSTRAINT tenant_users_pkey PRIMARY KEY (tenant_id, tg_user_id);
+
+
+--
+-- TOC entry 3970 (class 2606 OID 47667)
+-- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.tenants
+    ADD CONSTRAINT tenants_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4054 (class 2606 OID 48077)
+-- Name: chunk_embeddings_1536 chunk_embeddings_1536_pkey; Type: CONSTRAINT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.chunk_embeddings_1536
+    ADD CONSTRAINT chunk_embeddings_1536_pkey PRIMARY KEY (chunk_id, model_id);
+
+
+--
+-- TOC entry 4044 (class 2606 OID 48048)
+-- Name: chunks chunks_document_id_chunk_no_key; Type: CONSTRAINT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.chunks
+    ADD CONSTRAINT chunks_document_id_chunk_no_key UNIQUE (document_id, chunk_no);
+
+
+--
+-- TOC entry 4046 (class 2606 OID 48046)
+-- Name: chunks chunks_pkey; Type: CONSTRAINT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.chunks
+    ADD CONSTRAINT chunks_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4050 (class 2606 OID 48067)
+-- Name: embedding_models embedding_models_pkey; Type: CONSTRAINT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.embedding_models
+    ADD CONSTRAINT embedding_models_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4052 (class 2606 OID 48069)
+-- Name: embedding_models embedding_models_provider_model_key_task_type_output_dim_key; Type: CONSTRAINT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.embedding_models
+    ADD CONSTRAINT embedding_models_provider_model_key_task_type_output_dim_key UNIQUE (provider, model_key, task_type, output_dim);
+
+
+--
+-- TOC entry 4083 (class 2606 OID 48311)
+-- Name: bot_transport_events bot_transport_events_pkey; Type: CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.bot_transport_events
+    ADD CONSTRAINT bot_transport_events_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4064 (class 2606 OID 48139)
+-- Name: errors errors_pkey; Type: CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.errors
+    ADD CONSTRAINT errors_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4062 (class 2606 OID 48123)
+-- Name: job_runs job_runs_pkey; Type: CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.job_runs
+    ADD CONSTRAINT job_runs_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4059 (class 2606 OID 48105)
+-- Name: jobs jobs_pkey; Type: CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.jobs
+    ADD CONSTRAINT jobs_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4081 (class 2606 OID 48291)
+-- Name: webhook_health_snapshots webhook_health_snapshots_pkey; Type: CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.webhook_health_snapshots
+    ADD CONSTRAINT webhook_health_snapshots_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3987 (class 2606 OID 47758)
+-- Name: telegram_update_keys telegram_update_keys_pkey; Type: CONSTRAINT; Schema: raw; Owner: postgres
+--
+
+ALTER TABLE ONLY raw.telegram_update_keys
+    ADD CONSTRAINT telegram_update_keys_pkey PRIMARY KEY (bot_id, update_id);
+
+
+--
+-- TOC entry 3984 (class 2606 OID 47741)
+-- Name: telegram_updates telegram_updates_pkey; Type: CONSTRAINT; Schema: raw; Owner: postgres
+--
+
+ALTER TABLE ONLY raw.telegram_updates
+    ADD CONSTRAINT telegram_updates_pkey PRIMARY KEY (bot_id, update_id, received_at);
+
+
+--
+-- TOC entry 3989 (class 2606 OID 47777)
+-- Name: telegram_updates_default telegram_updates_default_pkey; Type: CONSTRAINT; Schema: raw; Owner: postgres
+--
+
+ALTER TABLE ONLY raw.telegram_updates_default
+    ADD CONSTRAINT telegram_updates_default_pkey PRIMARY KEY (bot_id, update_id, received_at);
+
+
+--
+-- TOC entry 4018 (class 2606 OID 47909)
+-- Name: chat_member_events chat_member_events_pkey; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_member_events
+    ADD CONSTRAINT chat_member_events_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4020 (class 2606 OID 47911)
+-- Name: chat_member_events chat_member_events_tenant_id_chat_id_tg_user_id_event_at_key; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_member_events
+    ADD CONSTRAINT chat_member_events_tenant_id_chat_id_tg_user_id_event_at_key UNIQUE (tenant_id, chat_id, tg_user_id, event_at);
+
+
+--
+-- TOC entry 4023 (class 2606 OID 47936)
+-- Name: chat_memberships_current chat_memberships_current_pkey; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_memberships_current
+    ADD CONSTRAINT chat_memberships_current_pkey PRIMARY KEY (tenant_id, chat_id, tg_user_id);
+
+
+--
+-- TOC entry 3996 (class 2606 OID 47809)
+-- Name: chats chats_pkey; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chats
+    ADD CONSTRAINT chats_pkey PRIMARY KEY (chat_id);
+
+
+--
+-- TOC entry 4015 (class 2606 OID 47893)
+-- Name: file_instances file_instances_pkey; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.file_instances
+    ADD CONSTRAINT file_instances_pkey PRIMARY KEY (file_id);
+
+
+--
+-- TOC entry 4013 (class 2606 OID 47884)
+-- Name: files files_pkey; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.files
+    ADD CONSTRAINT files_pkey PRIMARY KEY (file_unique_id);
+
+
+--
+-- TOC entry 4011 (class 2606 OID 47868)
+-- Name: message_attachments message_attachments_pkey; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.message_attachments
+    ADD CONSTRAINT message_attachments_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4005 (class 2606 OID 47845)
+-- Name: message_versions message_versions_message_fk_version_no_key; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.message_versions
+    ADD CONSTRAINT message_versions_message_fk_version_no_key UNIQUE (message_fk, version_no);
+
+
+--
+-- TOC entry 4007 (class 2606 OID 47843)
+-- Name: message_versions message_versions_pkey; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.message_versions
+    ADD CONSTRAINT message_versions_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3999 (class 2606 OID 47819)
+-- Name: messages messages_pkey; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.messages
+    ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4001 (class 2606 OID 47821)
+-- Name: messages uq_tg_messages_identity; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.messages
+    ADD CONSTRAINT uq_tg_messages_identity UNIQUE (tenant_id, chat_id, message_id);
+
+
+--
+-- TOC entry 3994 (class 2606 OID 47799)
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (tg_user_id);
+
+
+--
+-- TOC entry 4066 (class 1259 OID 48162)
+-- Name: ix_qa_sessions_user_time; Type: INDEX; Schema: audit; Owner: postgres
+--
+
+CREATE INDEX ix_qa_sessions_user_time ON audit.qa_sessions USING btree (tenant_id, tg_user_id, last_at DESC);
+
+
+--
+-- TOC entry 4069 (class 1259 OID 48183)
+-- Name: ix_qa_turns_session_time; Type: INDEX; Schema: audit; Owner: postgres
+--
+
+CREATE INDEX ix_qa_turns_session_time ON audit.qa_turns USING btree (session_id, created_at DESC);
+
+
+--
+-- TOC entry 4038 (class 1259 OID 48034)
+-- Name: ix_documents_chat_time; Type: INDEX; Schema: content; Owner: postgres
+--
+
+CREATE INDEX ix_documents_chat_time ON content.documents USING btree (tenant_id, chat_id, created_at DESC);
+
+
+--
+-- TOC entry 4039 (class 1259 OID 48033)
+-- Name: ix_documents_tenant_scope; Type: INDEX; Schema: content; Owner: postgres
+--
+
+CREATE INDEX ix_documents_tenant_scope ON content.documents USING btree (tenant_id, visibility, created_at DESC);
+
+
+--
+-- TOC entry 4029 (class 1259 OID 47982)
+-- Name: ix_url_fetches_url_time; Type: INDEX; Schema: content; Owner: postgres
+--
+
+CREATE INDEX ix_url_fetches_url_time ON content.url_fetches USING btree (url_id, fetched_at DESC);
+
+
+--
+-- TOC entry 4040 (class 1259 OID 48031)
+-- Name: ux_doc_file; Type: INDEX; Schema: content; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ux_doc_file ON content.documents USING btree (tenant_id, file_unique_id) WHERE ((doc_type = 'file'::content.doc_type) AND (file_unique_id IS NOT NULL));
+
+
+--
+-- TOC entry 4041 (class 1259 OID 48030)
+-- Name: ux_doc_message; Type: INDEX; Schema: content; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ux_doc_message ON content.documents USING btree (tenant_id, message_version_id) WHERE ((doc_type = 'message'::content.doc_type) AND (message_version_id IS NOT NULL));
+
+
+--
+-- TOC entry 4042 (class 1259 OID 48032)
+-- Name: ux_doc_url; Type: INDEX; Schema: content; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ux_doc_url ON content.documents USING btree (tenant_id, url_id) WHERE ((doc_type = 'url'::content.doc_type) AND (url_id IS NOT NULL));
+
+
+--
+-- TOC entry 4078 (class 1259 OID 48280)
+-- Name: ix_bot_transport_state_mode; Type: INDEX; Schema: core; Owner: postgres
+--
+
+CREATE INDEX ix_bot_transport_state_mode ON core.bot_transport_state USING btree (mode);
+
+
+--
+-- TOC entry 4055 (class 1259 OID 48088)
+-- Name: ix_chunk_emb_1536_hnsw; Type: INDEX; Schema: kg; Owner: postgres
+--
+
+CREATE INDEX ix_chunk_emb_1536_hnsw ON kg.chunk_embeddings_1536 USING hnsw (embedding public.vector_cosine_ops);
+
+
+--
+-- TOC entry 4047 (class 1259 OID 48054)
+-- Name: ix_chunks_doc; Type: INDEX; Schema: kg; Owner: postgres
+--
+
+CREATE INDEX ix_chunks_doc ON kg.chunks USING btree (document_id, chunk_no);
+
+
+--
+-- TOC entry 4048 (class 1259 OID 48055)
+-- Name: ix_chunks_tsv; Type: INDEX; Schema: kg; Owner: postgres
+--
+
+CREATE INDEX ix_chunks_tsv ON kg.chunks USING gin (tsv);
+
+
+--
+-- TOC entry 4084 (class 1259 OID 48317)
+-- Name: ix_bot_transport_events_bot_time; Type: INDEX; Schema: ops; Owner: postgres
+--
+
+CREATE INDEX ix_bot_transport_events_bot_time ON ops.bot_transport_events USING btree (bot_id, event_at DESC);
+
+
+--
+-- TOC entry 4060 (class 1259 OID 48129)
+-- Name: ix_job_runs_job; Type: INDEX; Schema: ops; Owner: postgres
+--
+
+CREATE INDEX ix_job_runs_job ON ops.job_runs USING btree (job_id, started_at DESC);
+
+
+--
+-- TOC entry 4056 (class 1259 OID 48111)
+-- Name: ix_jobs_run; Type: INDEX; Schema: ops; Owner: postgres
+--
+
+CREATE INDEX ix_jobs_run ON ops.jobs USING btree (status, next_run_at, priority);
+
+
+--
+-- TOC entry 4057 (class 1259 OID 48112)
+-- Name: ix_jobs_tenant; Type: INDEX; Schema: ops; Owner: postgres
+--
+
+CREATE INDEX ix_jobs_tenant ON ops.jobs USING btree (tenant_id, status);
+
+
+--
+-- TOC entry 4065 (class 1259 OID 48145)
+-- Name: ix_ops_errors_time; Type: INDEX; Schema: ops; Owner: postgres
+--
+
+CREATE INDEX ix_ops_errors_time ON ops.errors USING btree (created_at DESC);
+
+
+--
+-- TOC entry 4079 (class 1259 OID 48297)
+-- Name: ix_webhook_health_snapshots_bot_time; Type: INDEX; Schema: ops; Owner: postgres
+--
+
+CREATE INDEX ix_webhook_health_snapshots_bot_time ON ops.webhook_health_snapshots USING btree (bot_id, snap_at DESC);
+
+
+--
+-- TOC entry 3985 (class 1259 OID 47769)
+-- Name: ix_raw_update_keys_tenant_first_received; Type: INDEX; Schema: raw; Owner: postgres
+--
+
+CREATE INDEX ix_raw_update_keys_tenant_first_received ON raw.telegram_update_keys USING btree (tenant_id, first_received_at DESC);
+
+
+--
+-- TOC entry 3981 (class 1259 OID 47786)
+-- Name: ix_raw_updates_tenant_received; Type: INDEX; Schema: raw; Owner: postgres
+--
+
+CREATE INDEX ix_raw_updates_tenant_received ON ONLY raw.telegram_updates USING btree (tenant_id, received_at DESC);
+
+
+--
+-- TOC entry 3982 (class 1259 OID 47788)
+-- Name: ix_raw_updates_type_received; Type: INDEX; Schema: raw; Owner: postgres
+--
+
+CREATE INDEX ix_raw_updates_type_received ON ONLY raw.telegram_updates USING btree (update_type, received_at DESC);
+
+
+--
+-- TOC entry 3990 (class 1259 OID 47787)
+-- Name: telegram_updates_default_tenant_id_received_at_idx; Type: INDEX; Schema: raw; Owner: postgres
+--
+
+CREATE INDEX telegram_updates_default_tenant_id_received_at_idx ON raw.telegram_updates_default USING btree (tenant_id, received_at DESC);
+
+
+--
+-- TOC entry 3991 (class 1259 OID 47789)
+-- Name: telegram_updates_default_update_type_received_at_idx; Type: INDEX; Schema: raw; Owner: postgres
+--
+
+CREATE INDEX telegram_updates_default_update_type_received_at_idx ON raw.telegram_updates_default USING btree (update_type, received_at DESC);
+
+
+--
+-- TOC entry 4008 (class 1259 OID 47875)
+-- Name: ix_attach_file_unique; Type: INDEX; Schema: tg; Owner: postgres
+--
+
+CREATE INDEX ix_attach_file_unique ON tg.message_attachments USING btree (file_unique_id);
+
+
+--
+-- TOC entry 4009 (class 1259 OID 47874)
+-- Name: ix_attach_version; Type: INDEX; Schema: tg; Owner: postgres
+--
+
+CREATE INDEX ix_attach_version ON tg.message_attachments USING btree (message_version_id);
+
+
+--
+-- TOC entry 4016 (class 1259 OID 47899)
+-- Name: ix_file_instances_unique_id; Type: INDEX; Schema: tg; Owner: postgres
+--
+
+CREATE INDEX ix_file_instances_unique_id ON tg.file_instances USING btree (file_unique_id);
+
+
+--
+-- TOC entry 4021 (class 1259 OID 47927)
+-- Name: ix_member_events_chat_time; Type: INDEX; Schema: tg; Owner: postgres
+--
+
+CREATE INDEX ix_member_events_chat_time ON tg.chat_member_events USING btree (tenant_id, chat_id, event_at DESC);
+
+
+--
+-- TOC entry 4024 (class 1259 OID 47952)
+-- Name: ix_memberships_status; Type: INDEX; Schema: tg; Owner: postgres
+--
+
+CREATE INDEX ix_memberships_status ON tg.chat_memberships_current USING btree (tenant_id, chat_id, status);
+
+
+--
+-- TOC entry 4002 (class 1259 OID 47852)
+-- Name: ix_msg_versions_from_user; Type: INDEX; Schema: tg; Owner: postgres
+--
+
+CREATE INDEX ix_msg_versions_from_user ON tg.message_versions USING btree (from_user_id, sent_at DESC);
+
+
+--
+-- TOC entry 4003 (class 1259 OID 47851)
+-- Name: ix_msg_versions_sent_at; Type: INDEX; Schema: tg; Owner: postgres
+--
+
+CREATE INDEX ix_msg_versions_sent_at ON tg.message_versions USING btree (sent_at DESC);
+
+
+--
+-- TOC entry 3997 (class 1259 OID 47810)
+-- Name: ix_tg_chats_username; Type: INDEX; Schema: tg; Owner: postgres
+--
+
+CREATE INDEX ix_tg_chats_username ON tg.chats USING btree (username);
+
+
+--
+-- TOC entry 3992 (class 1259 OID 47800)
+-- Name: ix_tg_users_username; Type: INDEX; Schema: tg; Owner: postgres
+--
+
+CREATE INDEX ix_tg_users_username ON tg.users USING btree (username);
+
+
+--
+-- TOC entry 4085 (class 0 OID 0)
+-- Name: telegram_updates_default_pkey; Type: INDEX ATTACH; Schema: raw; Owner: postgres
+--
+
+ALTER INDEX raw.telegram_updates_pkey ATTACH PARTITION raw.telegram_updates_default_pkey;
+
+
+--
+-- TOC entry 4086 (class 0 OID 0)
+-- Name: telegram_updates_default_tenant_id_received_at_idx; Type: INDEX ATTACH; Schema: raw; Owner: postgres
+--
+
+ALTER INDEX raw.ix_raw_updates_tenant_received ATTACH PARTITION raw.telegram_updates_default_tenant_id_received_at_idx;
+
+
+--
+-- TOC entry 4087 (class 0 OID 0)
+-- Name: telegram_updates_default_update_type_received_at_idx; Type: INDEX ATTACH; Schema: raw; Owner: postgres
+--
+
+ALTER INDEX raw.ix_raw_updates_type_received ATTACH PARTITION raw.telegram_updates_default_update_type_received_at_idx;
+
+
+--
+-- TOC entry 4129 (class 2620 OID 48203)
+-- Name: documents trg_documents_updated_at; Type: TRIGGER; Schema: content; Owner: postgres
+--
+
+CREATE TRIGGER trg_documents_updated_at BEFORE UPDATE ON content.documents FOR EACH ROW EXECUTE FUNCTION core.set_updated_at();
+
+
+--
+-- TOC entry 4131 (class 2620 OID 48319)
+-- Name: bot_transport_config trg_bot_transport_config_updated_at; Type: TRIGGER; Schema: core; Owner: postgres
+--
+
+CREATE TRIGGER trg_bot_transport_config_updated_at BEFORE UPDATE ON core.bot_transport_config FOR EACH ROW EXECUTE FUNCTION core.tg_set_updated_at();
+
+
+--
+-- TOC entry 4132 (class 2620 OID 48320)
+-- Name: bot_transport_state trg_bot_transport_state_updated_at; Type: TRIGGER; Schema: core; Owner: postgres
+--
+
+CREATE TRIGGER trg_bot_transport_state_updated_at BEFORE UPDATE ON core.bot_transport_state FOR EACH ROW EXECUTE FUNCTION core.tg_set_updated_at();
+
+
+--
+-- TOC entry 4128 (class 2620 OID 48205)
+-- Name: chat_policies trg_chat_policies_updated_at; Type: TRIGGER; Schema: core; Owner: postgres
+--
+
+CREATE TRIGGER trg_chat_policies_updated_at BEFORE UPDATE ON core.chat_policies FOR EACH ROW EXECUTE FUNCTION core.set_updated_at();
+
+
+--
+-- TOC entry 4130 (class 2620 OID 48204)
+-- Name: jobs trg_jobs_updated_at; Type: TRIGGER; Schema: ops; Owner: postgres
+--
+
+CREATE TRIGGER trg_jobs_updated_at BEFORE UPDATE ON ops.jobs FOR EACH ROW EXECUTE FUNCTION core.set_updated_at();
+
+
+--
+-- TOC entry 4122 (class 2606 OID 48197)
+-- Name: qa_citations qa_citations_chunk_id_fkey; Type: FK CONSTRAINT; Schema: audit; Owner: postgres
+--
+
+ALTER TABLE ONLY audit.qa_citations
+    ADD CONSTRAINT qa_citations_chunk_id_fkey FOREIGN KEY (chunk_id) REFERENCES kg.chunks(id) ON DELETE RESTRICT;
+
+
+--
+-- TOC entry 4123 (class 2606 OID 48192)
+-- Name: qa_citations qa_citations_turn_id_fkey; Type: FK CONSTRAINT; Schema: audit; Owner: postgres
+--
+
+ALTER TABLE ONLY audit.qa_citations
+    ADD CONSTRAINT qa_citations_turn_id_fkey FOREIGN KEY (turn_id) REFERENCES audit.qa_turns(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4119 (class 2606 OID 48157)
+-- Name: qa_sessions qa_sessions_tenant_id_fkey; Type: FK CONSTRAINT; Schema: audit; Owner: postgres
+--
+
+ALTER TABLE ONLY audit.qa_sessions
+    ADD CONSTRAINT qa_sessions_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4120 (class 2606 OID 48178)
+-- Name: qa_turns qa_turns_question_msg_version_id_fkey; Type: FK CONSTRAINT; Schema: audit; Owner: postgres
+--
+
+ALTER TABLE ONLY audit.qa_turns
+    ADD CONSTRAINT qa_turns_question_msg_version_id_fkey FOREIGN KEY (question_msg_version_id) REFERENCES tg.message_versions(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 4121 (class 2606 OID 48173)
+-- Name: qa_turns qa_turns_session_id_fkey; Type: FK CONSTRAINT; Schema: audit; Owner: postgres
+--
+
+ALTER TABLE ONLY audit.qa_turns
+    ADD CONSTRAINT qa_turns_session_id_fkey FOREIGN KEY (session_id) REFERENCES audit.qa_sessions(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4109 (class 2606 OID 48020)
+-- Name: documents documents_file_unique_id_fkey; Type: FK CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.documents
+    ADD CONSTRAINT documents_file_unique_id_fkey FOREIGN KEY (file_unique_id) REFERENCES tg.files(file_unique_id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 4110 (class 2606 OID 48015)
+-- Name: documents documents_message_version_id_fkey; Type: FK CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.documents
+    ADD CONSTRAINT documents_message_version_id_fkey FOREIGN KEY (message_version_id) REFERENCES tg.message_versions(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 4111 (class 2606 OID 48010)
+-- Name: documents documents_tenant_id_fkey; Type: FK CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.documents
+    ADD CONSTRAINT documents_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4112 (class 2606 OID 48025)
+-- Name: documents documents_url_id_fkey; Type: FK CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.documents
+    ADD CONSTRAINT documents_url_id_fkey FOREIGN KEY (url_id) REFERENCES content.urls(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 4108 (class 2606 OID 47977)
+-- Name: url_fetches url_fetches_url_id_fkey; Type: FK CONSTRAINT; Schema: content; Owner: postgres
+--
+
+ALTER TABLE ONLY content.url_fetches
+    ADD CONSTRAINT url_fetches_url_id_fkey FOREIGN KEY (url_id) REFERENCES content.urls(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4124 (class 2606 OID 48257)
+-- Name: bot_transport_config bot_transport_config_bot_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.bot_transport_config
+    ADD CONSTRAINT bot_transport_config_bot_id_fkey FOREIGN KEY (bot_id) REFERENCES core.bots(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4125 (class 2606 OID 48275)
+-- Name: bot_transport_state bot_transport_state_bot_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.bot_transport_state
+    ADD CONSTRAINT bot_transport_state_bot_id_fkey FOREIGN KEY (bot_id) REFERENCES core.bots(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4088 (class 2606 OID 47681)
+-- Name: bots bots_tenant_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.bots
+    ADD CONSTRAINT bots_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4091 (class 2606 OID 47729)
+-- Name: chat_policies chat_policies_tenant_id_chat_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.chat_policies
+    ADD CONSTRAINT chat_policies_tenant_id_chat_id_fkey FOREIGN KEY (tenant_id, chat_id) REFERENCES core.tenant_chats(tenant_id, chat_id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4090 (class 2606 OID 47710)
+-- Name: tenant_chats tenant_chats_tenant_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.tenant_chats
+    ADD CONSTRAINT tenant_chats_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4089 (class 2606 OID 47695)
+-- Name: tenant_users tenant_users_tenant_id_fkey; Type: FK CONSTRAINT; Schema: core; Owner: postgres
+--
+
+ALTER TABLE ONLY core.tenant_users
+    ADD CONSTRAINT tenant_users_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4114 (class 2606 OID 48078)
+-- Name: chunk_embeddings_1536 chunk_embeddings_1536_chunk_id_fkey; Type: FK CONSTRAINT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.chunk_embeddings_1536
+    ADD CONSTRAINT chunk_embeddings_1536_chunk_id_fkey FOREIGN KEY (chunk_id) REFERENCES kg.chunks(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4115 (class 2606 OID 48083)
+-- Name: chunk_embeddings_1536 chunk_embeddings_1536_model_id_fkey; Type: FK CONSTRAINT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.chunk_embeddings_1536
+    ADD CONSTRAINT chunk_embeddings_1536_model_id_fkey FOREIGN KEY (model_id) REFERENCES kg.embedding_models(id) ON DELETE RESTRICT;
+
+
+--
+-- TOC entry 4113 (class 2606 OID 48049)
+-- Name: chunks chunks_document_id_fkey; Type: FK CONSTRAINT; Schema: kg; Owner: postgres
+--
+
+ALTER TABLE ONLY kg.chunks
+    ADD CONSTRAINT chunks_document_id_fkey FOREIGN KEY (document_id) REFERENCES content.documents(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4127 (class 2606 OID 48312)
+-- Name: bot_transport_events bot_transport_events_bot_id_fkey; Type: FK CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.bot_transport_events
+    ADD CONSTRAINT bot_transport_events_bot_id_fkey FOREIGN KEY (bot_id) REFERENCES core.bots(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4118 (class 2606 OID 48140)
+-- Name: errors errors_tenant_id_fkey; Type: FK CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.errors
+    ADD CONSTRAINT errors_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE SET NULL;
+
+
+--
+-- TOC entry 4117 (class 2606 OID 48124)
+-- Name: job_runs job_runs_job_id_fkey; Type: FK CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.job_runs
+    ADD CONSTRAINT job_runs_job_id_fkey FOREIGN KEY (job_id) REFERENCES ops.jobs(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4116 (class 2606 OID 48106)
+-- Name: jobs jobs_tenant_id_fkey; Type: FK CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.jobs
+    ADD CONSTRAINT jobs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4126 (class 2606 OID 48292)
+-- Name: webhook_health_snapshots webhook_health_snapshots_bot_id_fkey; Type: FK CONSTRAINT; Schema: ops; Owner: postgres
+--
+
+ALTER TABLE ONLY ops.webhook_health_snapshots
+    ADD CONSTRAINT webhook_health_snapshots_bot_id_fkey FOREIGN KEY (bot_id) REFERENCES core.bots(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4094 (class 2606 OID 47764)
+-- Name: telegram_update_keys telegram_update_keys_bot_id_fkey; Type: FK CONSTRAINT; Schema: raw; Owner: postgres
+--
+
+ALTER TABLE ONLY raw.telegram_update_keys
+    ADD CONSTRAINT telegram_update_keys_bot_id_fkey FOREIGN KEY (bot_id) REFERENCES core.bots(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4095 (class 2606 OID 47759)
+-- Name: telegram_update_keys telegram_update_keys_tenant_id_fkey; Type: FK CONSTRAINT; Schema: raw; Owner: postgres
+--
+
+ALTER TABLE ONLY raw.telegram_update_keys
+    ADD CONSTRAINT telegram_update_keys_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4092 (class 2606 OID 47747)
+-- Name: telegram_updates telegram_updates_bot_id_fkey; Type: FK CONSTRAINT; Schema: raw; Owner: postgres
+--
+
+ALTER TABLE raw.telegram_updates
+    ADD CONSTRAINT telegram_updates_bot_id_fkey FOREIGN KEY (bot_id) REFERENCES core.bots(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4093 (class 2606 OID 47742)
+-- Name: telegram_updates telegram_updates_tenant_id_fkey; Type: FK CONSTRAINT; Schema: raw; Owner: postgres
+--
+
+ALTER TABLE raw.telegram_updates
+    ADD CONSTRAINT telegram_updates_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4102 (class 2606 OID 47917)
+-- Name: chat_member_events chat_member_events_chat_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_member_events
+    ADD CONSTRAINT chat_member_events_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES tg.chats(chat_id);
+
+
+--
+-- TOC entry 4103 (class 2606 OID 47912)
+-- Name: chat_member_events chat_member_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_member_events
+    ADD CONSTRAINT chat_member_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4104 (class 2606 OID 47922)
+-- Name: chat_member_events chat_member_events_tg_user_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_member_events
+    ADD CONSTRAINT chat_member_events_tg_user_id_fkey FOREIGN KEY (tg_user_id) REFERENCES tg.users(tg_user_id);
+
+
+--
+-- TOC entry 4105 (class 2606 OID 47942)
+-- Name: chat_memberships_current chat_memberships_current_chat_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_memberships_current
+    ADD CONSTRAINT chat_memberships_current_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES tg.chats(chat_id);
+
+
+--
+-- TOC entry 4106 (class 2606 OID 47937)
+-- Name: chat_memberships_current chat_memberships_current_tenant_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_memberships_current
+    ADD CONSTRAINT chat_memberships_current_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4107 (class 2606 OID 47947)
+-- Name: chat_memberships_current chat_memberships_current_tg_user_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.chat_memberships_current
+    ADD CONSTRAINT chat_memberships_current_tg_user_id_fkey FOREIGN KEY (tg_user_id) REFERENCES tg.users(tg_user_id);
+
+
+--
+-- TOC entry 4101 (class 2606 OID 47894)
+-- Name: file_instances file_instances_file_unique_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.file_instances
+    ADD CONSTRAINT file_instances_file_unique_id_fkey FOREIGN KEY (file_unique_id) REFERENCES tg.files(file_unique_id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4096 (class 2606 OID 47853)
+-- Name: messages fk_messages_current_version; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.messages
+    ADD CONSTRAINT fk_messages_current_version FOREIGN KEY (current_version_id) REFERENCES tg.message_versions(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- TOC entry 4100 (class 2606 OID 47869)
+-- Name: message_attachments message_attachments_message_version_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.message_attachments
+    ADD CONSTRAINT message_attachments_message_version_id_fkey FOREIGN KEY (message_version_id) REFERENCES tg.message_versions(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4099 (class 2606 OID 47846)
+-- Name: message_versions message_versions_message_fk_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.message_versions
+    ADD CONSTRAINT message_versions_message_fk_fkey FOREIGN KEY (message_fk) REFERENCES tg.messages(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4097 (class 2606 OID 47827)
+-- Name: messages messages_chat_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.messages
+    ADD CONSTRAINT messages_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES tg.chats(chat_id);
+
+
+--
+-- TOC entry 4098 (class 2606 OID 47822)
+-- Name: messages messages_tenant_id_fkey; Type: FK CONSTRAINT; Schema: tg; Owner: postgres
+--
+
+ALTER TABLE ONLY tg.messages
+    ADD CONSTRAINT messages_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES core.tenants(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 4283 (class 0 OID 0)
+-- Dependencies: 16
+-- Name: SCHEMA core; Type: ACL; Schema: -; Owner: postgres
+--
+
+GRANT USAGE ON SCHEMA core TO service_role;
+
+
+--
+-- TOC entry 4284 (class 0 OID 0)
+-- Dependencies: 17
+-- Name: SCHEMA ops; Type: ACL; Schema: -; Owner: postgres
+--
+
+GRANT USAGE ON SCHEMA ops TO n8n;
+GRANT USAGE ON SCHEMA ops TO service_role;
+
+
+--
+-- TOC entry 4285 (class 0 OID 0)
+-- Dependencies: 15
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
+--
+
+GRANT USAGE ON SCHEMA public TO service_role;
+
+
+--
+-- TOC entry 4286 (class 0 OID 0)
+-- Dependencies: 13
+-- Name: SCHEMA raw; Type: ACL; Schema: -; Owner: postgres
+--
+
+GRANT USAGE ON SCHEMA raw TO service_role;
+
+
+--
+-- TOC entry 4287 (class 0 OID 0)
+-- Dependencies: 14
+-- Name: SCHEMA tg; Type: ACL; Schema: -; Owner: postgres
+--
+
+GRANT USAGE ON SCHEMA tg TO service_role;
+
+
+--
+-- TOC entry 4293 (class 0 OID 0)
+-- Dependencies: 310
+-- Name: FUNCTION citextin(cstring); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citextin(cstring) TO service_role;
+
+
+--
+-- TOC entry 4294 (class 0 OID 0)
+-- Dependencies: 327
+-- Name: FUNCTION citextout(public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citextout(public.citext) TO service_role;
+
+
+--
+-- TOC entry 4295 (class 0 OID 0)
+-- Dependencies: 471
+-- Name: FUNCTION citextrecv(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citextrecv(internal) TO service_role;
+
+
+--
+-- TOC entry 4296 (class 0 OID 0)
+-- Dependencies: 299
+-- Name: FUNCTION citextsend(public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citextsend(public.citext) TO service_role;
+
+
+--
+-- TOC entry 4297 (class 0 OID 0)
+-- Dependencies: 488
+-- Name: FUNCTION gtrgm_in(cstring); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_in(cstring) TO service_role;
+
+
+--
+-- TOC entry 4298 (class 0 OID 0)
+-- Dependencies: 448
+-- Name: FUNCTION gtrgm_out(public.gtrgm); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_out(public.gtrgm) TO service_role;
+
+
+--
+-- TOC entry 4299 (class 0 OID 0)
+-- Dependencies: 392
+-- Name: FUNCTION halfvec_in(cstring, oid, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_in(cstring, oid, integer) TO service_role;
+
+
+--
+-- TOC entry 4300 (class 0 OID 0)
+-- Dependencies: 527
+-- Name: FUNCTION halfvec_out(public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_out(public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4301 (class 0 OID 0)
+-- Dependencies: 485
+-- Name: FUNCTION halfvec_recv(internal, oid, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_recv(internal, oid, integer) TO service_role;
+
+
+--
+-- TOC entry 4302 (class 0 OID 0)
+-- Dependencies: 342
+-- Name: FUNCTION halfvec_send(public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_send(public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4303 (class 0 OID 0)
+-- Dependencies: 436
+-- Name: FUNCTION halfvec_typmod_in(cstring[]); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_typmod_in(cstring[]) TO service_role;
+
+
+--
+-- TOC entry 4304 (class 0 OID 0)
+-- Dependencies: 492
+-- Name: FUNCTION sparsevec_in(cstring, oid, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_in(cstring, oid, integer) TO service_role;
+
+
+--
+-- TOC entry 4305 (class 0 OID 0)
+-- Dependencies: 399
+-- Name: FUNCTION sparsevec_out(public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_out(public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4306 (class 0 OID 0)
+-- Dependencies: 404
+-- Name: FUNCTION sparsevec_recv(internal, oid, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_recv(internal, oid, integer) TO service_role;
+
+
+--
+-- TOC entry 4307 (class 0 OID 0)
+-- Dependencies: 283
+-- Name: FUNCTION sparsevec_send(public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_send(public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4308 (class 0 OID 0)
+-- Dependencies: 465
+-- Name: FUNCTION sparsevec_typmod_in(cstring[]); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_typmod_in(cstring[]) TO service_role;
+
+
+--
+-- TOC entry 4309 (class 0 OID 0)
+-- Dependencies: 444
+-- Name: FUNCTION vector_in(cstring, oid, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_in(cstring, oid, integer) TO service_role;
+
+
+--
+-- TOC entry 4310 (class 0 OID 0)
+-- Dependencies: 317
+-- Name: FUNCTION vector_out(public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_out(public.vector) TO service_role;
+
+
+--
+-- TOC entry 4311 (class 0 OID 0)
+-- Dependencies: 446
+-- Name: FUNCTION vector_recv(internal, oid, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_recv(internal, oid, integer) TO service_role;
+
+
+--
+-- TOC entry 4312 (class 0 OID 0)
+-- Dependencies: 439
+-- Name: FUNCTION vector_send(public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_send(public.vector) TO service_role;
+
+
+--
+-- TOC entry 4313 (class 0 OID 0)
+-- Dependencies: 410
+-- Name: FUNCTION vector_typmod_in(cstring[]); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_typmod_in(cstring[]) TO service_role;
+
+
+--
+-- TOC entry 4314 (class 0 OID 0)
+-- Dependencies: 522
+-- Name: FUNCTION array_to_halfvec(real[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_halfvec(real[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4315 (class 0 OID 0)
+-- Dependencies: 491
+-- Name: FUNCTION array_to_sparsevec(real[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_sparsevec(real[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4316 (class 0 OID 0)
+-- Dependencies: 378
+-- Name: FUNCTION array_to_vector(real[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_vector(real[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4317 (class 0 OID 0)
+-- Dependencies: 508
+-- Name: FUNCTION array_to_halfvec(double precision[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_halfvec(double precision[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4318 (class 0 OID 0)
+-- Dependencies: 388
+-- Name: FUNCTION array_to_sparsevec(double precision[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_sparsevec(double precision[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4319 (class 0 OID 0)
+-- Dependencies: 498
+-- Name: FUNCTION array_to_vector(double precision[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_vector(double precision[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4320 (class 0 OID 0)
+-- Dependencies: 420
+-- Name: FUNCTION array_to_halfvec(integer[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_halfvec(integer[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4321 (class 0 OID 0)
+-- Dependencies: 421
+-- Name: FUNCTION array_to_sparsevec(integer[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_sparsevec(integer[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4322 (class 0 OID 0)
+-- Dependencies: 309
+-- Name: FUNCTION array_to_vector(integer[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_vector(integer[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4323 (class 0 OID 0)
+-- Dependencies: 512
+-- Name: FUNCTION array_to_halfvec(numeric[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_halfvec(numeric[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4324 (class 0 OID 0)
+-- Dependencies: 325
+-- Name: FUNCTION array_to_sparsevec(numeric[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_sparsevec(numeric[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4325 (class 0 OID 0)
+-- Dependencies: 499
+-- Name: FUNCTION array_to_vector(numeric[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.array_to_vector(numeric[], integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4326 (class 0 OID 0)
+-- Dependencies: 376
+-- Name: FUNCTION citext(boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext(boolean) TO service_role;
+
+
+--
+-- TOC entry 4327 (class 0 OID 0)
+-- Dependencies: 496
+-- Name: FUNCTION citext(character); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext(character) TO service_role;
+
+
+--
+-- TOC entry 4328 (class 0 OID 0)
+-- Dependencies: 365
+-- Name: FUNCTION halfvec_to_float4(public.halfvec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_to_float4(public.halfvec, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4329 (class 0 OID 0)
+-- Dependencies: 443
+-- Name: FUNCTION halfvec(public.halfvec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec(public.halfvec, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4330 (class 0 OID 0)
+-- Dependencies: 431
+-- Name: FUNCTION halfvec_to_sparsevec(public.halfvec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_to_sparsevec(public.halfvec, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4331 (class 0 OID 0)
+-- Dependencies: 484
+-- Name: FUNCTION halfvec_to_vector(public.halfvec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_to_vector(public.halfvec, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4332 (class 0 OID 0)
+-- Dependencies: 394
+-- Name: FUNCTION citext(inet); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext(inet) TO service_role;
+
+
+--
+-- TOC entry 4333 (class 0 OID 0)
+-- Dependencies: 302
+-- Name: FUNCTION sparsevec_to_halfvec(public.sparsevec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_to_halfvec(public.sparsevec, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4334 (class 0 OID 0)
+-- Dependencies: 343
+-- Name: FUNCTION sparsevec(public.sparsevec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec(public.sparsevec, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4335 (class 0 OID 0)
+-- Dependencies: 460
+-- Name: FUNCTION sparsevec_to_vector(public.sparsevec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_to_vector(public.sparsevec, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4336 (class 0 OID 0)
+-- Dependencies: 355
+-- Name: FUNCTION vector_to_float4(public.vector, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_to_float4(public.vector, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4337 (class 0 OID 0)
+-- Dependencies: 510
+-- Name: FUNCTION vector_to_halfvec(public.vector, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_to_halfvec(public.vector, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4338 (class 0 OID 0)
+-- Dependencies: 303
+-- Name: FUNCTION vector_to_sparsevec(public.vector, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_to_sparsevec(public.vector, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4339 (class 0 OID 0)
+-- Dependencies: 372
+-- Name: FUNCTION vector(public.vector, integer, boolean); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector(public.vector, integer, boolean) TO service_role;
+
+
+--
+-- TOC entry 4340 (class 0 OID 0)
+-- Dependencies: 406
+-- Name: FUNCTION set_updated_at(); Type: ACL; Schema: core; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION core.set_updated_at() TO service_role;
+
+
+--
+-- TOC entry 4341 (class 0 OID 0)
+-- Dependencies: 481
+-- Name: FUNCTION tg_set_updated_at(); Type: ACL; Schema: core; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION core.tg_set_updated_at() TO service_role;
+
+
+--
+-- TOC entry 4342 (class 0 OID 0)
+-- Dependencies: 408
+-- Name: FUNCTION armor(bytea); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.armor(bytea) TO service_role;
+
+
+--
+-- TOC entry 4343 (class 0 OID 0)
+-- Dependencies: 356
+-- Name: FUNCTION armor(bytea, text[], text[]); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.armor(bytea, text[], text[]) TO service_role;
+
+
+--
+-- TOC entry 4344 (class 0 OID 0)
+-- Dependencies: 412
+-- Name: FUNCTION binary_quantize(public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.binary_quantize(public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4345 (class 0 OID 0)
+-- Dependencies: 497
+-- Name: FUNCTION binary_quantize(public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.binary_quantize(public.vector) TO service_role;
+
+
+--
+-- TOC entry 4346 (class 0 OID 0)
+-- Dependencies: 415
+-- Name: FUNCTION calculate_unit_economics(p_product_id uuid, p_sale_price numeric, p_cost_price numeric); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.calculate_unit_economics(p_product_id uuid, p_sale_price numeric, p_cost_price numeric) TO service_role;
+
+
+--
+-- TOC entry 4347 (class 0 OID 0)
+-- Dependencies: 308
+-- Name: FUNCTION citext_cmp(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_cmp(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4348 (class 0 OID 0)
+-- Dependencies: 321
+-- Name: FUNCTION citext_eq(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_eq(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4349 (class 0 OID 0)
+-- Dependencies: 396
+-- Name: FUNCTION citext_ge(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_ge(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4350 (class 0 OID 0)
+-- Dependencies: 349
+-- Name: FUNCTION citext_gt(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_gt(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4351 (class 0 OID 0)
+-- Dependencies: 466
+-- Name: FUNCTION citext_hash(public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_hash(public.citext) TO service_role;
+
+
+--
+-- TOC entry 4352 (class 0 OID 0)
+-- Dependencies: 467
+-- Name: FUNCTION citext_hash_extended(public.citext, bigint); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_hash_extended(public.citext, bigint) TO service_role;
+
+
+--
+-- TOC entry 4353 (class 0 OID 0)
+-- Dependencies: 526
+-- Name: FUNCTION citext_larger(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_larger(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4354 (class 0 OID 0)
+-- Dependencies: 461
+-- Name: FUNCTION citext_le(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_le(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4355 (class 0 OID 0)
+-- Dependencies: 516
+-- Name: FUNCTION citext_lt(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_lt(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4356 (class 0 OID 0)
+-- Dependencies: 311
+-- Name: FUNCTION citext_ne(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_ne(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4357 (class 0 OID 0)
+-- Dependencies: 360
+-- Name: FUNCTION citext_pattern_cmp(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_pattern_cmp(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4358 (class 0 OID 0)
+-- Dependencies: 455
+-- Name: FUNCTION citext_pattern_ge(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_pattern_ge(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4359 (class 0 OID 0)
+-- Dependencies: 469
+-- Name: FUNCTION citext_pattern_gt(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_pattern_gt(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4360 (class 0 OID 0)
+-- Dependencies: 403
+-- Name: FUNCTION citext_pattern_le(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_pattern_le(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4361 (class 0 OID 0)
+-- Dependencies: 367
+-- Name: FUNCTION citext_pattern_lt(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_pattern_lt(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4362 (class 0 OID 0)
+-- Dependencies: 416
+-- Name: FUNCTION citext_smaller(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.citext_smaller(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4363 (class 0 OID 0)
+-- Dependencies: 402
+-- Name: FUNCTION cosine_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.cosine_distance(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4364 (class 0 OID 0)
+-- Dependencies: 489
+-- Name: FUNCTION cosine_distance(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.cosine_distance(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4365 (class 0 OID 0)
+-- Dependencies: 456
+-- Name: FUNCTION cosine_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.cosine_distance(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4366 (class 0 OID 0)
+-- Dependencies: 334
+-- Name: FUNCTION crypt(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.crypt(text, text) TO service_role;
+
+
+--
+-- TOC entry 4367 (class 0 OID 0)
+-- Dependencies: 330
+-- Name: FUNCTION dearmor(text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.dearmor(text) TO service_role;
+
+
+--
+-- TOC entry 4368 (class 0 OID 0)
+-- Dependencies: 445
+-- Name: FUNCTION decrypt(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.decrypt(bytea, bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4369 (class 0 OID 0)
+-- Dependencies: 393
+-- Name: FUNCTION decrypt_iv(bytea, bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.decrypt_iv(bytea, bytea, bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4370 (class 0 OID 0)
+-- Dependencies: 364
+-- Name: FUNCTION digest(bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.digest(bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4371 (class 0 OID 0)
+-- Dependencies: 435
+-- Name: FUNCTION digest(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.digest(text, text) TO service_role;
+
+
+--
+-- TOC entry 4372 (class 0 OID 0)
+-- Dependencies: 340
+-- Name: FUNCTION encrypt(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.encrypt(bytea, bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4373 (class 0 OID 0)
+-- Dependencies: 509
+-- Name: FUNCTION encrypt_iv(bytea, bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.encrypt_iv(bytea, bytea, bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4374 (class 0 OID 0)
+-- Dependencies: 440
+-- Name: FUNCTION gen_random_bytes(integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gen_random_bytes(integer) TO service_role;
+
+
+--
+-- TOC entry 4375 (class 0 OID 0)
+-- Dependencies: 500
+-- Name: FUNCTION gen_random_uuid(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gen_random_uuid() TO service_role;
+
+
+--
+-- TOC entry 4376 (class 0 OID 0)
+-- Dependencies: 391
+-- Name: FUNCTION gen_salt(text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gen_salt(text) TO service_role;
+
+
+--
+-- TOC entry 4377 (class 0 OID 0)
+-- Dependencies: 332
+-- Name: FUNCTION gen_salt(text, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gen_salt(text, integer) TO service_role;
+
+
+--
+-- TOC entry 4378 (class 0 OID 0)
+-- Dependencies: 470
+-- Name: FUNCTION gin_extract_query_trgm(text, internal, smallint, internal, internal, internal, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gin_extract_query_trgm(text, internal, smallint, internal, internal, internal, internal) TO service_role;
+
+
+--
+-- TOC entry 4379 (class 0 OID 0)
+-- Dependencies: 352
+-- Name: FUNCTION gin_extract_value_trgm(text, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gin_extract_value_trgm(text, internal) TO service_role;
+
+
+--
+-- TOC entry 4380 (class 0 OID 0)
+-- Dependencies: 386
+-- Name: FUNCTION gin_trgm_consistent(internal, smallint, text, integer, internal, internal, internal, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gin_trgm_consistent(internal, smallint, text, integer, internal, internal, internal, internal) TO service_role;
+
+
+--
+-- TOC entry 4381 (class 0 OID 0)
+-- Dependencies: 468
+-- Name: FUNCTION gin_trgm_triconsistent(internal, smallint, text, integer, internal, internal, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gin_trgm_triconsistent(internal, smallint, text, integer, internal, internal, internal) TO service_role;
+
+
+--
+-- TOC entry 4382 (class 0 OID 0)
+-- Dependencies: 480
+-- Name: FUNCTION gtrgm_compress(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_compress(internal) TO service_role;
+
+
+--
+-- TOC entry 4383 (class 0 OID 0)
+-- Dependencies: 322
+-- Name: FUNCTION gtrgm_consistent(internal, text, smallint, oid, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_consistent(internal, text, smallint, oid, internal) TO service_role;
+
+
+--
+-- TOC entry 4384 (class 0 OID 0)
+-- Dependencies: 369
+-- Name: FUNCTION gtrgm_decompress(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_decompress(internal) TO service_role;
+
+
+--
+-- TOC entry 4385 (class 0 OID 0)
+-- Dependencies: 345
+-- Name: FUNCTION gtrgm_distance(internal, text, smallint, oid, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_distance(internal, text, smallint, oid, internal) TO service_role;
+
+
+--
+-- TOC entry 4386 (class 0 OID 0)
+-- Dependencies: 350
+-- Name: FUNCTION gtrgm_options(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_options(internal) TO service_role;
+
+
+--
+-- TOC entry 4387 (class 0 OID 0)
+-- Dependencies: 429
+-- Name: FUNCTION gtrgm_penalty(internal, internal, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_penalty(internal, internal, internal) TO service_role;
+
+
+--
+-- TOC entry 4388 (class 0 OID 0)
+-- Dependencies: 280
+-- Name: FUNCTION gtrgm_picksplit(internal, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_picksplit(internal, internal) TO service_role;
+
+
+--
+-- TOC entry 4389 (class 0 OID 0)
+-- Dependencies: 307
+-- Name: FUNCTION gtrgm_same(public.gtrgm, public.gtrgm, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_same(public.gtrgm, public.gtrgm, internal) TO service_role;
+
+
+--
+-- TOC entry 4390 (class 0 OID 0)
+-- Dependencies: 368
+-- Name: FUNCTION gtrgm_union(internal, internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.gtrgm_union(internal, internal) TO service_role;
+
+
+--
+-- TOC entry 4391 (class 0 OID 0)
+-- Dependencies: 382
+-- Name: FUNCTION halfvec_accum(double precision[], public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_accum(double precision[], public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4392 (class 0 OID 0)
+-- Dependencies: 335
+-- Name: FUNCTION halfvec_add(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_add(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4393 (class 0 OID 0)
+-- Dependencies: 487
+-- Name: FUNCTION halfvec_avg(double precision[]); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_avg(double precision[]) TO service_role;
+
+
+--
+-- TOC entry 4394 (class 0 OID 0)
+-- Dependencies: 344
+-- Name: FUNCTION halfvec_cmp(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_cmp(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4395 (class 0 OID 0)
+-- Dependencies: 464
+-- Name: FUNCTION halfvec_combine(double precision[], double precision[]); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_combine(double precision[], double precision[]) TO service_role;
+
+
+--
+-- TOC entry 4396 (class 0 OID 0)
+-- Dependencies: 292
+-- Name: FUNCTION halfvec_concat(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_concat(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4397 (class 0 OID 0)
+-- Dependencies: 379
+-- Name: FUNCTION halfvec_eq(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_eq(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4398 (class 0 OID 0)
+-- Dependencies: 428
+-- Name: FUNCTION halfvec_ge(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_ge(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4399 (class 0 OID 0)
+-- Dependencies: 286
+-- Name: FUNCTION halfvec_gt(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_gt(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4400 (class 0 OID 0)
+-- Dependencies: 291
+-- Name: FUNCTION halfvec_l2_squared_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_l2_squared_distance(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4401 (class 0 OID 0)
+-- Dependencies: 472
+-- Name: FUNCTION halfvec_le(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_le(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4402 (class 0 OID 0)
+-- Dependencies: 362
+-- Name: FUNCTION halfvec_lt(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_lt(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4403 (class 0 OID 0)
+-- Dependencies: 478
+-- Name: FUNCTION halfvec_mul(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_mul(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4404 (class 0 OID 0)
+-- Dependencies: 337
+-- Name: FUNCTION halfvec_ne(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_ne(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4405 (class 0 OID 0)
+-- Dependencies: 427
+-- Name: FUNCTION halfvec_negative_inner_product(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_negative_inner_product(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4406 (class 0 OID 0)
+-- Dependencies: 441
+-- Name: FUNCTION halfvec_spherical_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_spherical_distance(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4407 (class 0 OID 0)
+-- Dependencies: 411
+-- Name: FUNCTION halfvec_sub(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.halfvec_sub(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4408 (class 0 OID 0)
+-- Dependencies: 505
+-- Name: FUNCTION hamming_distance(bit, bit); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.hamming_distance(bit, bit) TO service_role;
+
+
+--
+-- TOC entry 4409 (class 0 OID 0)
+-- Dependencies: 383
+-- Name: FUNCTION hmac(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.hmac(bytea, bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4410 (class 0 OID 0)
+-- Dependencies: 425
+-- Name: FUNCTION hmac(text, text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.hmac(text, text, text) TO service_role;
+
+
+--
+-- TOC entry 4411 (class 0 OID 0)
+-- Dependencies: 521
+-- Name: FUNCTION hnsw_bit_support(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.hnsw_bit_support(internal) TO service_role;
+
+
+--
+-- TOC entry 4412 (class 0 OID 0)
+-- Dependencies: 517
+-- Name: FUNCTION hnsw_halfvec_support(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.hnsw_halfvec_support(internal) TO service_role;
+
+
+--
+-- TOC entry 4413 (class 0 OID 0)
+-- Dependencies: 316
+-- Name: FUNCTION hnsw_sparsevec_support(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.hnsw_sparsevec_support(internal) TO service_role;
+
+
+--
+-- TOC entry 4414 (class 0 OID 0)
+-- Dependencies: 395
+-- Name: FUNCTION hnswhandler(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.hnswhandler(internal) TO service_role;
+
+
+--
+-- TOC entry 4415 (class 0 OID 0)
+-- Dependencies: 298
+-- Name: FUNCTION inner_product(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.inner_product(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4416 (class 0 OID 0)
+-- Dependencies: 290
+-- Name: FUNCTION inner_product(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.inner_product(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4417 (class 0 OID 0)
+-- Dependencies: 338
+-- Name: FUNCTION inner_product(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.inner_product(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4418 (class 0 OID 0)
+-- Dependencies: 413
+-- Name: FUNCTION ivfflat_bit_support(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.ivfflat_bit_support(internal) TO service_role;
+
+
+--
+-- TOC entry 4419 (class 0 OID 0)
+-- Dependencies: 374
+-- Name: FUNCTION ivfflat_halfvec_support(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.ivfflat_halfvec_support(internal) TO service_role;
+
+
+--
+-- TOC entry 4420 (class 0 OID 0)
+-- Dependencies: 282
+-- Name: FUNCTION ivfflathandler(internal); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.ivfflathandler(internal) TO service_role;
+
+
+--
+-- TOC entry 4421 (class 0 OID 0)
+-- Dependencies: 312
+-- Name: FUNCTION jaccard_distance(bit, bit); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.jaccard_distance(bit, bit) TO service_role;
+
+
+--
+-- TOC entry 4422 (class 0 OID 0)
+-- Dependencies: 281
+-- Name: FUNCTION l1_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l1_distance(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4423 (class 0 OID 0)
+-- Dependencies: 390
+-- Name: FUNCTION l1_distance(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l1_distance(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4424 (class 0 OID 0)
+-- Dependencies: 502
+-- Name: FUNCTION l1_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l1_distance(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4425 (class 0 OID 0)
+-- Dependencies: 474
+-- Name: FUNCTION l2_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l2_distance(public.halfvec, public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4426 (class 0 OID 0)
+-- Dependencies: 398
+-- Name: FUNCTION l2_distance(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l2_distance(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4427 (class 0 OID 0)
+-- Dependencies: 525
+-- Name: FUNCTION l2_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l2_distance(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4428 (class 0 OID 0)
+-- Dependencies: 506
+-- Name: FUNCTION l2_norm(public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l2_norm(public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4429 (class 0 OID 0)
+-- Dependencies: 424
+-- Name: FUNCTION l2_norm(public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l2_norm(public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4430 (class 0 OID 0)
+-- Dependencies: 305
+-- Name: FUNCTION l2_normalize(public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l2_normalize(public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4431 (class 0 OID 0)
+-- Dependencies: 462
+-- Name: FUNCTION l2_normalize(public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l2_normalize(public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4432 (class 0 OID 0)
+-- Dependencies: 387
+-- Name: FUNCTION l2_normalize(public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.l2_normalize(public.vector) TO service_role;
+
+
+--
+-- TOC entry 4433 (class 0 OID 0)
+-- Dependencies: 473
+-- Name: FUNCTION pgp_armor_headers(text, OUT key text, OUT value text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_armor_headers(text, OUT key text, OUT value text) TO service_role;
+
+
+--
+-- TOC entry 4434 (class 0 OID 0)
+-- Dependencies: 288
+-- Name: FUNCTION pgp_key_id(bytea); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_key_id(bytea) TO service_role;
+
+
+--
+-- TOC entry 4435 (class 0 OID 0)
+-- Dependencies: 414
+-- Name: FUNCTION pgp_pub_decrypt(bytea, bytea); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_decrypt(bytea, bytea) TO service_role;
+
+
+--
+-- TOC entry 4436 (class 0 OID 0)
+-- Dependencies: 328
+-- Name: FUNCTION pgp_pub_decrypt(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_decrypt(bytea, bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4437 (class 0 OID 0)
+-- Dependencies: 358
+-- Name: FUNCTION pgp_pub_decrypt(bytea, bytea, text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_decrypt(bytea, bytea, text, text) TO service_role;
+
+
+--
+-- TOC entry 4438 (class 0 OID 0)
+-- Dependencies: 423
+-- Name: FUNCTION pgp_pub_decrypt_bytea(bytea, bytea); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_decrypt_bytea(bytea, bytea) TO service_role;
+
+
+--
+-- TOC entry 4439 (class 0 OID 0)
+-- Dependencies: 432
+-- Name: FUNCTION pgp_pub_decrypt_bytea(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_decrypt_bytea(bytea, bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4440 (class 0 OID 0)
+-- Dependencies: 504
+-- Name: FUNCTION pgp_pub_decrypt_bytea(bytea, bytea, text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_decrypt_bytea(bytea, bytea, text, text) TO service_role;
+
+
+--
+-- TOC entry 4441 (class 0 OID 0)
+-- Dependencies: 329
+-- Name: FUNCTION pgp_pub_encrypt(text, bytea); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_encrypt(text, bytea) TO service_role;
+
+
+--
+-- TOC entry 4442 (class 0 OID 0)
+-- Dependencies: 285
+-- Name: FUNCTION pgp_pub_encrypt(text, bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_encrypt(text, bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4443 (class 0 OID 0)
+-- Dependencies: 336
+-- Name: FUNCTION pgp_pub_encrypt_bytea(bytea, bytea); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_encrypt_bytea(bytea, bytea) TO service_role;
+
+
+--
+-- TOC entry 4444 (class 0 OID 0)
+-- Dependencies: 295
+-- Name: FUNCTION pgp_pub_encrypt_bytea(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_pub_encrypt_bytea(bytea, bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4445 (class 0 OID 0)
+-- Dependencies: 289
+-- Name: FUNCTION pgp_sym_decrypt(bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_sym_decrypt(bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4446 (class 0 OID 0)
+-- Dependencies: 476
+-- Name: FUNCTION pgp_sym_decrypt(bytea, text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_sym_decrypt(bytea, text, text) TO service_role;
+
+
+--
+-- TOC entry 4447 (class 0 OID 0)
+-- Dependencies: 296
+-- Name: FUNCTION pgp_sym_decrypt_bytea(bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_sym_decrypt_bytea(bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4448 (class 0 OID 0)
+-- Dependencies: 304
+-- Name: FUNCTION pgp_sym_decrypt_bytea(bytea, text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_sym_decrypt_bytea(bytea, text, text) TO service_role;
+
+
+--
+-- TOC entry 4449 (class 0 OID 0)
+-- Dependencies: 300
+-- Name: FUNCTION pgp_sym_encrypt(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_sym_encrypt(text, text) TO service_role;
+
+
+--
+-- TOC entry 4450 (class 0 OID 0)
+-- Dependencies: 320
+-- Name: FUNCTION pgp_sym_encrypt(text, text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_sym_encrypt(text, text, text) TO service_role;
+
+
+--
+-- TOC entry 4451 (class 0 OID 0)
+-- Dependencies: 380
+-- Name: FUNCTION pgp_sym_encrypt_bytea(bytea, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_sym_encrypt_bytea(bytea, text) TO service_role;
+
+
+--
+-- TOC entry 4452 (class 0 OID 0)
+-- Dependencies: 371
+-- Name: FUNCTION pgp_sym_encrypt_bytea(bytea, text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.pgp_sym_encrypt_bytea(bytea, text, text) TO service_role;
+
+
+--
+-- TOC entry 4453 (class 0 OID 0)
+-- Dependencies: 452
+-- Name: FUNCTION regexp_match(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_match(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4454 (class 0 OID 0)
+-- Dependencies: 333
+-- Name: FUNCTION regexp_match(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_match(public.citext, public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4455 (class 0 OID 0)
+-- Dependencies: 494
+-- Name: FUNCTION regexp_matches(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_matches(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4456 (class 0 OID 0)
+-- Dependencies: 519
+-- Name: FUNCTION regexp_matches(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_matches(public.citext, public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4457 (class 0 OID 0)
+-- Dependencies: 437
+-- Name: FUNCTION regexp_replace(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_replace(public.citext, public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4458 (class 0 OID 0)
+-- Dependencies: 306
+-- Name: FUNCTION regexp_replace(public.citext, public.citext, text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_replace(public.citext, public.citext, text, text) TO service_role;
+
+
+--
+-- TOC entry 4459 (class 0 OID 0)
+-- Dependencies: 483
+-- Name: FUNCTION regexp_split_to_array(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_split_to_array(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4460 (class 0 OID 0)
+-- Dependencies: 346
+-- Name: FUNCTION regexp_split_to_array(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_split_to_array(public.citext, public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4461 (class 0 OID 0)
+-- Dependencies: 323
+-- Name: FUNCTION regexp_split_to_table(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_split_to_table(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4462 (class 0 OID 0)
+-- Dependencies: 301
+-- Name: FUNCTION regexp_split_to_table(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.regexp_split_to_table(public.citext, public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4463 (class 0 OID 0)
+-- Dependencies: 331
+-- Name: FUNCTION replace(public.citext, public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.replace(public.citext, public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4464 (class 0 OID 0)
+-- Dependencies: 326
+-- Name: FUNCTION search_similar_products(query_embedding public.vector, match_threshold double precision, match_count integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.search_similar_products(query_embedding public.vector, match_threshold double precision, match_count integer) TO service_role;
+
+
+--
+-- TOC entry 4465 (class 0 OID 0)
+-- Dependencies: 401
+-- Name: FUNCTION set_limit(real); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.set_limit(real) TO service_role;
+
+
+--
+-- TOC entry 4466 (class 0 OID 0)
+-- Dependencies: 493
+-- Name: FUNCTION show_limit(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.show_limit() TO service_role;
+
+
+--
+-- TOC entry 4467 (class 0 OID 0)
+-- Dependencies: 475
+-- Name: FUNCTION show_trgm(text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.show_trgm(text) TO service_role;
+
+
+--
+-- TOC entry 4468 (class 0 OID 0)
+-- Dependencies: 419
+-- Name: FUNCTION similarity(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.similarity(text, text) TO service_role;
+
+
+--
+-- TOC entry 4469 (class 0 OID 0)
+-- Dependencies: 313
+-- Name: FUNCTION similarity_dist(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.similarity_dist(text, text) TO service_role;
+
+
+--
+-- TOC entry 4470 (class 0 OID 0)
+-- Dependencies: 315
+-- Name: FUNCTION similarity_op(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.similarity_op(text, text) TO service_role;
+
+
+--
+-- TOC entry 4471 (class 0 OID 0)
+-- Dependencies: 418
+-- Name: FUNCTION sparsevec_cmp(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_cmp(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4472 (class 0 OID 0)
+-- Dependencies: 357
+-- Name: FUNCTION sparsevec_eq(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_eq(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4473 (class 0 OID 0)
+-- Dependencies: 495
+-- Name: FUNCTION sparsevec_ge(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_ge(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4474 (class 0 OID 0)
+-- Dependencies: 351
+-- Name: FUNCTION sparsevec_gt(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_gt(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4475 (class 0 OID 0)
+-- Dependencies: 422
+-- Name: FUNCTION sparsevec_l2_squared_distance(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_l2_squared_distance(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4476 (class 0 OID 0)
+-- Dependencies: 513
+-- Name: FUNCTION sparsevec_le(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_le(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4477 (class 0 OID 0)
+-- Dependencies: 482
+-- Name: FUNCTION sparsevec_lt(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_lt(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4478 (class 0 OID 0)
+-- Dependencies: 284
+-- Name: FUNCTION sparsevec_ne(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_ne(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4479 (class 0 OID 0)
+-- Dependencies: 520
+-- Name: FUNCTION sparsevec_negative_inner_product(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sparsevec_negative_inner_product(public.sparsevec, public.sparsevec) TO service_role;
+
+
+--
+-- TOC entry 4480 (class 0 OID 0)
+-- Dependencies: 363
+-- Name: FUNCTION split_part(public.citext, public.citext, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.split_part(public.citext, public.citext, integer) TO service_role;
+
+
+--
+-- TOC entry 4481 (class 0 OID 0)
+-- Dependencies: 339
+-- Name: FUNCTION strict_word_similarity(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.strict_word_similarity(text, text) TO service_role;
+
+
+--
+-- TOC entry 4482 (class 0 OID 0)
+-- Dependencies: 409
+-- Name: FUNCTION strict_word_similarity_commutator_op(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.strict_word_similarity_commutator_op(text, text) TO service_role;
+
+
+--
+-- TOC entry 4483 (class 0 OID 0)
+-- Dependencies: 375
+-- Name: FUNCTION strict_word_similarity_dist_commutator_op(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.strict_word_similarity_dist_commutator_op(text, text) TO service_role;
+
+
+--
+-- TOC entry 4484 (class 0 OID 0)
+-- Dependencies: 385
+-- Name: FUNCTION strict_word_similarity_dist_op(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.strict_word_similarity_dist_op(text, text) TO service_role;
+
+
+--
+-- TOC entry 4485 (class 0 OID 0)
+-- Dependencies: 370
+-- Name: FUNCTION strict_word_similarity_op(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.strict_word_similarity_op(text, text) TO service_role;
+
+
+--
+-- TOC entry 4486 (class 0 OID 0)
+-- Dependencies: 348
+-- Name: FUNCTION strpos(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.strpos(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4487 (class 0 OID 0)
+-- Dependencies: 451
+-- Name: FUNCTION subvector(public.halfvec, integer, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.subvector(public.halfvec, integer, integer) TO service_role;
+
+
+--
+-- TOC entry 4488 (class 0 OID 0)
+-- Dependencies: 314
+-- Name: FUNCTION subvector(public.vector, integer, integer); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.subvector(public.vector, integer, integer) TO service_role;
+
+
+--
+-- TOC entry 4489 (class 0 OID 0)
+-- Dependencies: 530
+-- Name: FUNCTION texticlike(public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.texticlike(public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4490 (class 0 OID 0)
+-- Dependencies: 397
+-- Name: FUNCTION texticlike(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.texticlike(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4491 (class 0 OID 0)
+-- Dependencies: 400
+-- Name: FUNCTION texticnlike(public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.texticnlike(public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4492 (class 0 OID 0)
+-- Dependencies: 490
+-- Name: FUNCTION texticnlike(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.texticnlike(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4493 (class 0 OID 0)
+-- Dependencies: 511
+-- Name: FUNCTION texticregexeq(public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.texticregexeq(public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4494 (class 0 OID 0)
+-- Dependencies: 426
+-- Name: FUNCTION texticregexeq(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.texticregexeq(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4495 (class 0 OID 0)
+-- Dependencies: 433
+-- Name: FUNCTION texticregexne(public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.texticregexne(public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4496 (class 0 OID 0)
+-- Dependencies: 366
+-- Name: FUNCTION texticregexne(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.texticregexne(public.citext, public.citext) TO service_role;
+
+
+--
+-- TOC entry 4497 (class 0 OID 0)
+-- Dependencies: 279
+-- Name: FUNCTION translate(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.translate(public.citext, public.citext, text) TO service_role;
+
+
+--
+-- TOC entry 4498 (class 0 OID 0)
+-- Dependencies: 377
+-- Name: FUNCTION update_updated_at_column(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.update_updated_at_column() TO service_role;
+
+
+--
+-- TOC entry 4499 (class 0 OID 0)
+-- Dependencies: 529
+-- Name: FUNCTION uuid_generate_v1(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_generate_v1() TO service_role;
+
+
+--
+-- TOC entry 4500 (class 0 OID 0)
+-- Dependencies: 457
+-- Name: FUNCTION uuid_generate_v1mc(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_generate_v1mc() TO service_role;
+
+
+--
+-- TOC entry 4501 (class 0 OID 0)
+-- Dependencies: 515
+-- Name: FUNCTION uuid_generate_v3(namespace uuid, name text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_generate_v3(namespace uuid, name text) TO service_role;
+
+
+--
+-- TOC entry 4502 (class 0 OID 0)
+-- Dependencies: 503
+-- Name: FUNCTION uuid_generate_v4(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_generate_v4() TO service_role;
+
+
+--
+-- TOC entry 4503 (class 0 OID 0)
+-- Dependencies: 324
+-- Name: FUNCTION uuid_generate_v5(namespace uuid, name text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_generate_v5(namespace uuid, name text) TO service_role;
+
+
+--
+-- TOC entry 4504 (class 0 OID 0)
+-- Dependencies: 384
+-- Name: FUNCTION uuid_nil(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_nil() TO service_role;
+
+
+--
+-- TOC entry 4505 (class 0 OID 0)
+-- Dependencies: 434
+-- Name: FUNCTION uuid_ns_dns(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_ns_dns() TO service_role;
+
+
+--
+-- TOC entry 4506 (class 0 OID 0)
+-- Dependencies: 518
+-- Name: FUNCTION uuid_ns_oid(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_ns_oid() TO service_role;
+
+
+--
+-- TOC entry 4507 (class 0 OID 0)
+-- Dependencies: 507
+-- Name: FUNCTION uuid_ns_url(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_ns_url() TO service_role;
+
+
+--
+-- TOC entry 4508 (class 0 OID 0)
+-- Dependencies: 450
+-- Name: FUNCTION uuid_ns_x500(); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.uuid_ns_x500() TO service_role;
+
+
+--
+-- TOC entry 4509 (class 0 OID 0)
+-- Dependencies: 417
+-- Name: FUNCTION vector_accum(double precision[], public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_accum(double precision[], public.vector) TO service_role;
+
+
+--
+-- TOC entry 4510 (class 0 OID 0)
+-- Dependencies: 449
+-- Name: FUNCTION vector_add(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_add(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4511 (class 0 OID 0)
+-- Dependencies: 359
+-- Name: FUNCTION vector_avg(double precision[]); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_avg(double precision[]) TO service_role;
+
+
+--
+-- TOC entry 4512 (class 0 OID 0)
+-- Dependencies: 294
+-- Name: FUNCTION vector_cmp(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_cmp(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4513 (class 0 OID 0)
+-- Dependencies: 458
+-- Name: FUNCTION vector_combine(double precision[], double precision[]); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_combine(double precision[], double precision[]) TO service_role;
+
+
+--
+-- TOC entry 4514 (class 0 OID 0)
+-- Dependencies: 454
+-- Name: FUNCTION vector_concat(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_concat(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4515 (class 0 OID 0)
+-- Dependencies: 524
+-- Name: FUNCTION vector_dims(public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_dims(public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4516 (class 0 OID 0)
+-- Dependencies: 442
+-- Name: FUNCTION vector_dims(public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_dims(public.vector) TO service_role;
+
+
+--
+-- TOC entry 4517 (class 0 OID 0)
+-- Dependencies: 453
+-- Name: FUNCTION vector_eq(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_eq(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4518 (class 0 OID 0)
+-- Dependencies: 341
+-- Name: FUNCTION vector_ge(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_ge(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4519 (class 0 OID 0)
+-- Dependencies: 523
+-- Name: FUNCTION vector_gt(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_gt(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4520 (class 0 OID 0)
+-- Dependencies: 479
+-- Name: FUNCTION vector_l2_squared_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_l2_squared_distance(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4521 (class 0 OID 0)
+-- Dependencies: 447
+-- Name: FUNCTION vector_le(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_le(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4522 (class 0 OID 0)
+-- Dependencies: 405
+-- Name: FUNCTION vector_lt(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_lt(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4523 (class 0 OID 0)
+-- Dependencies: 373
+-- Name: FUNCTION vector_mul(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_mul(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4524 (class 0 OID 0)
+-- Dependencies: 381
+-- Name: FUNCTION vector_ne(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_ne(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4525 (class 0 OID 0)
+-- Dependencies: 486
+-- Name: FUNCTION vector_negative_inner_product(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_negative_inner_product(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4526 (class 0 OID 0)
+-- Dependencies: 297
+-- Name: FUNCTION vector_norm(public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_norm(public.vector) TO service_role;
+
+
+--
+-- TOC entry 4527 (class 0 OID 0)
+-- Dependencies: 438
+-- Name: FUNCTION vector_spherical_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_spherical_distance(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4528 (class 0 OID 0)
+-- Dependencies: 287
+-- Name: FUNCTION vector_sub(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.vector_sub(public.vector, public.vector) TO service_role;
+
+
+--
+-- TOC entry 4529 (class 0 OID 0)
+-- Dependencies: 347
+-- Name: FUNCTION word_similarity(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.word_similarity(text, text) TO service_role;
+
+
+--
+-- TOC entry 4530 (class 0 OID 0)
+-- Dependencies: 389
+-- Name: FUNCTION word_similarity_commutator_op(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.word_similarity_commutator_op(text, text) TO service_role;
+
+
+--
+-- TOC entry 4531 (class 0 OID 0)
+-- Dependencies: 319
+-- Name: FUNCTION word_similarity_dist_commutator_op(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.word_similarity_dist_commutator_op(text, text) TO service_role;
+
+
+--
+-- TOC entry 4532 (class 0 OID 0)
+-- Dependencies: 501
+-- Name: FUNCTION word_similarity_dist_op(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.word_similarity_dist_op(text, text) TO service_role;
+
+
+--
+-- TOC entry 4533 (class 0 OID 0)
+-- Dependencies: 407
+-- Name: FUNCTION word_similarity_op(text, text); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.word_similarity_op(text, text) TO service_role;
+
+
+--
+-- TOC entry 4534 (class 0 OID 0)
+-- Dependencies: 1290
+-- Name: FUNCTION avg(public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.avg(public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4535 (class 0 OID 0)
+-- Dependencies: 1288
+-- Name: FUNCTION avg(public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.avg(public.vector) TO service_role;
+
+
+--
+-- TOC entry 4536 (class 0 OID 0)
+-- Dependencies: 1293
+-- Name: FUNCTION max(public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.max(public.citext) TO service_role;
+
+
+--
+-- TOC entry 4537 (class 0 OID 0)
+-- Dependencies: 1292
+-- Name: FUNCTION min(public.citext); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.min(public.citext) TO service_role;
+
+
+--
+-- TOC entry 4538 (class 0 OID 0)
+-- Dependencies: 1291
+-- Name: FUNCTION sum(public.halfvec); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sum(public.halfvec) TO service_role;
+
+
+--
+-- TOC entry 4539 (class 0 OID 0)
+-- Dependencies: 1289
+-- Name: FUNCTION sum(public.vector); Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON FUNCTION public.sum(public.vector) TO service_role;
+
+
+--
+-- TOC entry 4545 (class 0 OID 0)
+-- Dependencies: 273
+-- Name: TABLE bot_transport_config; Type: ACL; Schema: core; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.bot_transport_config TO service_role;
+
+
+--
+-- TOC entry 4546 (class 0 OID 0)
+-- Dependencies: 274
+-- Name: TABLE bot_transport_state; Type: ACL; Schema: core; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.bot_transport_state TO service_role;
+
+
+--
+-- TOC entry 4547 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: TABLE bots; Type: ACL; Schema: core; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.bots TO service_role;
+
+
+--
+-- TOC entry 4548 (class 0 OID 0)
+-- Dependencies: 233
+-- Name: TABLE chat_policies; Type: ACL; Schema: core; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.chat_policies TO service_role;
+
+
+--
+-- TOC entry 4549 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: TABLE tenant_chats; Type: ACL; Schema: core; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.tenant_chats TO service_role;
+
+
+--
+-- TOC entry 4550 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: TABLE tenant_users; Type: ACL; Schema: core; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.tenant_users TO service_role;
+
+
+--
+-- TOC entry 4551 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: TABLE tenants; Type: ACL; Schema: core; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.tenants TO service_role;
+
+
+--
+-- TOC entry 4554 (class 0 OID 0)
+-- Dependencies: 278
+-- Name: TABLE bot_transport_events; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.bot_transport_events TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.bot_transport_events TO n8n;
+
+
+--
+-- TOC entry 4556 (class 0 OID 0)
+-- Dependencies: 277
+-- Name: SEQUENCE bot_transport_events_id_seq; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE ops.bot_transport_events_id_seq TO service_role;
+GRANT ALL ON SEQUENCE ops.bot_transport_events_id_seq TO n8n;
+
+
+--
+-- TOC entry 4557 (class 0 OID 0)
+-- Dependencies: 268
+-- Name: TABLE errors; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.errors TO n8n;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.errors TO service_role;
+
+
+--
+-- TOC entry 4559 (class 0 OID 0)
+-- Dependencies: 267
+-- Name: SEQUENCE errors_id_seq; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE ops.errors_id_seq TO n8n;
+GRANT ALL ON SEQUENCE ops.errors_id_seq TO service_role;
+
+
+--
+-- TOC entry 4560 (class 0 OID 0)
+-- Dependencies: 266
+-- Name: TABLE job_runs; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.job_runs TO n8n;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.job_runs TO service_role;
+
+
+--
+-- TOC entry 4562 (class 0 OID 0)
+-- Dependencies: 265
+-- Name: SEQUENCE job_runs_id_seq; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE ops.job_runs_id_seq TO n8n;
+GRANT ALL ON SEQUENCE ops.job_runs_id_seq TO service_role;
+
+
+--
+-- TOC entry 4563 (class 0 OID 0)
+-- Dependencies: 264
+-- Name: TABLE jobs; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.jobs TO n8n;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.jobs TO service_role;
+
+
+--
+-- TOC entry 4565 (class 0 OID 0)
+-- Dependencies: 263
+-- Name: SEQUENCE jobs_id_seq; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE ops.jobs_id_seq TO n8n;
+GRANT ALL ON SEQUENCE ops.jobs_id_seq TO service_role;
+
+
+--
+-- TOC entry 4566 (class 0 OID 0)
+-- Dependencies: 276
+-- Name: TABLE webhook_health_snapshots; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.webhook_health_snapshots TO service_role;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.webhook_health_snapshots TO n8n;
+
+
+--
+-- TOC entry 4568 (class 0 OID 0)
+-- Dependencies: 275
+-- Name: SEQUENCE webhook_health_snapshots_id_seq; Type: ACL; Schema: ops; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE ops.webhook_health_snapshots_id_seq TO service_role;
+GRANT ALL ON SEQUENCE ops.webhook_health_snapshots_id_seq TO n8n;
+
+
+--
+-- TOC entry 4569 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: TABLE telegram_update_keys; Type: ACL; Schema: raw; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE raw.telegram_update_keys TO service_role;
+
+
+--
+-- TOC entry 4570 (class 0 OID 0)
+-- Dependencies: 234
+-- Name: TABLE telegram_updates; Type: ACL; Schema: raw; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE raw.telegram_updates TO service_role;
+
+
+--
+-- TOC entry 4571 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: TABLE telegram_updates_default; Type: ACL; Schema: raw; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE raw.telegram_updates_default TO service_role;
+
+
+--
+-- TOC entry 4572 (class 0 OID 0)
+-- Dependencies: 248
+-- Name: TABLE chat_member_events; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.chat_member_events TO service_role;
+
+
+--
+-- TOC entry 4574 (class 0 OID 0)
+-- Dependencies: 247
+-- Name: SEQUENCE chat_member_events_id_seq; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE tg.chat_member_events_id_seq TO service_role;
+
+
+--
+-- TOC entry 4575 (class 0 OID 0)
+-- Dependencies: 249
+-- Name: TABLE chat_memberships_current; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.chat_memberships_current TO service_role;
+
+
+--
+-- TOC entry 4576 (class 0 OID 0)
+-- Dependencies: 238
+-- Name: TABLE chats; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.chats TO service_role;
+
+
+--
+-- TOC entry 4577 (class 0 OID 0)
+-- Dependencies: 246
+-- Name: TABLE file_instances; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.file_instances TO service_role;
+
+
+--
+-- TOC entry 4578 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: TABLE files; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.files TO service_role;
+
+
+--
+-- TOC entry 4579 (class 0 OID 0)
+-- Dependencies: 244
+-- Name: TABLE message_attachments; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.message_attachments TO service_role;
+
+
+--
+-- TOC entry 4581 (class 0 OID 0)
+-- Dependencies: 243
+-- Name: SEQUENCE message_attachments_id_seq; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE tg.message_attachments_id_seq TO service_role;
+
+
+--
+-- TOC entry 4582 (class 0 OID 0)
+-- Dependencies: 242
+-- Name: TABLE message_versions; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.message_versions TO service_role;
+
+
+--
+-- TOC entry 4584 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: SEQUENCE message_versions_id_seq; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE tg.message_versions_id_seq TO service_role;
+
+
+--
+-- TOC entry 4585 (class 0 OID 0)
+-- Dependencies: 240
+-- Name: TABLE messages; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.messages TO service_role;
+
+
+--
+-- TOC entry 4587 (class 0 OID 0)
+-- Dependencies: 239
+-- Name: SEQUENCE messages_id_seq; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE tg.messages_id_seq TO service_role;
+
+
+--
+-- TOC entry 4588 (class 0 OID 0)
+-- Dependencies: 237
+-- Name: TABLE users; Type: ACL; Schema: tg; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.users TO service_role;
+
+
+--
+-- TOC entry 2630 (class 826 OID 48211)
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: core; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA core GRANT ALL ON SEQUENCES TO service_role;
+
+
+--
+-- TOC entry 2631 (class 826 OID 48212)
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: core; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA core GRANT ALL ON FUNCTIONS TO service_role;
+
+
+--
+-- TOC entry 2629 (class 826 OID 48210)
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: core; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA core GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO service_role;
+
+
+--
+-- TOC entry 2627 (class 826 OID 48208)
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: ops; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA ops GRANT ALL ON SEQUENCES TO service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA ops GRANT ALL ON SEQUENCES TO n8n;
+
+
+--
+-- TOC entry 2628 (class 826 OID 48209)
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: ops; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA ops GRANT ALL ON FUNCTIONS TO service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA ops GRANT ALL ON FUNCTIONS TO n8n;
+
+
+--
+-- TOC entry 2626 (class 826 OID 48207)
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: ops; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA ops GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA ops GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO n8n;
+
+
+--
+-- TOC entry 2639 (class 826 OID 48220)
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: pg_database_owner
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE pg_database_owner IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
+
+
+--
+-- TOC entry 2624 (class 826 OID 46683)
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
+
+
+--
+-- TOC entry 2640 (class 826 OID 48221)
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: pg_database_owner
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE pg_database_owner IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
+
+
+--
+-- TOC entry 2625 (class 826 OID 46684)
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
+
+
+--
+-- TOC entry 2638 (class 826 OID 48219)
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: pg_database_owner
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE pg_database_owner IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO service_role;
+
+
+--
+-- TOC entry 2623 (class 826 OID 46682)
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO service_role;
+
+
+--
+-- TOC entry 2633 (class 826 OID 48214)
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: raw; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA raw GRANT ALL ON SEQUENCES TO service_role;
+
+
+--
+-- TOC entry 2634 (class 826 OID 48215)
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: raw; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA raw GRANT ALL ON FUNCTIONS TO service_role;
+
+
+--
+-- TOC entry 2632 (class 826 OID 48213)
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: raw; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA raw GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO service_role;
+
+
+--
+-- TOC entry 2636 (class 826 OID 48217)
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: tg; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA tg GRANT ALL ON SEQUENCES TO service_role;
+
+
+--
+-- TOC entry 2637 (class 826 OID 48218)
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: tg; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA tg GRANT ALL ON FUNCTIONS TO service_role;
+
+
+--
+-- TOC entry 2635 (class 826 OID 48216)
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: tg; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA tg GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO service_role;
+
+
+-- Completed on 2026-02-01 21:31:58 UTC
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict LF31CCDeBltsb99np2G3jrEwUS8jSoXkgxxc4q7Fnd7WSh3KhM3PviNW9hQUKBl
+

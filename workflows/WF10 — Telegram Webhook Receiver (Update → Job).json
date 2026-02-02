@@ -1,0 +1,1937 @@
+{
+  "name": "WF10 — Telegram Webhook Receiver (Update → Job)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "*"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2d5110ba-604a-4bd0-b37e-6ec5ca4ef25a",
+      "name": "Telegram Trigger",
+      "webhookId": "wf11-telegram-webhook",
+      "notesInFlow": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "notes": "PROD TRIGGER: Receives all Telegram update types via webhook.\nInput: HTTP POST from Telegram servers.\nOutput: Raw update object (update_id, message/callback_query/etc).\nWHY: Primary entry point for production Telegram traffic."
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        304
+      ],
+      "id": "59948503-5bcd-41e4-a6a5-ef7ac5ceef62",
+      "name": "Manual Trigger (Tests)",
+      "notesInFlow": true,
+      "notes": "TEST TRIGGER: Manual execution for test scenarios.\nInput: None.\nOutput: Empty item (test data set by next node).\nWHY: Isolated test path for T1/T2/T3 scenarios."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"_test\": true,\n  \"update_id\": 9999990001,\n  \"message\": {\n    \"message_id\": 1,\n    \"from\": {\"id\": 123456789, \"is_bot\": false, \"first_name\": \"TestUser\"},\n    \"chat\": {\"id\": -1001234567890, \"title\": \"Test Chat\", \"type\": \"supergroup\"},\n    \"date\": 1704067200,\n    \"text\": \"Test message for WF11\"\n  }\n}",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        304
+      ],
+      "id": "4da8368a-f053-44f5-9072-a5fd1608abaa",
+      "name": "Test Data (T1 Happy)",
+      "notesInFlow": true,
+      "notes": "TEST T1 HAPPY: Valid Telegram update.\nInput: Empty from Manual Trigger.\nOutput: Simulated update with update_id=9999990001.\nFor T2 (duplicate): Run twice with same update_id.\nFor T3 (fail): Remove update_id field manually."
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        160
+      ],
+      "id": "3b360b70-621f-4310-8c13-7753cb15ec11",
+      "name": "Merge Triggers",
+      "notesInFlow": true,
+      "notes": "Merges PROD (input 0) and TEST (input 1) into single path.\nInput 0: Telegram Trigger.\nInput 1: Test Data.\nOutput: Single update JSON.\nWHY mode=chooseBranch: Only one trigger fires per execution."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ctx-received",
+              "name": "_ctx.received_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-is-test",
+              "name": "_ctx.is_test",
+              "value": "={{ $json._test === true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "update",
+              "name": "update",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        160
+      ],
+      "id": "2963bc6f-38c2-48b1-a600-d8968b3560b6",
+      "name": "Init Context",
+      "notesInFlow": true,
+      "notes": "Initializes processing context.\nInput: Raw Telegram update.\nOutput: {_ctx: {received_at, is_test}, update: <original>}.\nWHY: Capture timestamp early for consistency across all DB writes."
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "correlation_id"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        976,
+        160
+      ],
+      "id": "95f2af61-5c4e-4f0f-9f11-a51d52e16c7d",
+      "name": "Generate UUID",
+      "notesInFlow": true,
+      "notes": "Generates UUID v4 for correlation.\nInput: Context + update.\nOutput: Adds _ctx.correlation_id.\nWHY: Used as request_id, first_request_id, job correlation_id."
+    },
+    {
+      "parameters": {
+        "type": "SHA256",
+        "value": "={{ JSON.stringify($json.update) }}",
+        "dataPropertyName": "_hash_hex"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        160
+      ],
+      "id": "0be2b56f-01b5-401a-aecc-c469d17da97e",
+      "name": "Hash SHA256",
+      "notesInFlow": true,
+      "notes": "Computes SHA-256 of update JSON.\nInput: update as JSON string.\nOutput: _hash_hex (hex string).\nWHY: For body_sha256 field in raw.telegram_updates."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "has-update-id",
+              "leftValue": "={{ $json.update.update_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1712,
+        160
+      ],
+      "id": "d2146668-813f-4ac6-b507-b4ed2f1ef1a8",
+      "name": "Has update_id?",
+      "notesInFlow": true,
+      "notes": "Validates update_id exists.\nInput: Context with update.\nOutput TRUE (index 0): Continue processing.\nOutput FALSE (index 1): Error 422.\nWHY: update_id required for deduplication (PK)."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"ok\": false,\n  \"status_code\": 422,\n  \"error\": {\n    \"code\": \"MISSING_UPDATE_ID\",\n    \"message\": \"Telegram update missing required field: update_id\"\n  },\n  \"meta\": {\n    \"correlation\": {\n      \"correlation_id\": \"{{ $json._ctx.correlation_id }}\",\n      \"trace_id\": null,\n      \"workflow\": \"WF11\"\n    }\n  }\n}",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        352
+      ],
+      "id": "709d93ee-8a89-4bde-a10a-b4f0cbeb3803",
+      "name": "Error 422",
+      "notesInFlow": true,
+      "notes": "Creates ErrorEnvelope for missing update_id.\nInput: Failed validation.\nOutput: {ok:false, status_code:422, error:{...}}.\nWHY: Standard error envelope format."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Validation failed: missing update_id"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        352
+      ],
+      "id": "6041c7be-1fce-4fcd-aba3-9f10bdf23ec3",
+      "name": "Stop 422",
+      "notesInFlow": true,
+      "notes": "Terminates with validation error.\nWHY: Prevents partial processing of invalid updates."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ctx",
+              "name": "_ctx",
+              "value": "={{ $json._ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "hash",
+              "name": "body_sha256_bytea",
+              "value": "=\\\\x{{ $json._hash_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "uid",
+              "name": "update_id",
+              "value": "={{ $json.update.update_id }}",
+              "type": "number"
+            },
+            {
+              "id": "utype",
+              "name": "update_type",
+              "value": "={{ $json.update.message ? 'message' : $json.update.edited_message ? 'edited_message' : $json.update.channel_post ? 'channel_post' : $json.update.edited_channel_post ? 'edited_channel_post' : $json.update.my_chat_member ? 'my_chat_member' : $json.update.chat_member ? 'chat_member' : $json.update.callback_query ? 'callback_query' : $json.update.inline_query ? 'inline_query' : $json.update.poll ? 'poll' : $json.update.poll_answer ? 'poll_answer' : 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "body",
+              "name": "update_body",
+              "value": "={{ $json.update }}",
+              "type": "object"
+            },
+            {
+              "id": "bot",
+              "name": "bot_username",
+              "value": "df_assistantbot",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        160
+      ],
+      "id": "9cc3559d-bd55-4df6-8754-9914663e7dfa",
+      "name": "Extract Fields",
+      "notesInFlow": true,
+      "notes": "Extracts and derives key fields.\nInput: Validated context.\nOutput: update_id, update_type, body_sha256_bytea, bot_username.\nWHY update_type: Checks each known property for type detection.\nWHY bytea format: Postgres needs \\\\x prefix for hex bytea.\nWHY bot_username hardcoded: Matches credential name for DB lookup."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "core",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "bots",
+          "mode": "list"
+        },
+        "limit": 2,
+        "where": {
+          "values": [
+            {
+              "column": "username",
+              "value": "={{ $json.bot_username }}"
+            },
+            {
+              "column": "is_active",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2176,
+        160
+      ],
+      "id": "6357dd85-6bdd-445a-88a0-192fb11ad0c7",
+      "name": "Lookup Bot",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Looks up bot_id and tenant_id.\nInput: bot_username.\nOutput (success): {id, tenant_id, username, ...}.\nOutput (error): Error object.\nWHY limit=2: Detect ambiguous mappings.\nWHY onError=continueErrorOutput: Route DB errors to error handler."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "has-error",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2608,
+        96
+      ],
+      "id": "2168a6a7-4949-4572-8e91-731f459c67a6",
+      "name": "Bot Found?",
+      "notesInFlow": true,
+      "notes": "Checks bot lookup results.\nInput: Postgres result array.\nOutput TRUE (0 results): Bot not found error.\nOutput FALSE (1+ results): Continue to count check."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"ok\": false,\n  \"status_code\": 404,\n  \"error\": {\n    \"code\": \"BOT_NOT_FOUND\",\n    \"message\": \"Bot not registered in core.bots or inactive\"\n  },\n  \"meta\": {\n    \"correlation\": {\n      \"correlation_id\": \"{{ $('Extract Fields').item.json._ctx.correlation_id }}\",\n      \"trace_id\": null,\n      \"workflow\": \"WF11\"\n    }\n  }\n}",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2832,
+        -48
+      ],
+      "id": "886a0f87-c454-429d-911e-a6d81da69a8e",
+      "name": "Error 404 Bot",
+      "notesInFlow": true,
+      "notes": "Creates ErrorEnvelope for missing bot."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Bot not found: {{ $('Extract Fields').item.json.bot_username }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3056,
+        -192
+      ],
+      "id": "4cf8d4e1-a1aa-48a8-9d94-7ef5df057fcb",
+      "name": "Stop 404",
+      "notesInFlow": true,
+      "notes": "Terminates on bot not found."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "exactly-one",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2864,
+        160
+      ],
+      "id": "44b72e47-a5b3-41e9-bb5c-4b0c1869d9e2",
+      "name": "Exactly 1?",
+      "notesInFlow": true,
+      "notes": "Validates exactly one bot found.\nInput: Bot lookup results.\nOutput TRUE: Single bot, continue.\nOutput FALSE: Multiple bots (409 error)."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"ok\": false,\n  \"status_code\": 409,\n  \"error\": {\n    \"code\": \"BOT_AMBIGUOUS\",\n    \"message\": \"Multiple active bots found for username\"\n  },\n  \"meta\": {\n    \"correlation\": {\n      \"correlation_id\": \"{{ $('Extract Fields').item.json._ctx.correlation_id }}\",\n      \"trace_id\": null,\n      \"workflow\": \"WF11\"\n    }\n  }\n}",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3328,
+        368
+      ],
+      "id": "f223d3c0-c5ba-4995-a80e-d12d01a4a2bc",
+      "name": "Error 409",
+      "notesInFlow": true,
+      "notes": "Creates ErrorEnvelope for ambiguous bot."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Bot mapping ambiguous: multiple active bots for username"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3712,
+        992
+      ],
+      "id": "e277e6fd-2ffc-4282-8ab3-75e72669db7b",
+      "name": "Stop 409",
+      "notesInFlow": true,
+      "notes": "Terminates on ambiguous bot."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ctx",
+              "name": "_ctx",
+              "value": "={{ $('Extract Fields').item.json._ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "sha",
+              "name": "body_sha256_bytea",
+              "value": "={{ $('Extract Fields').item.json.body_sha256_bytea }}",
+              "type": "string"
+            },
+            {
+              "id": "uid",
+              "name": "update_id",
+              "value": "={{ $('Extract Fields').item.json.update_id }}",
+              "type": "number"
+            },
+            {
+              "id": "utype",
+              "name": "update_type",
+              "value": "={{ $('Extract Fields').item.json.update_type }}",
+              "type": "string"
+            },
+            {
+              "id": "body",
+              "name": "update_body",
+              "value": "={{ $('Extract Fields').item.json.update_body }}",
+              "type": "object"
+            },
+            {
+              "id": "botid",
+              "name": "bot_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "tenantid",
+              "name": "tenant_id",
+              "value": "={{ $json.tenant_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3088,
+        160
+      ],
+      "id": "80f33c75-fd8c-403a-93f5-8dae3c8cf908",
+      "name": "Merge Bot Info",
+      "notesInFlow": true,
+      "notes": "Combines bot lookup with extracted fields.\nInput: Bot record + earlier context.\nOutput: Complete context with bot_id, tenant_id."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "raw",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "telegram_update_keys",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json.tenant_id }}",
+            "bot_id": "={{ $json.bot_id }}",
+            "update_id": "={{ $json.update_id }}",
+            "first_request_id": "={{ $json._ctx.correlation_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "bot_id",
+              "displayName": "bot_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "update_id",
+              "displayName": "update_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "first_request_id",
+              "displayName": "first_request_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "skipOnConflict": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3264,
+        160
+      ],
+      "id": "c5354a69-3171-4410-82f6-2692c046c766",
+      "name": "Insert Keys",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Inserts dedup key (first occurrence only).\nInput: tenant_id, bot_id, update_id, first_request_id.\nOutput: Inserted row or skipped.\nWHY skipOnConflict: PK(bot_id, update_id) prevents overwrites.\nWHY first_request_id: Tracks original request for duplicates."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pass",
+              "name": "data",
+              "value": "={{ $('Merge Bot Info').item.json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3520,
+        112
+      ],
+      "id": "91ac1fe5-21bb-42cb-8980-0ce8e03c4ad5",
+      "name": "Pass 1",
+      "notesInFlow": true,
+      "notes": "Passes merged context (Postgres output may not have all fields)."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "raw",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "telegram_updates",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json.data.tenant_id }}",
+            "bot_id": "={{ $json.data.bot_id }}",
+            "update_id": "={{ $json.data.update_id }}",
+            "update_type": "={{ $json.data.update_type }}",
+            "received_at": "={{ $json.data._ctx.received_at }}",
+            "request_id": "={{ $json.data._ctx.correlation_id }}",
+            "headers": "={}",
+            "body": "={{ $json.data.update_body }}",
+            "body_sha256": "={{ $json.data.body_sha256_bytea }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "bot_id",
+              "displayName": "bot_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "update_id",
+              "displayName": "update_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "update_type",
+              "displayName": "update_type",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "headers",
+              "displayName": "headers",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "body_sha256",
+              "displayName": "body_sha256",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3696,
+        112
+      ],
+      "id": "cb333101-600b-4e47-9214-165ae7b29731",
+      "name": "Insert Updates",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Inserts full update record.\nInput: All context fields.\nOutput: Inserted row.\nWHY headers={}: Remote IP not available from Telegram webhook.\nWHY body_sha256 bytea: \\\\x prefix makes Postgres interpret as hex bytes."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pass",
+              "name": "data",
+              "value": "={{ $('Pass 1').item.json.data }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3936,
+        96
+      ],
+      "id": "754f437f-5b18-40cd-940a-2af3c935a589",
+      "name": "Pass 2",
+      "notesInFlow": true,
+      "notes": "Passes context for job creation."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json.data.tenant_id }}",
+            "payload": "={{ JSON.stringify({tenant_id: $json.data.tenant_id, bot_id: $json.data.bot_id, update_id: $json.data.update_id, received_at: $json.data._ctx.received_at, request_id: $json.data._ctx.correlation_id, update_type: $json.data.update_type}) }}",
+            "correlation_id": "={{ $json.data._ctx.correlation_id }}",
+            "next_run_at": "={{ $json.data._ctx.is_test ? $now.plus({days: 1}).toISO() : $now.toISO() }}",
+            "job_type": "telegram_update"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "correlation_id",
+              "displayName": "correlation_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "next_run_at",
+              "displayName": "next_run_at",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4144,
+        96
+      ],
+      "id": "8647886d-817f-4842-8343-3269bb2f16e0",
+      "name": "Create Job",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Creates job for worker WF20.\nInput: Context with all fields.\nOutput: {id: job_id}.\nWHY job_type=telegram_update: Enum value for processing.\nWHY next_run_at+1day for tests: Prevents job runner pickup.\nWHY outputColumns=[id]: Get job_id for response.\n\nNOTE: Verify 'telegram_update' is valid ops.job_type enum value!"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"ok\": true,\n  \"status_code\": 200,\n  \"data\": {\n    \"job_id\": {{ $json.id }},\n    \"tenant_id\": \"{{ $('Pass 2').item.json.data.tenant_id }}\",\n    \"bot_id\": \"{{ $('Pass 2').item.json.data.bot_id }}\",\n    \"update_id\": {{ $('Pass 2').item.json.data.update_id }},\n    \"received_at\": \"{{ $('Pass 2').item.json.data._ctx.received_at }}\",\n    \"request_id\": \"{{ $('Pass 2').item.json.data._ctx.correlation_id }}\",\n    \"update_type\": \"{{ $('Pass 2').item.json.data.update_type }}\"\n  },\n  \"meta\": {\n    \"correlation\": {\n      \"correlation_id\": \"{{ $('Pass 2').item.json.data._ctx.correlation_id }}\",\n      \"trace_id\": null,\n      \"workflow\": \"WF11\"\n    }\n  },\n  \"_cleanup\": {\n    \"is_test\": {{ $('Pass 2').item.json.data._ctx.is_test }},\n    \"correlation_id\": \"{{ $('Pass 2').item.json.data._ctx.correlation_id }}\",\n    \"bot_id\": \"{{ $('Pass 2').item.json.data.bot_id }}\",\n    \"update_id\": {{ $('Pass 2').item.json.data.update_id }}\n  }\n}",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4368,
+        80
+      ],
+      "id": "11ed14f3-3498-474b-b986-6aa665493a77",
+      "name": "Success Envelope",
+      "notesInFlow": true,
+      "notes": "Creates SuccessEnvelope response.\nInput: Job ID + context.\nOutput: {ok:true, data:{job_id,...}, meta:{correlation:...}}.\n_cleanup field for test cleanup operations."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "is-test",
+              "leftValue": "={{ $json._cleanup.is_test }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4576,
+        80
+      ],
+      "id": "81339189-1032-4f0b-8011-79b1ba629b0a",
+      "name": "Is Test?",
+      "notesInFlow": true,
+      "notes": "Routes to cleanup for test executions.\nOutput TRUE: Test cleanup path.\nOutput FALSE: Production end."
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4816,
+        304
+      ],
+      "id": "e0a918ee-0bbf-42a0-a280-acdfc89dc125",
+      "name": "PROD End",
+      "notesInFlow": true,
+      "notes": "Production path termination.\nOutput: SuccessEnvelope (for response)."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "correlation_id",
+              "value": "={{ $json._cleanup.correlation_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4816,
+        0
+      ],
+      "id": "79625bc1-9a2e-4260-a459-8706a4587fa2",
+      "name": "Cleanup Jobs",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "TEST CLEANUP: Deletes test job by correlation_id."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pass",
+              "name": "_cleanup",
+              "value": "={{ $('Success Envelope').item.json._cleanup }}",
+              "type": "object"
+            },
+            {
+              "id": "env",
+              "name": "envelope",
+              "value": "={{ {ok: $('Success Envelope').item.json.ok, status_code: $('Success Envelope').item.json.status_code, data: $('Success Envelope').item.json.data, meta: $('Success Envelope').item.json.meta} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5024,
+        0
+      ],
+      "id": "13a7691e-8251-40d4-a1a7-e017249721bf",
+      "name": "Pass Cleanup",
+      "notesInFlow": true,
+      "notes": "Passes cleanup context for remaining cleanup steps."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "raw",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "telegram_updates",
+          "mode": "list"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "request_id",
+              "value": "={{ $json._cleanup.correlation_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5248,
+        0
+      ],
+      "id": "086dae21-f43d-4c0f-a412-18197920c421",
+      "name": "Cleanup Updates",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "TEST CLEANUP: Deletes test update by request_id (=correlation_id)."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pass",
+              "name": "_cleanup",
+              "value": "={{ $('Pass Cleanup').item.json._cleanup }}",
+              "type": "object"
+            },
+            {
+              "id": "env",
+              "name": "envelope",
+              "value": "={{ $('Pass Cleanup').item.json.envelope }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5472,
+        0
+      ],
+      "id": "3424477a-e2b9-4d1f-bb0a-e5e6646b899f",
+      "name": "Pass Cleanup 2",
+      "notesInFlow": true,
+      "notes": "Passes cleanup context."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "raw",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "telegram_update_keys",
+          "mode": "list"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "bot_id",
+              "value": "={{ $json._cleanup.bot_id }}"
+            },
+            {
+              "column": "update_id",
+              "value": "={{ $json._cleanup.update_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5696,
+        0
+      ],
+      "id": "eadde7f2-9a24-4c18-af30-a3d7245ad43e",
+      "name": "Cleanup Keys",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "TEST CLEANUP: Deletes test dedup key by PK (bot_id, update_id)."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $('Pass Cleanup 2').item.json.envelope }}",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5904,
+        0
+      ],
+      "id": "0084c906-5671-489d-96ec-b1754074cc3e",
+      "name": "TEST Result",
+      "notesInFlow": true,
+      "notes": "Returns test result (SuccessEnvelope) after cleanup.\nAssert: ok=true, data.job_id exists, data.update_type='message'."
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "=={\n  \"error_context\": {\n    \"node\": \"{{ $json._err.node }}\",\n    \"operation\": \"{{ $json._err.operation }}\",\n    \"table\": \"{{ $json._err.table }}\",\n    \"correlation_id\": \"{{ $json._ctx.correlation_id }}\",\n    \"error_message\": \"{{ $json.message || $json.error?.description || 'Database connection or query error' }}\",\n    \"status_code\": 500\n  }\n}\n",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4704,
+        960
+      ],
+      "id": "391ff40a-c828-4fb9-8261-00f5851fe2a0",
+      "name": "Prepare DB Error",
+      "notesInFlow": true,
+      "notes": "Prepares error context for WF99 (global error handler)."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "RttZ5uj4BvAAHuwX0rrsd",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/RttZ5uj4BvAAHuwX0rrsd",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        4912,
+        960
+      ],
+      "id": "e3acb092-6de5-49ec-b7a3-baf03bc97036",
+      "name": "Call WF99",
+      "notesInFlow": true,
+      "notes": "Calls global error handler WF99.\nwaitForSubWorkflow=false: Fire-and-forget logging."
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Database error: {{ $('Prepare DB Error').item.json.error_context.error_message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5136,
+        960
+      ],
+      "id": "017e6279-4be6-4c88-b2fd-250b3e02e58b",
+      "name": "Stop DB Error",
+      "notesInFlow": true,
+      "notes": "Terminates after DB error."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d88063e9-4461-4483-a671-f723baf98367",
+              "name": "_ctx.correlation_id",
+              "value": "={{ $json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        160
+      ],
+      "id": "f8a4ec37-834d-4e36-aa4c-2bbd6d4e2757",
+      "name": "Set ctx.corellation_id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a92d3063-1834-4a28-9c85-4e5d11a8ad5e",
+              "name": "_ctx",
+              "value": "={{ $('Set ctx.corellation_id').first().json._ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "8f8d23ac-ad22-4e0c-9802-6d1f59aabfff",
+              "name": "_err.node",
+              "value": "Lookup Bot",
+              "type": "string"
+            },
+            {
+              "id": "5561cf70-8b06-466e-b612-5b246fcc9340",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "d2bd6b15-1ade-407c-83de-2942d3578790",
+              "name": "_err.table",
+              "value": "core.bots",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3968,
+        784
+      ],
+      "id": "2566090e-cf24-4531-a70e-8aea102599d7",
+      "name": "ERR — Source Lookup Bot"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a92d3063-1834-4a28-9c85-4e5d11a8ad5e",
+              "name": "_ctx",
+              "value": "={{ $('Set ctx.corellation_id').first().json._ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "8f8d23ac-ad22-4e0c-9802-6d1f59aabfff",
+              "name": "_err.node",
+              "value": "Insert Keys",
+              "type": "string"
+            },
+            {
+              "id": "5561cf70-8b06-466e-b612-5b246fcc9340",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "d2bd6b15-1ade-407c-83de-2942d3578790",
+              "name": "_err.table",
+              "value": "raw.telegram_update_keys",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3968,
+        640
+      ],
+      "id": "b049a42b-17ad-40c1-bd54-e33bf0f5dcc2",
+      "name": "ERR — Source Insert Keys"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a92d3063-1834-4a28-9c85-4e5d11a8ad5e",
+              "name": "_ctx",
+              "value": "={{ $('Set ctx.corellation_id').first().json._ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "8f8d23ac-ad22-4e0c-9802-6d1f59aabfff",
+              "name": "_err.node",
+              "value": "Insert Updates",
+              "type": "string"
+            },
+            {
+              "id": "5561cf70-8b06-466e-b612-5b246fcc9340",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "d2bd6b15-1ade-407c-83de-2942d3578790",
+              "name": "_err.table",
+              "value": "raw.telegram_updates",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4128,
+        512
+      ],
+      "id": "b1aea4a0-e34f-4685-8007-8c75b2674cea",
+      "name": "ERR — Insert Updates"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a92d3063-1834-4a28-9c85-4e5d11a8ad5e",
+              "name": "_ctx",
+              "value": "={{ $('Set ctx.corellation_id').first().json._ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "8f8d23ac-ad22-4e0c-9802-6d1f59aabfff",
+              "name": "_err.node",
+              "value": "Create Job",
+              "type": "string"
+            },
+            {
+              "id": "5561cf70-8b06-466e-b612-5b246fcc9340",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "d2bd6b15-1ade-407c-83de-2942d3578790",
+              "name": "_err.table",
+              "value": "ops.jobs",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4416,
+        448
+      ],
+      "id": "671b9eb1-7888-4f64-b9ae-49c5c1a77b1f",
+      "name": "ERR — Create Job"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger (Tests)": {
+      "main": [
+        [
+          {
+            "node": "Test Data (T1 Happy)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Data (T1 Happy)": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Triggers": {
+      "main": [
+        [
+          {
+            "node": "Init Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Context": {
+      "main": [
+        [
+          {
+            "node": "Generate UUID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate UUID": {
+      "main": [
+        [
+          {
+            "node": "Set ctx.corellation_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hash SHA256": {
+      "main": [
+        [
+          {
+            "node": "Has update_id?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has update_id?": {
+      "main": [
+        [
+          {
+            "node": "Extract Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error 422",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error 422": {
+      "main": [
+        [
+          {
+            "node": "Stop 422",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Fields": {
+      "main": [
+        [
+          {
+            "node": "Lookup Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Bot": {
+      "main": [
+        [
+          {
+            "node": "Bot Found?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ERR — Source Lookup Bot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Bot Found?": {
+      "main": [
+        [
+          {
+            "node": "Error 404 Bot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exactly 1?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error 404 Bot": {
+      "main": [
+        [
+          {
+            "node": "Stop 404",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exactly 1?": {
+      "main": [
+        [
+          {
+            "node": "Merge Bot Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error 409",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error 409": {
+      "main": [
+        [
+          {
+            "node": "Stop 409",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare DB Error": {
+      "main": [
+        [
+          {
+            "node": "Call WF99",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99": {
+      "main": [
+        [
+          {
+            "node": "Stop DB Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Bot Info": {
+      "main": [
+        [
+          {
+            "node": "Insert Keys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Keys": {
+      "main": [
+        [
+          {
+            "node": "Pass 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Insert Keys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass 1": {
+      "main": [
+        [
+          {
+            "node": "Insert Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Updates": {
+      "main": [
+        [
+          {
+            "node": "Pass 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Insert Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass 2": {
+      "main": [
+        [
+          {
+            "node": "Create Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Job": {
+      "main": [
+        [
+          {
+            "node": "Success Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Create Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success Envelope": {
+      "main": [
+        [
+          {
+            "node": "Is Test?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Test?": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PROD End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup Jobs": {
+      "main": [
+        [
+          {
+            "node": "Pass Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass Cleanup": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup Updates": {
+      "main": [
+        [
+          {
+            "node": "Pass Cleanup 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pass Cleanup 2": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Keys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup Keys": {
+      "main": [
+        [
+          {
+            "node": "TEST Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set ctx.corellation_id": {
+      "main": [
+        [
+          {
+            "node": "Hash SHA256",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Lookup Bot": {
+      "main": [
+        [
+          {
+            "node": "Prepare DB Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Insert Keys": {
+      "main": [
+        [
+          {
+            "node": "Prepare DB Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Insert Updates": {
+      "main": [
+        [
+          {
+            "node": "Prepare DB Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Create Job": {
+      "main": [
+        [
+          {
+            "node": "Prepare DB Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "d1f48da5-b9a2-44a7-ad11-a74ee6fcf23c",
+  "meta": {
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "038ZpJX7gdYCWJD5YjfZ-",
+  "tags": [
+    {
+      "name": "telegram",
+      "id": "Aa1CkeTlYoyeRoXF",
+      "updatedAt": "2026-02-01T21:41:02.506Z",
+      "createdAt": "2026-02-01T21:41:02.506Z"
+    },
+    {
+      "name": "webhook",
+      "id": "uUvrJLEw7P9GsV8s",
+      "updatedAt": "2026-02-01T21:41:02.507Z",
+      "createdAt": "2026-02-01T21:41:02.507Z"
+    },
+    {
+      "name": "job-queue",
+      "id": "zUOMsuOKwekXNmgb",
+      "updatedAt": "2026-02-01T21:41:02.481Z",
+      "createdAt": "2026-02-01T21:41:02.481Z"
+    }
+  ]
+}
