@@ -1,0 +1,1221 @@
+{
+  "name": "WF98 — Platform Error Catcher",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger-prod",
+      "name": "Error Trigger (PROD)",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "notes": "PROD entry point. This trigger fires when WF98 is configured as the Error Workflow for another workflow.\n\nOUTPUT:\n- execution.id, execution.url, execution.mode\n- workflow.id, workflow.name\n- error.message, error.description, error.name\n- Possibly original item data from failed node\n\nWHY: WF98 acts as a last-resort error catcher for unmanaged failures across the project."
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "test-trigger",
+      "name": "Execute Workflow Trigger (TEST)",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 400],
+      "notes": "TEST entry point. Receives synthetic test payloads via Execute Workflow calls.\n\nEXPECTED INPUT:\n- test_case: 'T1' | 'T2' | 'T3'\n- run_mode: 'test'\n- ctx (optional): { correlation_id, workflow, ... }\n- error (optional): { message, description }\n- execution (optional): { id }\n- workflow (optional): { id, name }\n\nWHY: Allows testing WF98 normalization and WF99 integration without causing real workflow failures."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prep-test-source",
+              "name": "_source",
+              "value": "test_trigger",
+              "type": "string"
+            },
+            {
+              "id": "prep-test-run-mode",
+              "name": "ctx.run_mode",
+              "value": "test",
+              "type": "string"
+            },
+            {
+              "id": "prep-test-case",
+              "name": "ctx.test_case",
+              "value": "={{ $json.test_case ?? 'T1' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "prepare-test-payload",
+      "name": "Prepare Test Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 400],
+      "notes": "Stamps test-specific metadata onto the payload.\n\nINPUT: Raw test payload from Execute Workflow Trigger\nOUTPUT: Same payload + _source='test_trigger', ctx.run_mode='test', ctx.test_case\n\nWHY: Marks the item as coming from test path so downstream nodes can identify test executions and perform verification/cleanup."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "preserve-source-prod",
+              "name": "_source",
+              "value": "error_trigger",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "stamp-prod-source",
+      "name": "Stamp Prod Source",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0],
+      "notes": "Marks payload as coming from prod Error Trigger.\n\nINPUT: Error Trigger payload\nOUTPUT: Same payload + _source='error_trigger'\n\nWHY: Allows downstream logic to differentiate prod vs test executions."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "raw-full",
+              "name": "_raw_payload.execution",
+              "value": "={{ $json.execution ?? null }}",
+              "type": "object"
+            },
+            {
+              "id": "raw-wf",
+              "name": "_raw_payload.workflow",
+              "value": "={{ $json.workflow ?? null }}",
+              "type": "object"
+            },
+            {
+              "id": "raw-err",
+              "name": "_raw_payload.error",
+              "value": "={{ $json.error ?? null }}",
+              "type": "object"
+            },
+            {
+              "id": "raw-msg",
+              "name": "_raw_payload.message",
+              "value": "={{ $json.message ?? $json.error?.message ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "raw-desc",
+              "name": "_raw_payload.description",
+              "value": "={{ $json.description ?? $json.error?.description ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-exec-id",
+              "name": "_extracted.execution_id",
+              "value": "={{ $json.execution?.id ?? $json.ctx?.execution_id ?? 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-wf-id",
+              "name": "_extracted.source_workflow_id",
+              "value": "={{ $json.workflow?.id ?? $json.ctx?.source_workflow_id ?? 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-wf-name",
+              "name": "_extracted.source_workflow_name",
+              "value": "={{ $json.workflow?.name ?? $json.ctx?.source_workflow_name ?? $json.ctx?.workflow ?? 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-err-msg",
+              "name": "_extracted.error_message",
+              "value": "={{ $json.error?.message ?? $json.message ?? $json.description ?? 'Unknown error from error workflow trigger' }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-err-node",
+              "name": "_extracted.error_node",
+              "value": "={{ $json.error?.node ?? $json.error_context?.node ?? 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-existing-cid",
+              "name": "_extracted.existing_correlation_id",
+              "value": "={{ $json.ctx?.correlation_id ?? $json.error_context?.correlation_id ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "extract-job-id",
+              "name": "_extracted.job_id",
+              "value": "={{ $json.ctx?.job_id ?? null }}",
+              "type": "number"
+            },
+            {
+              "id": "extract-tenant-id",
+              "name": "_extracted.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id ?? null }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "step1-preserve-extract",
+      "name": "STEP1 — Preserve Raw + Extract",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [500, 200],
+      "notes": "Preserves raw error payload and extracts key fields for normalization.\n\nINPUT: Error Trigger or Test payload (with _source stamped)\nOUTPUT:\n- _raw_payload: structured object with execution/workflow/error/message/description\n- _extracted: normalized fields (execution_id, source_workflow_id/name, error_message, error_node, existing_correlation_id, job_id, tenant_id)\n\nWHY: Centralizes field extraction logic. Uses defensive expressions with ?? fallbacks to handle missing fields gracefully.\n\nCONTRACT: Objects remain objects (no stringify). Uses dotNotation for nested field creation."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "has-cid",
+              "leftValue": "={{ $json._extracted.existing_correlation_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-correlation-id",
+      "name": "IF Has Existing CID?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [720, 200],
+      "notes": "Checks if incoming payload already has a correlation_id.\n\nINPUT: Item with _extracted.existing_correlation_id\nOUTPUT:\n- TRUE branch: existing correlation_id found → reuse it\n- FALSE branch: no correlation_id → generate new one\n\nWHY: Per ErrorPipe Contract v1, we must reuse existing correlation_id if present; only generate if missing."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "use-existing-cid",
+              "name": "_resolved_correlation_id",
+              "value": "={{ $json._extracted.existing_correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cid-source",
+              "name": "_correlation_id_source",
+              "value": "reused_from_input",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "use-existing-cid",
+      "name": "Use Existing Correlation ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [940, 100],
+      "notes": "Uses the existing correlation_id from input ctx.\n\nINPUT: Item where _extracted.existing_correlation_id is not empty\nOUTPUT: _resolved_correlation_id set to existing value, _correlation_id_source='reused_from_input'\n\nWHY: Preserves traceability by maintaining the original correlation_id through the error handling pipeline."
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "encodingType": "uuid",
+        "dataPropertyName": "_generated_uuid"
+      },
+      "id": "crypto-generate-uuid",
+      "name": "Crypto Generate UUID",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [940, 300],
+      "notes": "Generates a new UUID v4 for correlation_id.\n\nINPUT: Item without existing correlation_id\nOUTPUT: _generated_uuid field added with new UUID\n\nWHY: Required by ErrorPipe Contract - generate correlation_id ONLY when input doesn't have one. Using Crypto node instead of Code node per project rules."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "use-generated-cid",
+              "name": "_resolved_correlation_id",
+              "value": "={{ $json._generated_uuid }}",
+              "type": "string"
+            },
+            {
+              "id": "cid-source-gen",
+              "name": "_correlation_id_source",
+              "value": "generated_by_wf98",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "use-generated-cid",
+      "name": "Use Generated Correlation ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1160, 300],
+      "notes": "Assigns the generated UUID as the correlation_id.\n\nINPUT: Item with _generated_uuid from Crypto node\nOUTPUT: _resolved_correlation_id set to generated UUID, _correlation_id_source='generated_by_wf98'\n\nWHY: Standardizes the field name for downstream processing regardless of whether CID was reused or generated."
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "merge-cid-paths",
+      "name": "Merge CID Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1380, 200],
+      "notes": "Merges the two correlation_id branches back together.\n\nINPUT: Either reused or generated correlation_id path (only one active per execution)\nOUTPUT: Item with _resolved_correlation_id ready for ctx building\n\nWHY: Reunifies control flow after conditional correlation_id handling."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ctx-contracts-errorpipe",
+              "name": "ctx.contracts.errorpipe",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "ctx-workflow",
+              "name": "ctx.workflow",
+              "value": "WF98",
+              "type": "string"
+            },
+            {
+              "id": "ctx-ts",
+              "name": "ctx.ts",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-correlation-id",
+              "name": "ctx.correlation_id",
+              "value": "={{ $json._resolved_correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-execution-id",
+              "name": "ctx.execution_id",
+              "value": "={{ $json._extracted.execution_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-source-wf-id",
+              "name": "ctx.source_workflow_id",
+              "value": "={{ $json._extracted.source_workflow_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-source-wf-name",
+              "name": "ctx.source_workflow_name",
+              "value": "={{ $json._extracted.source_workflow_name }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-job-id",
+              "name": "ctx.job_id",
+              "value": "={{ $json._extracted.job_id }}",
+              "type": "number"
+            },
+            {
+              "id": "ctx-tenant-id",
+              "name": "ctx.tenant_id",
+              "value": "={{ $json._extracted.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-run-mode",
+              "name": "ctx.run_mode",
+              "value": "={{ $json.ctx?.run_mode ?? $json._source === 'test_trigger' ? 'test' : 'prod' }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-test-case",
+              "name": "ctx.test_case",
+              "value": "={{ $json.ctx?.test_case ?? null }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "step2-build-ctx",
+      "name": "STEP2 — Build ctx",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1600, 200],
+      "notes": "Builds the canonical ctx object per ErrorPipe Contract v1.\n\nINPUT: Item with _resolved_correlation_id and _extracted fields\nOUTPUT: ctx object with:\n- contracts.errorpipe = 1 (version marker)\n- workflow = 'WF98'\n- ts = current ISO timestamp\n- correlation_id (resolved)\n- execution_id, source_workflow_id, source_workflow_name\n- job_id, tenant_id (preserved if present, else null)\n- run_mode, test_case (for test identification)\n\nWHY: Standardized ctx structure required by WF99 contract. Uses dotNotation per project rules."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-ctx-node",
+              "name": "error_context.node",
+              "value": "={{ $json._extracted.error_node }}",
+              "type": "string"
+            },
+            {
+              "id": "err-ctx-operation",
+              "name": "error_context.operation",
+              "value": "n8n_error_workflow",
+              "type": "string"
+            },
+            {
+              "id": "err-ctx-table",
+              "name": "error_context.table",
+              "value": "={{ null }}",
+              "type": "string"
+            },
+            {
+              "id": "err-ctx-status-code",
+              "name": "error_context.status_code",
+              "value": "500",
+              "type": "number"
+            },
+            {
+              "id": "err-ctx-message",
+              "name": "error_context.error_message",
+              "value": "={{ $json._extracted.error_message }}",
+              "type": "string"
+            },
+            {
+              "id": "err-ctx-cid",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "step3-build-error-context",
+      "name": "STEP3 — Build error_context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1820, 200],
+      "notes": "Builds error_context object per ErrorPipe Contract v1.\n\nINPUT: Item with ctx and _extracted fields\nOUTPUT: error_context object with:\n- node: failing node name (best effort, or 'unknown')\n- operation: 'n8n_error_workflow'\n- table: null (not a DB operation)\n- status_code: 500 (internal error)\n- error_message: extracted error message\n- correlation_id: duplicated for convenience\n\nWHY: Normalized error context required by WF99. Operation is always 'n8n_error_workflow' since WF98 catches platform-level errors."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "raw-err-execution",
+              "name": "raw_error.execution",
+              "value": "={{ $json._raw_payload.execution }}",
+              "type": "object"
+            },
+            {
+              "id": "raw-err-workflow",
+              "name": "raw_error.workflow",
+              "value": "={{ $json._raw_payload.workflow }}",
+              "type": "object"
+            },
+            {
+              "id": "raw-err-error",
+              "name": "raw_error.error",
+              "value": "={{ $json._raw_payload.error }}",
+              "type": "object"
+            },
+            {
+              "id": "raw-err-message",
+              "name": "raw_error.message",
+              "value": "={{ $json._raw_payload.message }}",
+              "type": "string"
+            },
+            {
+              "id": "raw-err-description",
+              "name": "raw_error.description",
+              "value": "={{ $json._raw_payload.description }}",
+              "type": "string"
+            },
+            {
+              "id": "raw-err-source",
+              "name": "raw_error._wf98_source",
+              "value": "={{ $json._source }}",
+              "type": "string"
+            },
+            {
+              "id": "raw-err-cid-source",
+              "name": "raw_error._correlation_id_source",
+              "value": "={{ $json._correlation_id_source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "step4-build-raw-error",
+      "name": "STEP4 — Build raw_error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2040, 200],
+      "notes": "Builds raw_error object as a STRUCTURED object (NOT stringified).\n\nINPUT: Item with _raw_payload preserved from STEP1\nOUTPUT: raw_error object containing:\n- execution, workflow, error: original objects from Error Trigger\n- message, description: string fields\n- _wf98_source: 'error_trigger' or 'test_trigger'\n- _correlation_id_source: 'reused_from_input' or 'generated_by_wf98'\n\nWHY: Preserves diagnostic information for WF99 and ops.errors. Per ErrorPipe Contract, objects remain objects - no stringify."
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "workflowInputs": {
+          "mappingMode": "passThrough"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "call-wf99",
+      "name": "Call WF99",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [2260, 200],
+      "onError": "continueErrorOutput",
+      "notes": "Calls WF99 — Global ERR Handler to persist error and handle any job-path logic.\n\nINPUT: Item with ctx, error_context, raw_error (and all other fields)\nOUTPUT: ErrorEnvelope from WF99 with ok, status_code, error.details, meta, _internal\n\nPASSING MODE: passThrough - sends entire item to WF99 per ErrorPipe Contract.\n\nERROR HANDLING: continueErrorOutput - if WF99 fails, WF98 continues on error output branch (does not crash).\n\nWHY: WF98 is last-resort fallback. Must always complete, even if WF99 fails. WF99 workflowId must be configured manually."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf99-ok",
+              "name": "_wf99_result.called",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "wf99-success",
+              "name": "_wf99_result.success",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "wf99-persist-failed",
+              "name": "_wf99_result.persist_failed",
+              "value": "false",
+              "type": "boolean"
+            },
+            {
+              "id": "wf99-ops-error-id",
+              "name": "_wf99_result.ops_error_id",
+              "value": "={{ $json._internal?.ops_error_id ?? null }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "wf99-success",
+      "name": "WF99 Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2480, 100],
+      "notes": "Handles successful WF99 call.\n\nINPUT: WF99 response (ErrorEnvelope)\nOUTPUT: _wf99_result with called=true, success=true, persist_failed=false, ops_error_id (if available)\n\nWHY: Tracks WF99 call outcome for final output construction."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf99-fail-called",
+              "name": "_wf99_result.called",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "wf99-fail-success",
+              "name": "_wf99_result.success",
+              "value": "false",
+              "type": "boolean"
+            },
+            {
+              "id": "wf99-fail-persist",
+              "name": "_wf99_result.persist_failed",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "wf99-fail-stage",
+              "name": "_internal.persist_stage",
+              "value": "call_wf99",
+              "type": "string"
+            },
+            {
+              "id": "wf99-fail-err-msg",
+              "name": "_internal.wf99_error_message",
+              "value": "={{ $json.message ?? $json.error?.message ?? 'WF99 call failed with unknown error' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "wf99-failed",
+      "name": "WF99 Failed — Persist Failed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2480, 300],
+      "notes": "Handles WF99 call failure.\n\nINPUT: Error from Execute Workflow node\nOUTPUT: _wf99_result with called=true, success=false, persist_failed=true\n         _internal.persist_stage='call_wf99', _internal.wf99_error_message\n\nWHY: WF98 must complete even if WF99 fails. Marks persist_failed=true so callers know the error wasn't persisted to DB. WF98 does NOT throw - it's the last resort."
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "merge-wf99-result",
+      "name": "Merge WF99 Result",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [2700, 200],
+      "notes": "Merges WF99 success and failure branches.\n\nINPUT: Either WF99 Success or WF99 Failed branch (only one active)\nOUTPUT: Item with _wf99_result containing outcome details\n\nWHY: Reunifies control flow for final output construction."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "out-ok",
+              "name": "ok",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "out-cid",
+              "name": "correlation_id",
+              "value": "={{ $json.ctx.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "out-source-wf",
+              "name": "source_workflow_name",
+              "value": "={{ $json.ctx.source_workflow_name }}",
+              "type": "string"
+            },
+            {
+              "id": "out-source-exec",
+              "name": "source_execution_id",
+              "value": "={{ $json.ctx.execution_id }}",
+              "type": "string"
+            },
+            {
+              "id": "out-wf99-called",
+              "name": "wf99_called",
+              "value": "={{ $json._wf99_result.called }}",
+              "type": "boolean"
+            },
+            {
+              "id": "out-persist-failed",
+              "name": "persist_failed",
+              "value": "={{ $json._wf99_result.persist_failed }}",
+              "type": "boolean"
+            },
+            {
+              "id": "out-ops-error-id",
+              "name": "_internal.ops_error_id",
+              "value": "={{ $json._wf99_result.ops_error_id ?? null }}",
+              "type": "number"
+            },
+            {
+              "id": "out-run-mode",
+              "name": "_internal.run_mode",
+              "value": "={{ $json.ctx.run_mode }}",
+              "type": "string"
+            },
+            {
+              "id": "out-test-case",
+              "name": "_internal.test_case",
+              "value": "={{ $json.ctx.test_case }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "build-final-output",
+      "name": "Build Final Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2920, 200],
+      "notes": "Constructs final WF98 output.\n\nINPUT: Item with ctx, _wf99_result, and all processed fields\nOUTPUT: Clean output with:\n- ok: true (WF98 itself completed)\n- correlation_id: the correlation_id used\n- source_workflow_name, source_execution_id: failing workflow info\n- wf99_called: whether WF99 was invoked\n- persist_failed: whether WF99 call failed (error not persisted)\n- _internal: ops_error_id, run_mode, test_case for verification\n\nWHY: Provides clear summary of WF98 execution. includeOtherFields=false to strip internal working fields."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "is-test-mode",
+              "leftValue": "={{ $json._internal.run_mode }}",
+              "rightValue": "test",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-is-test-mode",
+      "name": "IF Is Test Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [3140, 200],
+      "notes": "Checks if this execution is a test run.\n\nINPUT: Final output item with _internal.run_mode\nOUTPUT:\n- TRUE: test mode → perform verification and cleanup\n- FALSE: prod mode → skip to final output\n\nWHY: Test executions need to verify DB inserts and clean up test data."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "errors"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "correlation_id",
+              "value": "={{ $json.correlation_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "test-verify-select",
+      "name": "TEST — Verify Insert (SELECT)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3360, 100],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "TEST ONLY: Verifies that WF99 inserted the error into ops.errors.\n\nINPUT: Final output with correlation_id\nOUTPUT: Row from ops.errors matching the correlation_id (if found)\n\nQUERY: SELECT * FROM ops.errors WHERE correlation_id = ? LIMIT 1\n\nWHY: Test verification confirms the error pipeline works end-to-end.\n\nERROR HANDLING: continueRegularOutput - if select fails, continue (don't crash test)."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "verify-found",
+              "name": "_test.verify_found",
+              "value": "={{ $json.id ? true : false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "verify-id",
+              "name": "_test.verified_error_id",
+              "value": "={{ $json.id ?? null }}",
+              "type": "number"
+            },
+            {
+              "id": "verify-cid",
+              "name": "_test.verified_correlation_id",
+              "value": "={{ $json.correlation_id ?? $('Build Final Output').item.json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "test-verify-result",
+      "name": "TEST — Verify Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [3580, 100],
+      "notes": "TEST ONLY: Processes verification result.\n\nINPUT: SELECT result (row from ops.errors or empty)\nOUTPUT:\n- _test.verify_found: true if row exists\n- _test.verified_error_id: the id of the verified row\n- _test.verified_correlation_id: preserved correlation_id for cleanup\n\nWHY: Structures verification outcome for cleanup step."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "errors"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "correlation_id",
+              "value": "={{ $json._test.verified_correlation_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "test-cleanup-delete",
+      "name": "TEST — Cleanup (DELETE)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3800, 100],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "TEST ONLY: Deletes the test error row from ops.errors.\n\nINPUT: Item with _test.verified_correlation_id\nOUTPUT: Delete confirmation\n\nQUERY: DELETE FROM ops.errors WHERE correlation_id = ?\n\nWHY: Clean up test data to avoid polluting prod database.\n\nERROR HANDLING: continueRegularOutput - if delete fails, continue (don't crash test)."
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "test-complete-ok",
+              "name": "ok",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "test-complete-verified",
+              "name": "test_verified",
+              "value": "={{ $('TEST — Verify Result').item.json._test.verify_found }}",
+              "type": "boolean"
+            },
+            {
+              "id": "test-complete-cleaned",
+              "name": "test_cleaned",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "test-complete-cid",
+              "name": "correlation_id",
+              "value": "={{ $('Build Final Output').item.json.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "test-complete-case",
+              "name": "test_case",
+              "value": "={{ $('Build Final Output').item.json._internal.test_case }}",
+              "type": "string"
+            },
+            {
+              "id": "test-complete-persist",
+              "name": "persist_failed",
+              "value": "={{ $('Build Final Output').item.json.persist_failed }}",
+              "type": "boolean"
+            },
+            {
+              "id": "test-complete-ops-id",
+              "name": "verified_error_id",
+              "value": "={{ $('TEST — Verify Result').item.json._test.verified_error_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "test-complete-output",
+      "name": "TEST — Complete Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [4020, 100],
+      "notes": "TEST ONLY: Builds final test output.\n\nINPUT: Post-cleanup state\nOUTPUT:\n- ok: true (test completed)\n- test_verified: whether the ops.errors row was found\n- test_cleaned: true (cleanup attempted)\n- correlation_id: for test tracking\n- test_case: T1/T2/T3\n- persist_failed: whether WF99 failed\n- verified_error_id: the id that was verified and cleaned\n\nWHY: Provides complete test summary for assertions."
+    },
+    {
+      "parameters": {},
+      "id": "prod-output-noop",
+      "name": "Prod Output",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [3360, 300],
+      "notes": "PROD path: No additional processing needed.\n\nINPUT: Final output from Build Final Output\nOUTPUT: Passes through unchanged\n\nWHY: Placeholder for prod path. In prod, we skip test verification/cleanup."
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "merge-final-output",
+      "name": "Merge Final Output",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [4240, 200],
+      "notes": "Merges TEST and PROD output paths.\n\nINPUT: Either TEST Complete Output or PROD Output (only one active)\nOUTPUT: Final WF98 result\n\nWHY: Unifies control flow for workflow completion."
+    }
+  ],
+  "connections": {
+    "Error Trigger (PROD)": {
+      "main": [
+        [
+          {
+            "node": "Stamp Prod Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger (TEST)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Test Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Test Payload": {
+      "main": [
+        [
+          {
+            "node": "STEP1 — Preserve Raw + Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stamp Prod Source": {
+      "main": [
+        [
+          {
+            "node": "STEP1 — Preserve Raw + Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "STEP1 — Preserve Raw + Extract": {
+      "main": [
+        [
+          {
+            "node": "IF Has Existing CID?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Has Existing CID?": {
+      "main": [
+        [
+          {
+            "node": "Use Existing Correlation ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crypto Generate UUID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Existing Correlation ID": {
+      "main": [
+        [
+          {
+            "node": "Merge CID Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto Generate UUID": {
+      "main": [
+        [
+          {
+            "node": "Use Generated Correlation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Generated Correlation ID": {
+      "main": [
+        [
+          {
+            "node": "Merge CID Paths",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge CID Paths": {
+      "main": [
+        [
+          {
+            "node": "STEP2 — Build ctx",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "STEP2 — Build ctx": {
+      "main": [
+        [
+          {
+            "node": "STEP3 — Build error_context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "STEP3 — Build error_context": {
+      "main": [
+        [
+          {
+            "node": "STEP4 — Build raw_error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "STEP4 — Build raw_error": {
+      "main": [
+        [
+          {
+            "node": "Call WF99",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99": {
+      "main": [
+        [
+          {
+            "node": "WF99 Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WF99 Failed — Persist Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 Success": {
+      "main": [
+        [
+          {
+            "node": "Merge WF99 Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 Failed — Persist Failed": {
+      "main": [
+        [
+          {
+            "node": "Merge WF99 Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge WF99 Result": {
+      "main": [
+        [
+          {
+            "node": "Build Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Final Output": {
+      "main": [
+        [
+          {
+            "node": "IF Is Test Mode?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Is Test Mode?": {
+      "main": [
+        [
+          {
+            "node": "TEST — Verify Insert (SELECT)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prod Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Verify Insert (SELECT)": {
+      "main": [
+        [
+          {
+            "node": "TEST — Verify Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Verify Result": {
+      "main": [
+        [
+          {
+            "node": "TEST — Cleanup (DELETE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Cleanup (DELETE)": {
+      "main": [
+        [
+          {
+            "node": "TEST — Complete Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Complete Output": {
+      "main": [
+        [
+          {
+            "node": "Merge Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prod Output": {
+      "main": [
+        [
+          {
+            "node": "Merge Final Output",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "",
+  "meta": {
+    "instanceId": ""
+  },
+  "id": "",
+  "tags": []
+}

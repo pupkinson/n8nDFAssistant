@@ -488,7 +488,7 @@
             {
               "id": "norm-ctx",
               "name": "_ctx",
-              "value": "={{ $json.ctx || {} }}",
+              "value": "={{ $json.ctx || $json._ctx || {} }}",
               "type": "object"
             },
             {
@@ -500,13 +500,13 @@
             {
               "id": "norm-error-msg",
               "name": "_error_message",
-              "value": "={{ $json.errorMessage || $json.errorDescription || $json.message || $json.error?.message || $json.err?.message || 'Unknown error' }}",
+              "value": "={{ $json.errorMessage || $json.errorDescription || $json.message || $json.error?.message || $json.err?.message || $json.error_context?.error_message || 'Unknown error' }}",
               "type": "string"
             },
             {
               "id": "norm-http-code",
               "name": "_http_code",
-              "value": "={{ $json.httpCode || $json.statusCode || $json.error?.statusCode || $json.error?.httpCode || null }}",
+              "value": "={{ $json.httpCode || $json.statusCode || $json.error?.statusCode || $json.error?.httpCode || $json.error_context?.status_code || null }}",
               "type": "number"
             },
             {
@@ -538,6 +538,24 @@
               "name": "_test_job_id",
               "value": "={{ $json._test_job_id || null }}",
               "type": "number"
+            },
+            {
+              "id": "norm-error-context",
+              "name": "_error_context",
+              "value": "={{ $json.error_context || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "norm-correlation-in",
+              "name": "_correlation_in",
+              "value": "={{ $json.error_context?.correlation_id || ($json.ctx || $json._ctx)?.correlation_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "norm-source-node",
+              "name": "_source_node",
+              "value": "={{ $json.error_context?.node || null }}",
+              "type": "string"
             }
           ]
         },
@@ -554,7 +572,7 @@
         -640,
         352
       ],
-      "notes": "Нормализует различные форматы ошибок в единую структуру.\n\nИзвлекает:\n- _ctx: контекст (tenant_id, job_id, trace_id и т.д.)\n- _error_message: сообщение об ошибке\n- _http_code: HTTP код (если есть)\n- _node_type: тип ноды (для определения Postgres)\n- _test_mode/_test_case: для тестов\n\nВход: Raw error item.\nВыход: Нормализованный item с _ полями."
+      "notes": "Нормализует различные форматы ошибок в единую структуру.\n\nИзвлекает:\n- _ctx: контекст из ctx ИЛИ _ctx (tenant_id, job_id, trace_id и т.д.)\n- _error_context: объект error_context от вызывающего WF\n- _correlation_in: входящий correlation_id (для сохранения)\n- _source_node: имя ноды-источника из error_context\n- _error_message: сообщение об ошибке\n- _http_code: HTTP код (если есть)\n- _node_type: тип ноды (для определения Postgres)\n- _test_mode/_test_case: для тестов\n\nВход: Raw error item.\nВыход: Нормализованный item с _ полями."
     },
     {
       "parameters": {
@@ -1000,10 +1018,163 @@
     },
     {
       "parameters": {
-        "mode": "raw",
-        "jsonOutput": "={\n  \"ok\": false,\n  \"status_code\": {{ $json._status_code }},\n  \"data\": null,\n  \"error\": {\n    \"kind\": \"{{ $json._kind }}\",\n    \"message\": {{ JSON.stringify($json._error_message) }},\n    \"retryable\": {{ $json._retryable }},\n    \"details\": {\n      \"ctx\": {{ JSON.stringify($json._ctx) }},\n      \"raw_error\": {{ JSON.stringify({ message: $json._error_message, http_code: $json._http_code, node_type: $json._node_type }) }},\n      \"test_mode\": {{ $json._test_mode }},\n      \"test_case\": {{ JSON.stringify($json._test_case) }}\n    }\n  },\n  \"meta\": {\n    \"source\": \"WF99\",\n    \"correlation\": {\n      \"correlation_id\": \"{{ $json._correlation_id }}\",\n      \"trace_id\": {{ JSON.stringify($json._ctx.trace_id || null) }},\n      \"workflow\": {{ JSON.stringify($json._ctx.workflow || null) }},\n      \"node\": {{ JSON.stringify($json._ctx.node || null) }}\n    },\n    \"ts\": \"{{ new Date().toISOString() }}\"\n  },\n  \"_internal\": {\n    \"correlation_id\": \"{{ $json._correlation_id }}\",\n    \"tenant_id\": {{ JSON.stringify($json._ctx.tenant_id || null) }},\n    \"job_id\": {{ $json._ctx.job_id || 'null' }},\n    \"test_mode\": {{ $json._test_mode }},\n    \"test_case\": {{ JSON.stringify($json._test_case) }},\n    \"_test_job_id\": {{ $json._test_job_id || 'null' }}\n  }\n}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "env-ok",
+              "name": "ok",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "env-status-code",
+              "name": "status_code",
+              "value": "={{ $json._status_code }}",
+              "type": "number"
+            },
+            {
+              "id": "env-data",
+              "name": "data",
+              "value": "={{ null }}",
+              "type": "string"
+            },
+            {
+              "id": "env-error-kind",
+              "name": "error.kind",
+              "value": "={{ $json._kind }}",
+              "type": "string"
+            },
+            {
+              "id": "env-error-message",
+              "name": "error.message",
+              "value": "={{ $json._error_message }}",
+              "type": "string"
+            },
+            {
+              "id": "env-error-retryable",
+              "name": "error.retryable",
+              "value": "={{ $json._retryable }}",
+              "type": "boolean"
+            },
+            {
+              "id": "env-details-ctx",
+              "name": "error.details.ctx",
+              "value": "={{ $json._ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "env-details-error-context",
+              "name": "error.details.error_context",
+              "value": "={{ $json._error_context }}",
+              "type": "object"
+            },
+            {
+              "id": "env-details-raw-message",
+              "name": "error.details.raw_error.message",
+              "value": "={{ $json._error_message }}",
+              "type": "string"
+            },
+            {
+              "id": "env-details-raw-http",
+              "name": "error.details.raw_error.http_code",
+              "value": "={{ $json._http_code }}",
+              "type": "number"
+            },
+            {
+              "id": "env-details-raw-node",
+              "name": "error.details.raw_error.node_type",
+              "value": "={{ $json._node_type }}",
+              "type": "string"
+            },
+            {
+              "id": "env-details-test-mode",
+              "name": "error.details.test_mode",
+              "value": "={{ $json._test_mode }}",
+              "type": "boolean"
+            },
+            {
+              "id": "env-details-test-case",
+              "name": "error.details.test_case",
+              "value": "={{ $json._test_case }}",
+              "type": "string"
+            },
+            {
+              "id": "env-meta-source",
+              "name": "meta.source",
+              "value": "WF99",
+              "type": "string"
+            },
+            {
+              "id": "env-meta-corr-id",
+              "name": "meta.correlation.correlation_id",
+              "value": "={{ $json._correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "env-meta-corr-trace",
+              "name": "meta.correlation.trace_id",
+              "value": "={{ $json._ctx.trace_id ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "env-meta-corr-wf",
+              "name": "meta.correlation.workflow",
+              "value": "={{ $json._ctx.workflow ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "env-meta-corr-node",
+              "name": "meta.correlation.node",
+              "value": "={{ $json._source_node ?? $json._ctx.node ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "env-meta-ts",
+              "name": "meta.ts",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "env-int-corr",
+              "name": "_internal.correlation_id",
+              "value": "={{ $json._correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "env-int-tenant",
+              "name": "_internal.tenant_id",
+              "value": "={{ $json._ctx.tenant_id ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "env-int-job",
+              "name": "_internal.job_id",
+              "value": "={{ $json._ctx.job_id ?? null }}",
+              "type": "number"
+            },
+            {
+              "id": "env-int-test-mode",
+              "name": "_internal.test_mode",
+              "value": "={{ $json._test_mode }}",
+              "type": "boolean"
+            },
+            {
+              "id": "env-int-test-case",
+              "name": "_internal.test_case",
+              "value": "={{ $json._test_case }}",
+              "type": "string"
+            },
+            {
+              "id": "env-int-test-job",
+              "name": "_internal._test_job_id",
+              "value": "={{ $json._test_job_id ?? null }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {
-          "dotNotation": false
+          "dotNotation": true
         }
       },
       "id": "33dc1c1a-a708-4f91-b526-bee6614340b0",
@@ -1014,7 +1185,7 @@
         464,
         448
       ],
-      "notes": "Строит канонический ErrorEnvelope согласно контракту:\n\n- ok: false\n- status_code: number\n- data: null\n- error.kind/message/retryable/details\n- meta.source/correlation/ts\n- _internal: служебные поля для DB операций\n\nВход: Classified item.\nВыход: ErrorEnvelope structure."
+      "notes": "Строит канонический ErrorEnvelope согласно контракту (NO CODE VERSION).\n\nСтруктура:\n- ok: false\n- status_code: number\n- data: null\n- error.kind/message/retryable/details\n  - details.ctx: исходный контекст\n  - details.error_context: объект от вызывающего WF\n  - details.raw_error: message/http_code/node_type\n  - details.test_mode/test_case: для тестов\n- meta.source/correlation/ts\n- _internal: служебные поля для DB операций\n\nБЕЗ JSON.stringify — использует dotNotation для построения вложенных объектов.\n\nВход: Classified item.\nВыход: ErrorEnvelope structure."
     },
     {
       "parameters": {
@@ -1035,7 +1206,7 @@
             "correlation_id": "={{ $json._internal.correlation_id }}",
             "kind": "={{ $json.error.kind }}",
             "message": "={{ $json.error.message }}",
-            "details": "={{ JSON.stringify($json.error.details) }}",
+            "details": "={{ $json.error.details }}",
             "retryable": "={{ $json.error.retryable }}"
           },
           "matchingColumns": [
@@ -1420,7 +1591,7 @@
           "value": {
             "id": "={{ $('PIPE — Extract Job ID').item.json._job_id }}",
             "status": "failed",
-            "last_error": "={{ JSON.stringify($('PIPE — Extract Job ID').item.json._envelope.error.details) }}",
+            "last_error": "={{ $('PIPE — Extract Job ID').item.json._envelope.error.details }}",
             "updated_at": "={{ new Date().toISOString() }}"
           },
           "matchingColumns": [
@@ -1481,7 +1652,7 @@
             "job_id": "={{ $('PIPE — Extract Job ID').item.json._job_id }}",
             "status": "failed",
             "finished_at": "={{ new Date().toISOString() }}",
-            "error": "={{ JSON.stringify($('PIPE — Extract Job ID').item.json._envelope.error.details) }}"
+            "error": "={{ $('PIPE — Extract Job ID').item.json._envelope.error.details }}"
           },
           "matchingColumns": [
             "id"
@@ -2937,6 +3108,83 @@
       "id": "8c11fee3-aa6c-4351-8bce-b042ecf667b9",
       "name": "TEST — Build Test Cases",
       "notes": "Генерирует 3 тестовых item:\n\nT1: HTTP 429 rate limit → kind=rate_limit, retryable=true\nT2: Postgres error → kind=db, retryable=true\nT3: Job path (требует setup) → проверка job failure flow\n\nВход: пустой item от Manual Trigger.\nВыход: 3 items для тестирования core pipeline"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-has-corr-in",
+              "leftValue": "={{ $json._correlation_in }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ab1ec705-bc4a-43fd-906b-6d9954a6db6b",
+      "name": "PIPE — IF Has Correlation In",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -640,
+        352
+      ],
+      "notes": "Проверяет наличие входящего correlation_id.\n\nTRUE: Использует существующий correlation_id.\nFALSE: Генерирует новый UUID v4.\n\nВход: Нормализованный item с _correlation_in.\nВыход: TRUE (есть correlation) / FALSE (нужен новый)."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "use-existing-corr",
+              "name": "_correlation_id",
+              "value": "={{ $json._correlation_in }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "81a1741a-4314-4636-ab0a-70f019896304",
+      "name": "PIPE — Use Existing Correlation",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -432,
+        144
+      ],
+      "notes": "Использует входящий correlation_id.\n\nПрименяется когда _correlation_in уже существует (передан от вызывающего WF).\n\nВход: TRUE от IF Has Correlation In.\nВыход: Item с _correlation_id = _correlation_in."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "5280d883-8472-418a-926e-c28dcf6103ec",
+      "name": "PIPE — Merge Correlation Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -224,
+        352
+      ],
+      "notes": "Объединяет пути correlation ID:\n- Input 0: Использован существующий correlation_id\n- Input 1: Сгенерирован новый UUID\n\nВход: Items от Use Existing Correlation и Generate Correlation ID.\nВыход: Item с _correlation_id."
     }
   ],
   "pinData": {},
@@ -3054,7 +3302,7 @@
       "main": [
         [
           {
-            "node": "PIPE — Generate Correlation ID",
+            "node": "PIPE — IF Has Correlation In",
             "type": "main",
             "index": 0
           }
@@ -3065,9 +3313,9 @@
       "main": [
         [
           {
-            "node": "PIPE — Switch Error Kind",
+            "node": "PIPE — Merge Correlation Paths",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -3894,6 +4142,46 @@
             "node": "PIPE — Merge Job Paths",
             "type": "main",
             "index": 1
+          }
+        ]
+      ]
+    },
+    "PIPE — IF Has Correlation In": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Use Existing Correlation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIPE — Generate Correlation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Use Existing Correlation": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Merge Correlation Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIPE — Merge Correlation Paths": {
+      "main": [
+        [
+          {
+            "node": "PIPE — Switch Error Kind",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
