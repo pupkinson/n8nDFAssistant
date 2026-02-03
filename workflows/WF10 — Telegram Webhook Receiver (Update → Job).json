@@ -1196,10 +1196,55 @@
     },
     {
       "parameters": {
-        "mode": "raw",
-        "jsonOutput": "=={\n  \"error_context\": {\n    \"node\": \"{{ $json._err.node }}\",\n    \"operation\": \"{{ $json._err.operation }}\",\n    \"table\": \"{{ $json._err.table }}\",\n    \"correlation_id\": \"{{ $json._ctx.correlation_id }}\",\n    \"error_message\": \"{{ $json.message || $json.error?.description || 'Database connection or query error' }}\",\n    \"status_code\": 500\n  }\n}\n",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ctx-out",
+              "name": "ctx",
+              "value": "={{ $json._ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "err-node",
+              "name": "error_context.node",
+              "value": "={{ $json._err.node }}",
+              "type": "string"
+            },
+            {
+              "id": "err-op",
+              "name": "error_context.operation",
+              "value": "={{ $json._err.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "err-table",
+              "name": "error_context.table",
+              "value": "={{ $json._err.table }}",
+              "type": "string"
+            },
+            {
+              "id": "err-corr",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json._ctx.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "err-msg",
+              "name": "error_context.error_message",
+              "value": "={{ $json.message || ($json.error ? $json.error.description : null) || 'Database connection or query error' }}",
+              "type": "string"
+            },
+            {
+              "id": "err-status",
+              "name": "error_context.status_code",
+              "value": 500,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
         "options": {
-          "dotNotation": false
+          "dotNotation": true
         }
       },
       "type": "n8n-nodes-base.set",
@@ -1211,7 +1256,7 @@
       "id": "391ff40a-c828-4fb9-8261-00f5851fe2a0",
       "name": "Prepare DB Error",
       "notesInFlow": true,
-      "notes": "Prepares error context for WF99 (global error handler)."
+      "notes": "FIXED: Prepares error context for WF99 (global error handler).\nInput: _ctx, _err from ERR-Source nodes, plus error fields (message/error/description).\nOutput: ctx (object), error_context (object), plus original error fields preserved.\nWHY includeOtherFields=true: Preserves message/error/description from Postgres error output."
     },
     {
       "parameters": {
@@ -1224,9 +1269,71 @@
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "ctx": "={{ $json.ctx }}",
+            "error_context": "={{ $json.error_context }}",
+            "message": "={{ $json.message }}",
+            "error": "={{ $json.error }}",
+            "description": "={{ $json.description }}"
+          },
           "matchingColumns": [],
-          "schema": [],
+          "schema": [
+            {
+              "id": "ctx",
+              "displayName": "ctx",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "error_context",
+              "displayName": "error_context",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
@@ -1243,7 +1350,7 @@
       "id": "e3acb092-6de5-49ec-b7a3-baf03bc97036",
       "name": "Call WF99",
       "notesInFlow": true,
-      "notes": "Calls global error handler WF99.\nwaitForSubWorkflow=false: Fire-and-forget logging."
+      "notes": "FIXED: Calls global error handler WF99.\nInput mapping: ctx, error_context, message, error, description.\nwaitForSubWorkflow=true: Wait for error handling to complete."
     },
     {
       "parameters": {
