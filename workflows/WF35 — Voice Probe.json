@@ -1,0 +1,3024 @@
+{
+  "name": "WF35 — Voice Probe",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -5056,
+        480
+      ],
+      "id": "793b2d19-0f00-4ef6-9416-00a9ce95e3d8",
+      "name": "Execute Workflow Trigger",
+      "notesInFlow": true,
+      "notes": "Entry point for WF35. Accepts worker input contract with req.ctx and req.job containing voice_probe job data.\nInput: { req: { ctx: {...}, job: {...} } }\nOutput: Same structure passed through."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-tenant",
+              "leftValue": "={{ $json.req?.ctx?.tenant_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-corr",
+              "leftValue": "={{ $json.req?.ctx?.correlation_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-jobid",
+              "leftValue": "={{ $json.req?.job?.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-docid",
+              "leftValue": "={{ $json.req?.job?.payload?.document_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-kind",
+              "leftValue": "={{ $json.req?.job?.payload?.extract_kind }}",
+              "rightValue": "voice_probe",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-blobid",
+              "leftValue": "={{ $json.req?.job?.payload?.source_locator?.blob_object_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-wake",
+              "leftValue": "={{ $json.req?.job?.payload?.wake_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4848,
+        480
+      ],
+      "id": "f0a38deb-bf7c-460a-bced-2b911dbaaeaf",
+      "name": "Guard — Input Valid",
+      "notesInFlow": true,
+      "notes": "Validates all required fields: tenant_id, correlation_id, job.id, document_id, extract_kind=voice_probe, blob_object_id, wake_name.\nInput: req.ctx + req.job\nOutput True: Valid input passes through\nOutput False: Invalid input → ErrorPipe"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 400,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "Missing required fields in voice_probe job input",
+              "type": "string"
+            },
+            {
+              "id": "err-details",
+              "name": "_err.details",
+              "value": "={{ { missing_fields: [ !$json.req?.ctx?.tenant_id ? 'ctx.tenant_id' : null, !$json.req?.ctx?.correlation_id ? 'ctx.correlation_id' : null, !$json.req?.job?.id ? 'job.id' : null, !$json.req?.job?.payload?.document_id ? 'payload.document_id' : null, $json.req?.job?.payload?.extract_kind !== 'voice_probe' ? 'payload.extract_kind' : null, !$json.req?.job?.payload?.source_locator?.blob_object_id ? 'payload.source_locator.blob_object_id' : null, !$json.req?.job?.payload?.wake_name ? 'payload.wake_name' : null ].filter(x => x) } }}",
+              "type": "object"
+            },
+            {
+              "id": "err-node",
+              "name": "_err.node",
+              "value": "Guard — Input Valid",
+              "type": "string"
+            },
+            {
+              "id": "err-op",
+              "name": "_err.operation",
+              "value": "input_validation",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4624,
+        688
+      ],
+      "id": "85eb9894-adff-4bf7-b26b-b776b2b4f43e",
+      "name": "ERR — Source Guard Input",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe v1 for input validation failure.\nInput: Invalid input data\nOutput: _err object with status_code=400, kind=validation, retryable=false"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -4400,
+        688
+      ],
+      "id": "79442076-b66a-4969-9ec4-2b7b25167367",
+      "name": "Call WF99 — Guard Error",
+      "notesInFlow": true,
+      "notes": "Calls WF99 error handler workflow.\nInput: _err + ctx + job\nOutput: Error response from WF99\nWHY: ErrorPipe Contract v1 requires WF99 for centralized error handling"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Input Validation Failed: ' + $json._err?.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -4176,
+        688
+      ],
+      "id": "c447e715-7a84-45d1-ac03-3b8f33350f86",
+      "name": "Stop — Guard Error",
+      "notesInFlow": true,
+      "notes": "Terminates workflow execution after input validation error.\nInput: Error context from WF99\nOutput: None (workflow stops)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "snap-req",
+              "name": "_snapshot.req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4624,
+        480
+      ],
+      "id": "d1b2a673-0299-4de3-ac17-3c78b88929bf",
+      "name": "Set — Snapshot Input",
+      "notesInFlow": true,
+      "notes": "Snapshots original input before DB/HTTP operations.\nInput: req object with ctx and job\nOutput: _snapshot.req preserved for later Merge restore\nWHY: Postgres/HTTP nodes may overwrite $json, need to preserve context"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $json._snapshot.req.ctx.tenant_id }}"
+            },
+            {
+              "column": "id",
+              "value": "={{ $json._snapshot.req.job.payload.document_id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "tenant_id",
+            "doc_type",
+            "visibility",
+            "status",
+            "meta",
+            "language"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -4400,
+        480
+      ],
+      "id": "32b8f07f-072b-4c3f-a899-7f1351697fc5",
+      "name": "PG — Load Document",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Loads target document by tenant_id + document_id.\nInput: _snapshot.req with document_id\nOutput: Document row or error\nWHY: Required lookup to verify document exists before processing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 500,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "db",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "={{ 'Database error loading document: ' + ($json.error?.message || 'Unknown error') }}",
+              "type": "string"
+            },
+            {
+              "id": "err-node",
+              "name": "_err.node",
+              "value": "PG — Load Document",
+              "type": "string"
+            },
+            {
+              "id": "err-table",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "err-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4176,
+        640
+      ],
+      "id": "e40047ff-b6b5-4b07-87cd-c2be0907f8e2",
+      "name": "ERR — Source Load Doc",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for document load DB error.\nInput: Postgres error output\nOutput: _err with kind=db, retryable=true"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3968,
+        640
+      ],
+      "id": "3ce1a186-64b3-4e32-ab53-6ed3401799f1",
+      "name": "Call WF99 — Doc Error",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for document load error.\nInput: _err + context\nOutput: Error response"
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Document Load Failed: ' + $json._err?.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -3744,
+        640
+      ],
+      "id": "131e7348-8bfc-40cf-98f8-69f876f39e9e",
+      "name": "Stop — Doc Error",
+      "notesInFlow": true,
+      "notes": "Terminates after document load error."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-has-doc",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4176,
+        480
+      ],
+      "id": "06bd43f0-5806-4484-ad66-2620bd2006bc",
+      "name": "Guard — Doc Exists",
+      "notesInFlow": true,
+      "notes": "Checks if document was found (not 0 rows).\nInput: Postgres select result\nOutput True: Document found\nOutput False: 404 business error"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 404,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "app",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "Document not found",
+              "type": "string"
+            },
+            {
+              "id": "err-details",
+              "name": "_err.details",
+              "value": "={{ { document_id: $('Set — Snapshot Input').item.json._snapshot.req.job.payload.document_id, tenant_id: $('Set — Snapshot Input').item.json._snapshot.req.ctx.tenant_id } }}",
+              "type": "object"
+            },
+            {
+              "id": "err-node",
+              "name": "_err.node",
+              "value": "Guard — Doc Exists",
+              "type": "string"
+            },
+            {
+              "id": "err-op",
+              "name": "_err.operation",
+              "value": "document_lookup",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3968,
+        768
+      ],
+      "id": "8b045bf8-6ca1-4856-a392-c941a0622d16",
+      "name": "ERR — Doc Not Found",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for document not found (404).\nInput: Empty result context\nOutput: _err with status_code=404, kind=app"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3744,
+        768
+      ],
+      "id": "68a1f00a-13b1-43e3-907c-8f2f0bda5f1d",
+      "name": "Call WF99 — 404",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for document not found."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Document Not Found: ' + $json._err?.details?.document_id }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -3520,
+        768
+      ],
+      "id": "b65c5820-f86a-4726-88f8-e141f73ed883",
+      "name": "Stop — 404",
+      "notesInFlow": true,
+      "notes": "Terminates after document not found."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "doc-data",
+              "name": "_doc",
+              "value": "={{ { id: $json.id, tenant_id: $json.tenant_id, doc_type: $json.doc_type, visibility: $json.visibility, status: $json.status, meta: $json.meta || {}, language: $json.language } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3968,
+        480
+      ],
+      "id": "3b89f929-e435-43ed-b900-0c8d382b18ea",
+      "name": "Set — Store Doc",
+      "notesInFlow": true,
+      "notes": "Stores loaded document data for later use.\nInput: Document row from Postgres\nOutput: _doc object with document fields"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -3744,
+        480
+      ],
+      "id": "99fd839f-ce02-4688-8fad-dc0575bbd0fc",
+      "name": "Merge — Doc + Snapshot",
+      "notesInFlow": true,
+      "notes": "Merges document data with original snapshot.\nInput 1: _doc from Store Doc\nInput 2: _snapshot from Snapshot node\nOutput: Combined _doc + _snapshot\nWHY: numberInputs=2 matches 2 incoming connections"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "blob_objects",
+          "mode": "list",
+          "cachedResultName": "blob_objects"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json._snapshot.req.job.payload.source_locator.blob_object_id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "storage_kind",
+            "storage_key",
+            "byte_size",
+            "meta"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -3520,
+        480
+      ],
+      "id": "08e507f3-ba0c-416a-8cdf-8301e7e8394d",
+      "name": "PG — Load Blob",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Loads blob object by id to get storage location.\nInput: blob_object_id from payload\nOutput: Blob row with storage_kind, storage_key"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 500,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "db",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "={{ 'Database error loading blob: ' + ($json.error?.message || 'Unknown error') }}",
+              "type": "string"
+            },
+            {
+              "id": "err-node",
+              "name": "_err.node",
+              "value": "PG — Load Blob",
+              "type": "string"
+            },
+            {
+              "id": "err-table",
+              "name": "_err.table",
+              "value": "content.blob_objects",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3296,
+        640
+      ],
+      "id": "384f4dfc-e03b-4bcb-a849-89f549a49f71",
+      "name": "ERR — Source Load Blob",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for blob load error."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3088,
+        640
+      ],
+      "id": "a0eb1530-d48f-4082-a93e-6e4572c5b7d4",
+      "name": "Call WF99 — Blob Error",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for blob load error."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Blob Load Failed: ' + $json._err?.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -2864,
+        640
+      ],
+      "id": "ca37afb5-6f3e-4547-833d-d442a2d61366",
+      "name": "Stop — Blob Error",
+      "notesInFlow": true,
+      "notes": "Terminates after blob load error."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-has-blob",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3296,
+        480
+      ],
+      "id": "6db4c909-f4f5-4dea-b7e3-6e72f29800d0",
+      "name": "Guard — Blob Exists",
+      "notesInFlow": true,
+      "notes": "Checks if blob object was found.\nInput: Postgres result\nOutput True: Blob found\nOutput False: 404"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 404,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "app",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "Blob object not found",
+              "type": "string"
+            },
+            {
+              "id": "err-details",
+              "name": "_err.details",
+              "value": "={{ { blob_object_id: $('Set — Snapshot Input').item.json._snapshot.req.job.payload.source_locator.blob_object_id } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3088,
+        768
+      ],
+      "id": "151d1d50-c92a-4f10-b4da-cdd88ebda130",
+      "name": "ERR — Blob Not Found",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for blob not found."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -2864,
+        768
+      ],
+      "id": "10180cee-9410-465a-b747-65e3e760826f",
+      "name": "Call WF99 — Blob 404",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for blob not found."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Blob Not Found: ' + $json._err?.details?.blob_object_id }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -2640,
+        768
+      ],
+      "id": "3cdddc73-56e4-4a0c-9df5-b1ccacd4121e",
+      "name": "Stop — Blob 404",
+      "notesInFlow": true,
+      "notes": "Terminates after blob not found."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "blob-data",
+              "name": "_blob",
+              "value": "={{ { id: $json.id, storage_kind: $json.storage_kind, storage_key: $json.storage_key, byte_size: $json.byte_size, meta: $json.meta || {} } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3088,
+        480
+      ],
+      "id": "0e22fcce-d375-4ea5-b540-05dea8069993",
+      "name": "Set — Store Blob",
+      "notesInFlow": true,
+      "notes": "Stores blob object data.\nInput: Blob row\nOutput: _blob with storage info"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-http-kind",
+              "leftValue": "={{ $json._blob.storage_kind }}",
+              "rightValue": "http",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2864,
+        480
+      ],
+      "id": "177a3d3e-5d34-4908-9557-0a84c6ca8fdb",
+      "name": "IF — Storage Kind HTTP",
+      "notesInFlow": true,
+      "notes": "Checks if storage_kind allows direct HTTP fetch.\nInput: _blob.storage_kind\nOutput True: HTTP fetchable\nOutput False: Needs signing (unsupported)\nWHY: Only http storage_kind can be fetched without signing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 500,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "app",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "blob_fetch_not_supported_without_signing",
+              "type": "string"
+            },
+            {
+              "id": "err-details",
+              "name": "_err.details",
+              "value": "={{ { storage_kind: $json._blob.storage_kind, blob_object_id: $json._blob.id } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2640,
+        640
+      ],
+      "id": "0d7390ca-d364-4884-b6f5-44b6e813e3b5",
+      "name": "ERR — Storage Unsupported",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for unsupported storage kind.\nWHY: S3/MinIO require signing which is not available without Code node"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -2416,
+        640
+      ],
+      "id": "28aa88f6-dff4-4886-8a60-983c0dff6e64",
+      "name": "Call WF99 — Storage",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for unsupported storage."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Storage Unsupported: ' + $json._err?.details?.storage_kind }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        640
+      ],
+      "id": "ac2ece5f-31fb-42dd-99b4-45448b1098f5",
+      "name": "Stop — Storage",
+      "notesInFlow": true,
+      "notes": "Terminates after unsupported storage error."
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2640,
+        480
+      ],
+      "id": "f66b7101-7486-4f1d-b5c8-b6043023c919",
+      "name": "HTTP — Fetch Audio",
+      "notesInFlow": true,
+      "notes": "Fetches audio binary from storage_key URL.\nInput: _blob.storage_key (HTTP URL)\nOutput: Binary audio in audio_data field\nWHY: On Error Continue to handle fetch failures"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 502,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "http",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "={{ 'Failed to fetch audio: ' + ($json.error?.message || 'Unknown error') }}",
+              "type": "string"
+            },
+            {
+              "id": "err-http",
+              "name": "_err.http",
+              "value": "={{ { url: $('Set — Store Blob').item.json._blob.storage_key, status: $json.error?.httpCode } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2416,
+        480
+      ],
+      "id": "9f317157-5069-4340-ab4e-e361e1ba60f5",
+      "name": "ERR — Source Fetch Audio",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for audio fetch failure."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -2208,
+        480
+      ],
+      "id": "71456d90-c436-41d4-910c-08e4e8e19b2b",
+      "name": "Call WF99 — Fetch Error",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for audio fetch error."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Audio Fetch Failed: ' + $json._err?.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -1984,
+        480
+      ],
+      "id": "d3fd4f5f-eae6-4f1c-9535-9db30fd8acea",
+      "name": "Stop — Fetch Error",
+      "notesInFlow": true,
+      "notes": "Terminates after fetch error."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2416,
+        320
+      ],
+      "id": "a1433534-4d9f-48e7-b28a-e781d4a34892",
+      "name": "Merge — Audio + Context",
+      "notesInFlow": true,
+      "notes": "Merges fetched audio with document/blob/snapshot context.\nInput 1: Audio binary\nInput 2: Context from Snapshot\nOutput: Combined data with audio_data binary\nWHY: numberInputs=2"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "={{ 'You are a wake-word detection system. Analyze ONLY the first ' + ($json._snapshot?.req?.job?.payload?.max_seconds || 5) + ' seconds of this audio.\\n\\nTask: Detect if the wake word \"' + $json._snapshot?.req?.job?.payload?.wake_name + '\" (case-insensitive) is spoken in the audio.\\n\\nRespond ONLY with valid JSON (no markdown, no explanation):\\n{\\n  \"probe_text\": \"<transcribed text from first ' + ($json._snapshot?.req?.job?.payload?.max_seconds || 5) + ' seconds>\",\\n  \"language\": \"<detected language code: ru, en, etc>\",\\n  \"wake_detected\": <true if wake word found, false otherwise>,\\n  \"confidence\": <0.0 to 1.0 confidence score>\\n}\\n\\nIf uncertain, set wake_detected=false and confidence<0.5.' }}",
+        "inputType": "binary",
+        "binaryPropertyName": "audio_data",
+        "options": {
+          "maxOutputTokens": 500
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -2208,
+        320
+      ],
+      "id": "ab239278-c3cf-4359-b32c-94e09b9e42a2",
+      "name": "Gemini — Wake Probe",
+      "notesInFlow": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Calls Gemini Flash for STT-lite wake detection.\nInput: Audio binary + wake_name + max_seconds\nOutput: JSON with probe_text, language, wake_detected, confidence\nWHY: Using analyze operation with strict JSON prompt"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 502,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "ai",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "={{ 'Gemini wake probe failed: ' + ($json.error?.message || 'Unknown error') }}",
+              "type": "string"
+            },
+            {
+              "id": "err-node",
+              "name": "_err.node",
+              "value": "Gemini — Wake Probe",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1984,
+        320
+      ],
+      "id": "9fe26b69-5d3d-4c87-893b-014adff7d9fb",
+      "name": "ERR — Source Gemini",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for Gemini API error."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -1760,
+        320
+      ],
+      "id": "c935b08d-9411-41a2-8962-a17432a1499c",
+      "name": "Call WF99 — Gemini",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for Gemini error."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Gemini Failed: ' + $json._err?.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -1536,
+        320
+      ],
+      "id": "dccbbd7e-fd1e-4cd4-8a79-4c3aaf57f312",
+      "name": "Stop — Gemini",
+      "notesInFlow": true,
+      "notes": "Terminates after Gemini error."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1984,
+        160
+      ],
+      "id": "9b351a5e-3604-494e-ab4e-b995c67bf8a0",
+      "name": "Merge — Gemini + Context",
+      "notesInFlow": true,
+      "notes": "Merges Gemini response with context.\nInput 1: Gemini result\nInput 2: _snapshot/_doc/_blob context\nOutput: Combined probe result + context"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "probe-text",
+              "name": "_probe.probe_text",
+              "value": "={{ $json.output || $json.text || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "probe-wake",
+              "name": "_probe.wake_detected",
+              "value": "={{ false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "probe-conf",
+              "name": "_probe.confidence",
+              "value": "={{ 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "probe-lang",
+              "name": "_probe.language",
+              "value": "={{ 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "probe-raw",
+              "name": "_probe.raw_response",
+              "value": "={{ $json.output || $json.text || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1760,
+        160
+      ],
+      "id": "4ca2f06e-ea79-43fa-9663-4ed4259de467",
+      "name": "Set — Parse Gemini Raw",
+      "notesInFlow": true,
+      "notes": "Initial parse of Gemini response.\nInput: Raw Gemini output\nOutput: _probe with defaults, will be updated by JSON parse"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse JSON from Gemini response\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const raw = item.json._probe?.raw_response || '';\n  let parsed = { wake_detected: false, confidence: 0, probe_text: raw, language: 'unknown' };\n  \n  try {\n    // Try to extract JSON from response\n    const jsonMatch = raw.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      const obj = JSON.parse(jsonMatch[0]);\n      parsed = {\n        wake_detected: Boolean(obj.wake_detected),\n        confidence: Number(obj.confidence) || 0,\n        probe_text: String(obj.probe_text || ''),\n        language: String(obj.language || 'unknown')\n      };\n    }\n  } catch (e) {\n    // Keep defaults on parse error\n  }\n  \n  results.push({\n    json: {\n      ...item.json,\n      _probe: {\n        ...item.json._probe,\n        ...parsed,\n        parse_success: parsed.probe_text !== raw\n      }\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1536,
+        160
+      ],
+      "id": "d5b6297c-a4df-4b19-9a31-0bd544f3dda8",
+      "name": "Code — Parse JSON",
+      "notesInFlow": true,
+      "notes": "Parses JSON from Gemini response.\nInput: _probe.raw_response\nOutput: _probe with parsed wake_detected, confidence, probe_text, language\nWHY: Code node needed for robust JSON extraction from LLM output"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $json._snapshot.req.ctx.tenant_id }}"
+            },
+            {
+              "column": "id",
+              "value": "={{ $json._snapshot.req.job.payload.document_id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "meta"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1328,
+        160
+      ],
+      "id": "84ba416a-e15a-4b6c-9c5a-87836475d080",
+      "name": "PG — Select Meta",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Selects current document meta before update.\nInput: tenant_id + document_id\nOutput: Current meta for preserving existing fields\nWHY: Need to merge voice_probe into existing meta without overwriting"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 500,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "db",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "={{ 'Failed to select document meta: ' + ($json.error?.message || 'Unknown error') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1104,
+        320
+      ],
+      "id": "de080111-a071-48b1-afba-4dd76bb09b61",
+      "name": "ERR — Source Select Meta",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for meta select error."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -880,
+        320
+      ],
+      "id": "cb44f118-d35d-46f6-a0df-c5182d2740fe",
+      "name": "Call WF99 — Meta Error",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for meta select error."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Meta Select Failed: ' + $json._err?.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        320
+      ],
+      "id": "60bcbe56-84ec-416b-9d9c-33f5a7a9db3c",
+      "name": "Stop — Meta Error",
+      "notesInFlow": true,
+      "notes": "Terminates after meta select error."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1104,
+        160
+      ],
+      "id": "d4938902-6967-43e0-b2d8-ede98172b937",
+      "name": "Merge — Meta + Probe",
+      "notesInFlow": true,
+      "notes": "Merges current meta with probe results.\nInput 1: Current meta from DB\nInput 2: _probe results\nOutput: Combined for meta update"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "new-meta",
+              "name": "_new_meta",
+              "value": "={{ Object.assign({}, $json.meta || {}, { voice_probe: { wake_name: $json._snapshot?.req?.job?.payload?.wake_name, max_seconds: $json._snapshot?.req?.job?.payload?.max_seconds || 5, wake_detected: $json._probe?.wake_detected || false, confidence: $json._probe?.confidence || 0, probe_text: $json._probe?.probe_text || '', language: $json._probe?.language || 'unknown', model: 'gemini-2.5-flash', probed_at: new Date().toISOString() } }) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        160
+      ],
+      "id": "301767a2-14b7-48eb-88e2-ee1452069eda",
+      "name": "Set — Build New Meta",
+      "notesInFlow": true,
+      "notes": "Builds new meta with voice_probe merged.\nInput: Existing meta + _probe\nOutput: _new_meta with voice_probe added"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "meta": "={{ $json._new_meta }}"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -656,
+        160
+      ],
+      "id": "28d12633-d1bc-41a3-bbb3-2c0eaddbc875",
+      "name": "PG — Update Meta",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Updates document meta with voice_probe.\nInput: _new_meta\nOutput: Update confirmation\nWHY: Does NOT change status (probe is auxiliary)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 500,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "db",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "={{ 'Failed to update document meta: ' + ($json.error?.message || 'Unknown error') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -448,
+        320
+      ],
+      "id": "e44a36fc-906b-4730-8dbc-a2c0d9bec3e1",
+      "name": "ERR — Source Update Meta",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for meta update error."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -224,
+        320
+      ],
+      "id": "ef895d20-6edf-45f3-8887-f28c2a0233b3",
+      "name": "Call WF99 — Update Error",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for meta update error."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Meta Update Failed: ' + $json._err?.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        0,
+        320
+      ],
+      "id": "1d9dfefe-f471-40b4-b71a-4e478190e6ae",
+      "name": "Stop — Update Error",
+      "notesInFlow": true,
+      "notes": "Terminates after meta update error."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-wake",
+              "leftValue": "={{ $json._probe?.wake_detected }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        160
+      ],
+      "id": "cf2ade91-8411-4baa-bff9-d91bed30fe16",
+      "name": "IF — Wake Detected",
+      "notesInFlow": true,
+      "notes": "Checks if wake word was detected.\nInput: _probe.wake_detected\nOutput True: Enqueue full transcription\nOutput False: Skip to success response"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $json._snapshot.req.ctx.tenant_id }}"
+            },
+            {
+              "column": "job_type",
+              "value": "extract_text"
+            },
+            {
+              "column": "status",
+              "value": "queued,running"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -224,
+        160
+      ],
+      "id": "7f9dd4bd-3176-4307-bc03-b2d6c81169de",
+      "name": "PG — Check Existing Job",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Checks for existing voice_transcribe job to avoid duplicates.\nInput: tenant_id, job_type=extract_text, status in (queued,running)\nOutput: Existing job or empty\nWHY: payload.extract_kind check done via JSON containment would need Execute Query, so we check job_type only and filter after"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 500,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "db",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "={{ 'Failed to check existing job: ' + ($json.error?.message || 'Unknown error') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "580dcab9-a7be-4b6f-9e7c-13c7dedbed5e",
+      "name": "ERR — Source Check Job",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for job check error."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "381e996f-2a8d-4c05-b956-3695f1b45824",
+      "name": "Call WF99 — Check Job",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for job check error."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Job Check Failed: ' + $json._err?.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "ecc42e95-242d-4526-9e5f-1714908e2a3b",
+      "name": "Stop — Check Job",
+      "notesInFlow": true,
+      "notes": "Terminates after job check error."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-no-existing",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notExists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        160
+      ],
+      "id": "bdcdf9dc-7461-4f0d-8d5d-da817d592e94",
+      "name": "Guard — No Existing Job",
+      "notesInFlow": true,
+      "notes": "Checks if no existing voice_transcribe job exists.\nInput: Job check result\nOutput True: Insert new job\nOutput False: Skip insert (job exists)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "job-payload",
+              "name": "_new_job.payload",
+              "value": "={{ { document_id: $json._snapshot?.req?.job?.payload?.document_id, extract_kind: 'voice_transcribe', source_locator: $json._snapshot?.req?.job?.payload?.source_locator, language_hint: $json._probe?.language || $json._snapshot?.req?.job?.payload?.language_hint, message_version_id: $json._snapshot?.req?.job?.payload?.message_version_id, chat_id: $json._snapshot?.req?.job?.payload?.chat_id, visibility: $json._snapshot?.req?.job?.payload?.visibility, tenant_id: $json._snapshot?.req?.ctx?.tenant_id, bot_id: $json._snapshot?.req?.ctx?.bot_id, trace_id: $json._snapshot?.req?.ctx?.trace_id, correlation_id: $json._snapshot?.req?.ctx?.correlation_id } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        160
+      ],
+      "id": "3505b807-4289-4956-9e33-6dc30c07d822",
+      "name": "Set — Build New Job",
+      "notesInFlow": true,
+      "notes": "Builds payload for voice_transcribe job.\nInput: Context from snapshot\nOutput: _new_job.payload with extract_kind=voice_transcribe"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json._snapshot.req.ctx.tenant_id }}",
+            "job_type": "extract_text",
+            "payload": "={{ $json._new_job.payload }}",
+            "correlation_id": "={{ $json._snapshot.req.ctx.correlation_id }}"
+          }
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        160
+      ],
+      "id": "74451cf9-8303-4ced-89d6-3bb7ffd1a678",
+      "name": "PG — Insert Job",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Inserts voice_transcribe job for WF34.\nInput: _new_job.payload\nOutput: New job ID\nWHY: job_type=extract_text, payload.extract_kind=voice_transcribe"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "_err.status_code",
+              "value": 500,
+              "type": "number"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "db",
+              "type": "string"
+            },
+            {
+              "id": "err-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "={{ 'Failed to insert job: ' + ($json.error?.message || 'Unknown error') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        320
+      ],
+      "id": "198701bb-daec-4697-a25b-d0d8440ff30a",
+      "name": "ERR — Source Insert Job",
+      "notesInFlow": true,
+      "notes": "Prepares ErrorPipe for job insert error."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        320
+      ],
+      "id": "794f2d2b-e854-4f1b-af24-e5f6fd072f8b",
+      "name": "Call WF99 — Insert Job",
+      "notesInFlow": true,
+      "notes": "Calls WF99 for job insert error."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF35 Job Insert Failed: ' + $json._err?.message }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        320
+      ],
+      "id": "c0400497-59fb-47ea-8521-b1c94bdc9db9",
+      "name": "Stop — Insert Job",
+      "notesInFlow": true,
+      "notes": "Terminates after job insert error."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "enqueued-id",
+              "name": "_result.enqueued_job_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "action",
+              "name": "_result.next_action",
+              "value": "transcribe_full",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        160
+      ],
+      "id": "1c54cbc2-8095-4b73-9bac-b90dbec5c9e3",
+      "name": "Set — Enqueued Result",
+      "notesInFlow": true,
+      "notes": "Sets enqueued job ID and next_action=transcribe_full.\nInput: Insert result with new job ID\nOutput: _result with enqueued_job_id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "enqueued-id",
+              "name": "_result.enqueued_job_id",
+              "value": "={{ null }}",
+              "type": "string"
+            },
+            {
+              "id": "action",
+              "name": "_result.next_action",
+              "value": "ignore",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        480
+      ],
+      "id": "d104f511-68c6-4aa4-8f7d-f7dbc3c2f922",
+      "name": "Set — Ignore Result",
+      "notesInFlow": true,
+      "notes": "Sets next_action=ignore when wake not detected or job exists.\nInput: Context\nOutput: _result with null enqueued_job_id"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        880,
+        240
+      ],
+      "id": "462bba04-2c0d-4049-bb66-95c495fce519",
+      "name": "Merge — All Results",
+      "notesInFlow": true,
+      "notes": "Merges all result paths.\nInput 1: Enqueued result\nInput 2: Existing job skip\nInput 3: No wake ignore\nOutput: Unified result\nWHY: numberInputs=3 for three paths"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "out-docid",
+              "name": "data.document_id",
+              "value": "={{ $json._snapshot?.req?.job?.payload?.document_id }}",
+              "type": "number"
+            },
+            {
+              "id": "out-wake",
+              "name": "data.wake_detected",
+              "value": "={{ $json._probe?.wake_detected || false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "out-conf",
+              "name": "data.confidence",
+              "value": "={{ $json._probe?.confidence || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "out-text",
+              "name": "data.probe_text",
+              "value": "={{ $json._probe?.probe_text || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "out-action",
+              "name": "data.next_action",
+              "value": "={{ $json._result?.next_action || 'ignore' }}",
+              "type": "string"
+            },
+            {
+              "id": "out-jobid",
+              "name": "data.enqueued_job_id",
+              "value": "={{ $json._result?.enqueued_job_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "out-model",
+              "name": "data.model",
+              "value": "gemini-2.5-flash",
+              "type": "string"
+            },
+            {
+              "id": "out-max",
+              "name": "data.max_seconds",
+              "value": "={{ $json._snapshot?.req?.job?.payload?.max_seconds || 5 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        240
+      ],
+      "id": "820eb329-1118-4a48-a2ea-6d8548ecd1a4",
+      "name": "Set — Build Success Envelope",
+      "notesInFlow": true,
+      "notes": "Builds final SuccessEnvelope.\nInput: All context and results\nOutput: { data: { document_id, wake_detected, confidence, probe_text, next_action, enqueued_job_id, model, max_seconds } }"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -5056,
+        992
+      ],
+      "id": "37bd914f-7af6-4e37-aa3d-18208f2abcd1",
+      "name": "TEST — Manual Trigger",
+      "notesInFlow": true,
+      "notes": "Manual trigger for test branch.\nWHY: Tests do not affect prod path"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t1-req",
+              "name": "req",
+              "value": "={{ { ctx: { tenant_id: '00000000-0000-0000-0000-000000000001', bot_id: '00000000-0000-0000-0000-000000000002', trace_id: 'test-trace-t1', correlation_id: '00000000-0000-0000-0000-000000000003', visibility: 'group', chat_id: 123456, message_version_id: 789, job_id: 1, workflow: 'WF35' }, job: { id: 1, job_type: 'extract_text', payload: { document_id: 100, extract_kind: 'voice_probe', source_locator: { blob_object_id: 200, mime: 'audio/ogg' }, wake_name: 'Ассистент', max_seconds: 5, language_hint: 'ru', message_version_id: 789, chat_id: 123456, visibility: 'group', tenant_id: '00000000-0000-0000-0000-000000000001', bot_id: '00000000-0000-0000-0000-000000000002', trace_id: 'test-trace-t1', correlation_id: '00000000-0000-0000-0000-000000000003' } } } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4848,
+        992
+      ],
+      "id": "421c9d9a-8fd5-456f-afe4-e46988fd0ac9",
+      "name": "T1 — Happy Wake Detected",
+      "notesInFlow": true,
+      "notes": "Test 1: Happy path with wake word present.\nExpect: wake_detected=true, job inserted, next_action=transcribe_full"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t2-req",
+              "name": "req",
+              "value": "={{ { ctx: { tenant_id: '00000000-0000-0000-0000-000000000001', bot_id: '00000000-0000-0000-0000-000000000002', trace_id: 'test-trace-t2', correlation_id: '00000000-0000-0000-0000-000000000004', visibility: 'dm_private', chat_id: 999, message_version_id: 888, job_id: 2, workflow: 'WF35' }, job: { id: 2, job_type: 'extract_text', payload: { document_id: 101, extract_kind: 'voice_probe', source_locator: { blob_object_id: 201, mime: 'audio/ogg' }, wake_name: 'Бот', max_seconds: 3, language_hint: null, message_version_id: 888, chat_id: 999, visibility: 'dm_private', tenant_id: '00000000-0000-0000-0000-000000000001', bot_id: '00000000-0000-0000-0000-000000000002', trace_id: 'test-trace-t2', correlation_id: '00000000-0000-0000-0000-000000000004' } } } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4848,
+        1152
+      ],
+      "id": "812ce633-e7da-4d58-8ae1-cf9dd9813131",
+      "name": "T2 — Edge No Wake",
+      "notesInFlow": true,
+      "notes": "Test 2: Edge case no wake word.\nExpect: wake_detected=false, no job inserted, next_action=ignore"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t3-req",
+              "name": "req",
+              "value": "={{ { ctx: { tenant_id: '00000000-0000-0000-0000-000000000001', bot_id: '00000000-0000-0000-0000-000000000002', trace_id: 'test-trace-t3', correlation_id: '00000000-0000-0000-0000-000000000005', visibility: 'group', chat_id: null, message_version_id: null, job_id: 3, workflow: 'WF35' }, job: { id: 3, job_type: 'extract_text', payload: { extract_kind: 'voice_probe', source_locator: { blob_object_id: 202, mime: 'audio/ogg' }, wake_name: 'Test', max_seconds: 5 } } } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4848,
+        1312
+      ],
+      "id": "1e19668a-d193-462a-8105-b878de897715",
+      "name": "T3 — Fail Missing document_id",
+      "notesInFlow": true,
+      "notes": "Test 3: Fail case missing document_id.\nExpect: ErrorPipe v1 → WF99 → StopAndError with status_code=400"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -4624,
+        1152
+      ],
+      "id": "b2f37152-f373-4155-8a88-6add79759b8f",
+      "name": "TEST — End",
+      "notesInFlow": true,
+      "notes": "Test branch endpoint. Tests MAY write to DB."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Guard — Input Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard — Input Valid": {
+      "main": [
+        [
+          {
+            "node": "Set — Snapshot Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Guard Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Guard Input": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Guard Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Guard Error": {
+      "main": [
+        [
+          {
+            "node": "Stop — Guard Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Snapshot Input": {
+      "main": [
+        [
+          {
+            "node": "PG — Load Document",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Doc + Snapshot",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "PG — Load Document": {
+      "main": [
+        [
+          {
+            "node": "Guard — Doc Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Load Doc": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Doc Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Doc Error": {
+      "main": [
+        [
+          {
+            "node": "Stop — Doc Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard — Doc Exists": {
+      "main": [
+        [
+          {
+            "node": "Set — Store Doc",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Doc Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Doc Not Found": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — 404",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — 404": {
+      "main": [
+        [
+          {
+            "node": "Stop — 404",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Store Doc": {
+      "main": [
+        [
+          {
+            "node": "Merge — Doc + Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Doc + Snapshot": {
+      "main": [
+        [
+          {
+            "node": "PG — Load Blob",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Load Blob": {
+      "main": [
+        [
+          {
+            "node": "Guard — Blob Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Load Blob": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Blob Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Blob Error": {
+      "main": [
+        [
+          {
+            "node": "Stop — Blob Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard — Blob Exists": {
+      "main": [
+        [
+          {
+            "node": "Set — Store Blob",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Blob Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Blob Not Found": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Blob 404",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Blob 404": {
+      "main": [
+        [
+          {
+            "node": "Stop — Blob 404",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Store Blob": {
+      "main": [
+        [
+          {
+            "node": "IF — Storage Kind HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Storage Kind HTTP": {
+      "main": [
+        [
+          {
+            "node": "Merge — Audio + Context",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "ERR — Storage Unsupported",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Storage Unsupported": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Storage": {
+      "main": [
+        [
+          {
+            "node": "Stop — Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Fetch Audio": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Fetch Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Fetch Error": {
+      "main": [
+        [
+          {
+            "node": "Stop — Fetch Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Audio + Context": {
+      "main": [
+        [
+          {
+            "node": "Gemini — Wake Probe",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Gemini + Context",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Gemini — Wake Probe": {
+      "main": [
+        [
+          {
+            "node": "Merge — Gemini + Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Gemini": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Gemini": {
+      "main": [
+        [
+          {
+            "node": "Stop — Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Gemini + Context": {
+      "main": [
+        [
+          {
+            "node": "Set — Parse Gemini Raw",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Parse Gemini Raw": {
+      "main": [
+        [
+          {
+            "node": "Code — Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "PG — Select Meta",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Meta + Probe",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "PG — Select Meta": {
+      "main": [
+        [
+          {
+            "node": "Merge — Meta + Probe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Select Meta": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Meta Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Meta Error": {
+      "main": [
+        [
+          {
+            "node": "Stop — Meta Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Meta + Probe": {
+      "main": [
+        [
+          {
+            "node": "Set — Build New Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Build New Meta": {
+      "main": [
+        [
+          {
+            "node": "PG — Update Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Update Meta": {
+      "main": [
+        [
+          {
+            "node": "IF — Wake Detected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Update Meta": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Update Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Update Error": {
+      "main": [
+        [
+          {
+            "node": "Stop — Update Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Wake Detected": {
+      "main": [
+        [
+          {
+            "node": "PG — Check Existing Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Ignore Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Check Existing Job": {
+      "main": [
+        [
+          {
+            "node": "Guard — No Existing Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Check Job": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Check Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Check Job": {
+      "main": [
+        [
+          {
+            "node": "Stop — Check Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard — No Existing Job": {
+      "main": [
+        [
+          {
+            "node": "Set — Build New Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Ignore Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Build New Job": {
+      "main": [
+        [
+          {
+            "node": "PG — Insert Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert Job": {
+      "main": [
+        [
+          {
+            "node": "Set — Enqueued Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Insert Job": {
+      "main": [
+        [
+          {
+            "node": "Call WF99 — Insert Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99 — Insert Job": {
+      "main": [
+        [
+          {
+            "node": "Stop — Insert Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Enqueued Result": {
+      "main": [
+        [
+          {
+            "node": "Merge — All Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Ignore Result": {
+      "main": [
+        [
+          {
+            "node": "Merge — All Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — All Results": {
+      "main": [
+        [
+          {
+            "node": "Set — Build Success Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "T1 — Happy Wake Detected",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "T2 — Edge No Wake",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "T3 — Fail Missing document_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Happy Wake Detected": {
+      "main": [
+        [
+          {
+            "node": "TEST — End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T2 — Edge No Wake": {
+      "main": [
+        [
+          {
+            "node": "TEST — End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T3 — Fail Missing document_id": {
+      "main": [
+        [
+          {
+            "node": "TEST — End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "85ff4869-a967-46fd-8f94-f36a5ffdeee6",
+  "meta": {
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "KbQJKDHMQ_S11UtY2rgO_",
+  "tags": [
+    {
+      "name": "WF35",
+      "id": "Fp78KwRQYq7sqAgO",
+      "updatedAt": "2026-02-04T22:00:58.757Z",
+      "createdAt": "2026-02-04T22:00:58.757Z"
+    },
+    {
+      "name": "voice",
+      "id": "1q3ObHVaO06igcHD",
+      "updatedAt": "2026-02-04T22:00:58.778Z",
+      "createdAt": "2026-02-04T22:00:58.778Z"
+    },
+    {
+      "name": "worker",
+      "id": "nJYNm0jmUv4O9etB",
+      "updatedAt": "2026-02-04T22:00:58.807Z",
+      "createdAt": "2026-02-04T22:00:58.807Z"
+    }
+  ]
+}
