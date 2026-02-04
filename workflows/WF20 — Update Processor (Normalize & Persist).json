@@ -5,13 +5,13 @@
       "parameters": {
         "inputSource": "passthrough"
       },
-      "id": "e8a2af9f-831b-481f-834b-4ca5a9cb58c8",
+      "id": "2a947749-867c-49d8-bf4b-f7e650bd40b0",
       "name": "Execute Workflow Trigger",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -3392,
-        384
+        -15712,
+        992
       ],
       "notes": "PROD trigger: Receives update payload from Job Runner.\nInput: { req: { tenant_id, update, trace_id, correlation_id } }\nOutput: Same item passed through.\nWHY passthrough: Accepts any shape from caller, processes raw Telegram update."
     },
@@ -40,13 +40,13 @@
         },
         "options": {}
       },
-      "id": "2f15ef8a-e81b-4e7e-8e83-14e499afafac",
-      "name": "IF � Correlation ID Exists",
+      "id": "0630444b-4866-4b87-8b34-a6a85364f57f",
+      "name": "IF — Correlation ID Exists",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -3136,
-        544
+        -15456,
+        1152
       ],
       "notes": "Check if req.correlation_id was provided.\nInput: { req: { ... } }\nOutput true: correlation_id exists, pass through.\nOutput false: need to generate correlation_id.\nWHY: correlation_id required for tracing; generate if missing per CTX spec."
     },
@@ -54,13 +54,13 @@
       "parameters": {
         "action": "generate"
       },
-      "id": "6d48c960-91da-4646-9e03-2635f43922d5",
-      "name": "Crypto � Generate UUID",
+      "id": "34a5f445-761e-4305-ba0e-380c567f1910",
+      "name": "Crypto — Generate UUID",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        -2880,
-        640
+        -15200,
+        1248
       ],
       "notes": "Generate UUID for correlation_id when not provided.\nInput: Item without correlation_id.\nOutput: { data: '<uuid>' } added to item.\nWHY: No Code node for UUID generation per project rules."
     },
@@ -81,25 +81,25 @@
           "dotNotation": true
         }
       },
-      "id": "ff10fa22-68c8-4f43-b4c5-7f2ba5b0e7cf",
-      "name": "Set � Assign Generated Correlation ID",
+      "id": "8e06f286-665e-4752-aefd-36617acc0896",
+      "name": "Set — Assign Generated Correlation ID",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2688,
-        640
+        -15008,
+        1248
       ],
       "notes": "Assign generated UUID to req.correlation_id.\nInput: { data: '<uuid>', req: { ... } }\nOutput: { req: { correlation_id: '<uuid>', ... } }\nWHY: Move generated UUID into proper location."
     },
     {
       "parameters": {},
-      "id": "1c081f23-a501-4434-bca7-6544589c754d",
-      "name": "Merge � Correlation Paths",
+      "id": "15d09d7e-2d22-49ad-97f5-a7be2d378e37",
+      "name": "Merge — Correlation Paths",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -2480,
-        544
+        -14800,
+        1152
       ],
       "notes": "Merge: existing correlation_id path + generated correlation_id path.\nInput 1: Items with existing correlation_id.\nInput 2: Items with generated correlation_id.\nOutput: Single stream with correlation_id guaranteed.\nWHY: Converge paths after IF node."
     },
@@ -144,27 +144,27 @@
           "dotNotation": true
         }
       },
-      "id": "c1e02ed7-a80c-455f-91d5-646653bc8fad",
-      "name": "Set � Build _ctx",
+      "id": "7b29d049-3d59-49ad-ad66-c3599523143a",
+      "name": "Set — Build _ctx",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2288,
-        544
+        -14608,
+        1152
       ],
       "notes": "Build _ctx object for correlation and ErrorPipe.\nInput: { req: { tenant_id, update, trace_id, correlation_id } }\nOutput: Adds _ctx.workflow, _ctx.tenant_id, _ctx.trace_id, _ctx.correlation_id, _ctx.contracts.errorpipe.\nWHY: _ctx required for ErrorPipe v1 and meta in SuccessEnvelope."
     },
     {
       "parameters": {
-        "jsCode": "// Parse Telegram update to extract update_kind and canonical fields\n// WHY Code: Telegram update has many optional top-level keys (message, edited_message, etc.)\n// and nested structures. Standard nodes cannot efficiently determine which key exists.\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const update = item.json.req?.update || {};\n  const _ctx = item.json._ctx || {};\n  const req = item.json.req || {};\n  \n  // Determine update_kind based on which top-level key exists\n  let update_kind = 'other';\n  let msg = null;\n  \n  if (update.message) {\n    update_kind = 'message';\n    msg = update.message;\n  } else if (update.edited_message) {\n    update_kind = 'edited_message';\n    msg = update.edited_message;\n  } else if (update.channel_post) {\n    update_kind = 'channel_post';\n    msg = update.channel_post;\n  } else if (update.edited_channel_post) {\n    update_kind = 'edited_channel_post';\n    msg = update.edited_channel_post;\n  } else if (update.my_chat_member) {\n    update_kind = 'my_chat_member';\n  } else if (update.chat_member) {\n    update_kind = 'chat_member';\n  }\n  \n  // Extract canonical fields for message-like updates\n  let parsed = {\n    update_kind,\n    chat_id: null,\n    chat_type: null,\n    message_id: null,\n    message_thread_id: null,\n    is_topic_message: false,\n    from_user: null,\n    sender_chat: null,\n    text: null,\n    caption: null,\n    entities: null,\n    caption_entities: null,\n    reply_to_message_id: null,\n    forward_from: null,\n    forward_from_chat: null,\n    forward_date: null,\n    date: null,\n    edit_date: null,\n    via_bot: null,\n    // File attachments\n    document: null,\n    photo: null,\n    video: null,\n    audio: null,\n    voice: null,\n    animation: null,\n    sticker: null,\n    // Membership\n    membership_update: null\n  };\n  \n  if (msg) {\n    parsed.chat_id = msg.chat?.id || null;\n    parsed.chat_type = msg.chat?.type || null;\n    parsed.message_id = msg.message_id || null;\n    parsed.message_thread_id = msg.message_thread_id || null;\n    parsed.is_topic_message = msg.is_topic_message || false;\n    parsed.from_user = msg.from || null;\n    parsed.sender_chat = msg.sender_chat || null;\n    parsed.text = msg.text || null;\n    parsed.caption = msg.caption || null;\n    parsed.entities = msg.entities || null;\n    parsed.caption_entities = msg.caption_entities || null;\n    parsed.reply_to_message_id = msg.reply_to_message?.message_id || null;\n    parsed.forward_from = msg.forward_from || null;\n    parsed.forward_from_chat = msg.forward_from_chat || null;\n    parsed.forward_date = msg.forward_date ? new Date(msg.forward_date * 1000).toISOString() : null;\n    parsed.date = msg.date ? new Date(msg.date * 1000).toISOString() : null;\n    parsed.edit_date = msg.edit_date ? new Date(msg.edit_date * 1000).toISOString() : null;\n    parsed.via_bot = msg.via_bot || null;\n    // Files\n    parsed.document = msg.document || null;\n    parsed.photo = msg.photo || null; // array of PhotoSize\n    parsed.video = msg.video || null;\n    parsed.audio = msg.audio || null;\n    parsed.voice = msg.voice || null;\n    parsed.animation = msg.animation || null;\n    parsed.sticker = msg.sticker || null;\n    // Chat info for upsert\n    parsed.chat = msg.chat || null;\n  }\n  \n  // Extract membership info\n  if (update_kind === 'my_chat_member' || update_kind === 'chat_member') {\n    const memberUpdate = update.my_chat_member || update.chat_member;\n    parsed.membership_update = memberUpdate;\n    parsed.chat_id = memberUpdate?.chat?.id || null;\n    parsed.chat_type = memberUpdate?.chat?.type || null;\n    parsed.chat = memberUpdate?.chat || null;\n  }\n  \n  // Derive visibility and dm_owner\n  let visibility = 'group';\n  let dm_owner_user_id = null;\n  let channel = 'group';\n  \n  if (parsed.chat_type === 'private') {\n    visibility = 'dm_private';\n    channel = 'dm';\n    // For DM, the owner is the other user (from_user)\n    dm_owner_user_id = parsed.from_user?.id || null;\n  }\n  \n  // Update _ctx with derived fields\n  const updatedCtx = {\n    ..._ctx,\n    chat_id: parsed.chat_id,\n    tg_user_id: parsed.from_user?.id || parsed.membership_update?.from?.id || null,\n    message_id: parsed.message_id,\n    channel,\n    visibility,\n    dm_owner_user_id\n  };\n  \n  // Extract URLs from entities\n  let discovered_urls = [];\n  const textContent = parsed.text || parsed.caption || '';\n  const entitiesToCheck = parsed.entities || parsed.caption_entities || [];\n  \n  for (const ent of entitiesToCheck) {\n    if (ent.type === 'url') {\n      // Extract URL from text by offset/length\n      const url = textContent.substring(ent.offset, ent.offset + ent.length);\n      if (url) discovered_urls.push({ type: 'url', url, entity: ent });\n    } else if (ent.type === 'text_link' && ent.url) {\n      discovered_urls.push({ type: 'text_link', url: ent.url, entity: ent });\n    }\n  }\n  \n  // Determine has_media and has_links\n  const has_media = !!(parsed.document || parsed.photo || parsed.video || parsed.audio || parsed.voice || parsed.animation || parsed.sticker);\n  const has_links = discovered_urls.length > 0;\n  \n  // Compute content_sha256 placeholder (actual hash would need crypto)\n  // Using a simple deterministic approach: hash of text+caption\n  const contentForHash = JSON.stringify({ text: parsed.text, caption: parsed.caption, entities: parsed.entities, caption_entities: parsed.caption_entities });\n  \n  results.push({\n    json: {\n      ...item.json,\n      _ctx: updatedCtx,\n      _parsed: {\n        ...parsed,\n        visibility,\n        dm_owner_user_id,\n        has_media,\n        has_links,\n        discovered_urls,\n        content_for_hash: contentForHash\n      }\n    }\n  });\n}\n\nreturn results;"
+        "jsCode": "// Parse Telegram update to extract update_kind and canonical fields\n// WHY Code: Telegram update has many optional top-level keys (message, edited_message, etc.)\n// and nested structures. Standard nodes cannot efficiently determine which key exists.\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const update = item.json.req?.update || {};\n  const _ctx = item.json._ctx || {};\n  const req = item.json.req || {};\n  \n  // Determine update_kind based on which top-level key exists\n  let update_kind = 'other';\n  let msg = null;\n  \n  if (update.message) {\n    update_kind = 'message';\n    msg = update.message;\n  } else if (update.edited_message) {\n    update_kind = 'edited_message';\n    msg = update.edited_message;\n  } else if (update.channel_post) {\n    update_kind = 'channel_post';\n    msg = update.channel_post;\n  } else if (update.edited_channel_post) {\n    update_kind = 'edited_channel_post';\n    msg = update.edited_channel_post;\n  } else if (update.my_chat_member) {\n    update_kind = 'my_chat_member';\n  } else if (update.chat_member) {\n    update_kind = 'chat_member';\n  }\n  \n  // Extract canonical fields for message-like updates\n  let parsed = {\n    update_kind,\n    chat_id: null,\n    chat_type: null,\n    message_id: null,\n    message_thread_id: null,\n    is_topic_message: false,\n    from_user: null,\n    sender_chat: null,\n    text: null,\n    caption: null,\n    entities: null,\n    caption_entities: null,\n    reply_to_message_id: null,\n    forward_from: null,\n    forward_from_chat: null,\n    forward_date: null,\n    date: null,\n    edit_date: null,\n    via_bot: null,\n    // File attachments\n    document: null,\n    photo: null,\n    video: null,\n    audio: null,\n    voice: null,\n    animation: null,\n    sticker: null,\n    // Membership\n    membership_update: null\n  };\n  \n  if (msg) {\n    parsed.chat_id = msg.chat?.id || null;\n    parsed.chat_type = msg.chat?.type || null;\n    parsed.message_id = msg.message_id || null;\n    parsed.message_thread_id = msg.message_thread_id || null;\n    parsed.is_topic_message = msg.is_topic_message || false;\n    parsed.from_user = msg.from || null;\n    parsed.sender_chat = msg.sender_chat || null;\n    parsed.text = msg.text || null;\n    parsed.caption = msg.caption || null;\n    parsed.entities = msg.entities || null;\n    parsed.caption_entities = msg.caption_entities || null;\n    parsed.reply_to_message_id = msg.reply_to_message?.message_id || null;\n    parsed.forward_from = msg.forward_from || null;\n    parsed.forward_from_chat = msg.forward_from_chat || null;\n    parsed.forward_date = msg.forward_date ? new Date(msg.forward_date * 1000).toISOString() : null;\n    parsed.date = msg.date ? new Date(msg.date * 1000).toISOString() : null;\n    parsed.edit_date = msg.edit_date ? new Date(msg.edit_date * 1000).toISOString() : null;\n    parsed.via_bot = msg.via_bot || null;\n    // Files\n    parsed.document = msg.document || null;\n    parsed.photo = msg.photo || null; // array of PhotoSize\n    parsed.video = msg.video || null;\n    parsed.audio = msg.audio || null;\n    parsed.voice = msg.voice || null;\n    parsed.animation = msg.animation || null;\n    parsed.sticker = msg.sticker || null;\n    // Chat info for upsert\n    parsed.chat = msg.chat || null;\n  }\n  \n  // Extract membership info\n  if (update_kind === 'my_chat_member' || update_kind === 'chat_member') {\n    const memberUpdate = update.my_chat_member || update.chat_member;\n    parsed.membership_update = memberUpdate;\n    parsed.chat_id = memberUpdate?.chat?.id || null;\n    parsed.chat_type = memberUpdate?.chat?.type || null;\n    parsed.chat = memberUpdate?.chat || null;\n  }\n  \n  // Derive visibility and dm_owner\n  let visibility = 'group';\n  let dm_owner_user_id = null;\n  let channel = 'group';\n  \n  if (parsed.chat_type === 'private') {\n    visibility = 'dm_private';\n    channel = 'dm';\n    // For DM, the owner is the other user (from_user)\n    dm_owner_user_id = parsed.from_user?.id || null;\n  }\n  \n  // Update _ctx with derived fields\n  const updatedCtx = {\n    ..._ctx,\n    chat_id: parsed.chat_id,\n    tg_user_id: parsed.from_user?.id || parsed.membership_update?.from?.id || null,\n    message_id: parsed.message_id,\n    channel,\n    visibility,\n    dm_owner_user_id\n  };\n  \n  // Extract URLs from entities\n  let discovered_urls = [];\n  const textContent = parsed.text || parsed.caption || '';\n  const entitiesToCheck = parsed.entities || parsed.caption_entities || [];\n  \n  for (const ent of entitiesToCheck) {\n    if (ent.type === 'url') {\n      // Extract URL from text by offset/length\n      const url = textContent.substring(ent.offset, ent.offset + ent.length);\n      if (url) discovered_urls.push({ type: 'url', url, entity: ent });\n    } else if (ent.type === 'text_link' && ent.url) {\n      discovered_urls.push({ type: 'text_link', url: ent.url, entity: ent });\n    }\n  }\n  \n  // Determine has_media and has_links\n  const has_media = !!(parsed.document || parsed.photo || parsed.video || parsed.audio || parsed.voice || parsed.animation || parsed.sticker);\n  const has_links = discovered_urls.length > 0;\n  \n  // Using a simple deterministic approach: hash of text+caption\n  \n  results.push({\n    json: {\n      ...item.json,\n      _ctx: updatedCtx,\n      _parsed: {\n        ...parsed,\n        visibility,\n        dm_owner_user_id,\n        has_media,\n        has_links,\n        discovered_urls,\n      }\n    }\n  });\n}\n\nreturn results;"
       },
-      "id": "bb3f0502-44b8-4bd8-b510-65348ee69de8",
-      "name": "Code � Parse Telegram Update",
+      "id": "50d07501-a178-45a3-907f-8e679550e9c7",
+      "name": "Code — Parse Telegram Update",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2080,
-        544
+        -14400,
+        1152
       ],
       "notes": "Parse Telegram update to extract update_kind and canonical fields.\nInput: { req: { update: {...} }, _ctx: {...} }\nOutput: Adds _parsed object with extracted fields, discovered_urls, has_media, has_links.\nWHY Code: Telegram update structure is highly polymorphic (message vs edited_message vs chat_member etc.) and extracting URLs requires offset/length substring. Standard nodes cannot handle this efficiently. No network calls, deterministic, comments included."
     },
@@ -188,7 +188,7 @@
                       "type": "string",
                       "operation": "equals"
                     },
-                    "id": "64796fdf-b5a2-4a84-bedc-4de40f34886b"
+                    "id": "1adb9dde-6641-4177-ad7d-a0829d6ef250"
                   }
                 ],
                 "combinator": "and"
@@ -210,7 +210,7 @@
                       "type": "string",
                       "operation": "equals"
                     },
-                    "id": "2a4bb472-684c-426f-8324-3463f9676a84"
+                    "id": "7781cf48-78e4-45c1-80ec-951f57e00c79"
                   }
                 ],
                 "combinator": "and"
@@ -232,7 +232,7 @@
                       "type": "string",
                       "operation": "equals"
                     },
-                    "id": "149c021d-3b47-4257-aa5b-745e3168e8cb"
+                    "id": "132f44af-fbc8-4cae-8a99-20795c2a3641"
                   }
                 ],
                 "combinator": "and"
@@ -254,7 +254,7 @@
                       "type": "string",
                       "operation": "equals"
                     },
-                    "id": "c407abf8-8af8-409f-88a8-2f151b6b23dc"
+                    "id": "15659d69-b87d-4dc5-9450-231cab083f45"
                   }
                 ],
                 "combinator": "and"
@@ -276,7 +276,7 @@
                       "type": "string",
                       "operation": "equals"
                     },
-                    "id": "a531123a-1f47-4d36-8058-26cbb151c922"
+                    "id": "a6832f36-9ebd-4272-8d47-39d80e4770a2"
                   }
                 ],
                 "combinator": "and"
@@ -298,7 +298,7 @@
                       "type": "string",
                       "operation": "equals"
                     },
-                    "id": "03e79939-a65a-4078-b9c0-8aa87be6d907"
+                    "id": "d60418d5-3f81-4450-81b8-2e8e7a902d0c"
                   }
                 ],
                 "combinator": "and"
@@ -310,13 +310,13 @@
           "fallbackOutput": "extra"
         }
       },
-      "id": "2602bf5e-4977-4558-9fe3-a53e12566929",
-      "name": "Switch � Update Kind",
+      "id": "a47023c0-0493-4db1-bb5b-4ddc4eb0d1dd",
+      "name": "Switch — Update Kind",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -1872,
-        400
+        -14192,
+        1008
       ],
       "notes": "Route based on update_kind.\nInput: { _parsed: { update_kind: '...' }, ... }\nOutputs: 0=message, 1=edited_message, 2=channel_post, 3=edited_channel_post, 4=my_chat_member, 5=chat_member, 6=other(fallback).\nWHY: Different update types require different processing paths."
     },
@@ -369,8 +369,8 @@
             {
               "id": "user-payload",
               "name": "payload",
-              "value": "={{ JSON.stringify($json._parsed.from_user || {}) }}",
-              "type": "string"
+              "value": "={{ $json._parsed.from_user || {} }}",
+              "type": "object"
             }
           ]
         },
@@ -379,13 +379,13 @@
           "dotNotation": true
         }
       },
-      "id": "62c809be-e5c4-46e1-a0ee-5f48b0a2c64a",
-      "name": "Set � Prepare User Upsert",
+      "id": "eae5d768-e76c-4856-9f5c-0f33193e8c6e",
+      "name": "Set — Prepare User Upsert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1632,
-        240
+        -13952,
+        848
       ],
       "notes": "Prepare fields for tg.users upsert.\nInput: { _parsed: { from_user: {...} }, ... }\nOutput: Adds tg_user_id, is_bot, first_name, etc. for Postgres upsert.\nWHY: Map Telegram user to tg.users schema."
     },
@@ -518,13 +518,13 @@
         },
         "options": {}
       },
-      "id": "51d44654-928a-4005-9767-f9a221793a66",
-      "name": "PG � Upsert tg.users",
+      "id": "903302c4-e3db-490e-928e-1772082a99e3",
+      "name": "PG — Upsert tg.users",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1440,
-        240
+        -13792,
+        976
       ],
       "credentials": {
         "postgres": {
@@ -564,13 +564,13 @@
           "dotNotation": true
         }
       },
-      "id": "72638d86-ff7a-40f0-b3bf-1c8edbb38896",
-      "name": "ERR � Source PG Upsert tg.users",
+      "id": "529e8097-974f-4738-aba4-761f19e5b7f5",
+      "name": "ERR — Source PG Upsert tg.users",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1200,
-        448
+        -13520,
+        1056
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -611,8 +611,8 @@
             {
               "id": "chat-payload",
               "name": "payload",
-              "value": "={{ JSON.stringify($json._parsed.chat || {}) }}",
-              "type": "string"
+              "value": "={{ $json._parsed.chat || {} }}",
+              "type": "object"
             }
           ]
         },
@@ -621,13 +621,13 @@
           "dotNotation": true
         }
       },
-      "id": "d90aa581-1300-4f27-99d5-40cd48757555",
-      "name": "Set � Prepare Chat Upsert",
+      "id": "6e7df439-0ac9-4c03-9e57-c0a739e472c1",
+      "name": "Set — Prepare Chat Upsert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1232,
-        240
+        -13360,
+        576
       ],
       "notes": "Prepare fields for tg.chats upsert.\nInput: { _parsed: { chat_id, chat_type, chat: {...} }, ... }\nOutput: Adds chat_id, chat_type, title, etc.\nWHY: Map Telegram chat to tg.chats schema."
     },
@@ -758,13 +758,13 @@
         },
         "options": {}
       },
-      "id": "142ebe0f-7d6c-4784-917b-591a3ef01f92",
-      "name": "PG � Upsert tg.chats",
+      "id": "8d206439-eb60-4112-be94-77078b8f4bc1",
+      "name": "PG — Upsert tg.chats",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1040,
-        240
+        -13216,
+        752
       ],
       "credentials": {
         "postgres": {
@@ -804,13 +804,13 @@
           "dotNotation": true
         }
       },
-      "id": "21d1497f-d9c4-4cbf-a6cd-e68f2e143f8d",
-      "name": "ERR � Source PG Upsert tg.chats",
+      "id": "cd6a8fef-163e-4b28-af84-8567ff9e959d",
+      "name": "ERR — Source PG Upsert tg.chats",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -752,
-        544
+        -12672,
+        1152
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -853,13 +853,13 @@
           ]
         }
       },
-      "id": "c2e81013-4194-4713-9778-14027b1c85c0",
-      "name": "PG � Select Existing Message",
+      "id": "a472f86e-94ba-4aa8-a30a-46b9a96ca22e",
+      "name": "PG — Select Existing Message",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -832,
-        240
+        -12720,
+        816
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -900,13 +900,13 @@
           "dotNotation": true
         }
       },
-      "id": "a01bb697-123a-4fa1-82e2-9bacd190cf60",
-      "name": "ERR � Source PG Select Message",
+      "id": "08560cf8-60d7-4bb4-bfb5-23e97bd2d3e4",
+      "name": "ERR — Source PG Select Message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -560,
-        416
+        -12320,
+        928
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -916,30 +916,32 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 3
           },
           "conditions": [
             {
               "id": "msg-exists",
-              "leftValue": "={{ $json.id }}",
+              "leftValue": "={{ $json.db.existing_msg?.id }}",
               "rightValue": "",
               "operator": {
-                "type": "number",
+                "type": "string",
                 "operation": "exists",
                 "singleValue": true
               }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
-      "id": "c7163209-f5f5-41fd-a456-f00945a61ada",
-      "name": "IF � Message Exists",
+      "id": "27d1a2bf-54cd-4185-adaa-9637e3b8e3d0",
+      "name": "IF — Message Exists",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -640,
-        240
+        -12288,
+        256
       ],
       "notes": "Check if message already exists in tg.messages.\nInput: Select result with id field or empty.\nOutput true: Message exists, need to create new version.\nOutput false: New message, insert message first.\nWHY: Different paths for new message vs edit."
     },
@@ -996,13 +998,13 @@
           "dotNotation": true
         }
       },
-      "id": "84e22401-33d7-426f-b3f3-d3ba5ac2be2d",
-      "name": "Set � Prepare New Message Insert",
+      "id": "76ec60fd-b4d1-485e-adeb-5f1ecbe84bd1",
+      "name": "Set — Prepare New Message Insert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -384,
-        144
+        -12064,
+        576
       ],
       "notes": "Prepare fields for new tg.messages insert.\nInput: { _ctx, _parsed }\nOutput: Adds tenant_id, chat_id, message_id, visibility, dm_owner_user_id.\nWHY: Map to tg.messages schema for new message."
     },
@@ -1151,13 +1153,13 @@
           "skipOnConflict": true
         }
       },
-      "id": "4dda84f1-ca4f-46c3-88ba-2151375d4e36",
-      "name": "PG � Insert tg.messages",
+      "id": "bf367062-e9a1-4e80-9b53-c76a37536d47",
+      "name": "PG — Insert tg.messages",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -192,
-        144
+        -11872,
+        640
       ],
       "credentials": {
         "postgres": {
@@ -1197,13 +1199,13 @@
           "dotNotation": true
         }
       },
-      "id": "5bd23aeb-7a88-49b7-8149-3ad1ffcf3ab3",
-      "name": "ERR � Source PG Insert Message",
+      "id": "c04029df-e638-4e78-af01-79b8242849ac",
+      "name": "ERR — Source PG Insert Message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        176,
-        720
+        -10816,
+        1504
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -1214,7 +1216,7 @@
             {
               "id": "msg-fk",
               "name": "_message_fk",
-              "value": "={{ $json.id }}",
+              "value": "={{ $json.db.new_message.id }}",
               "type": "number"
             },
             {
@@ -1230,13 +1232,13 @@
           "dotNotation": true
         }
       },
-      "id": "d4391c48-38ab-42d7-a7f6-4f611e684a21",
-      "name": "Set � New Message FK (version 1)",
+      "id": "29290efb-d0da-4902-aa83-287d8df14fae",
+      "name": "Set — New Message FK (version 1)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        0
+        -11424,
+        576
       ],
       "notes": "Set message_fk and version_no=1 for new message.\nInput: { id: <new message id>, ... }\nOutput: Adds _message_fk, _version_no=1.\nWHY: New message always starts at version 1."
     },
@@ -1276,13 +1278,13 @@
           ]
         }
       },
-      "id": "883201d1-1d06-4be2-8308-304a3489d4d8",
-      "name": "PG � Select Max Version",
+      "id": "6a5b6f7d-e286-4e98-826c-5972036a6592",
+      "name": "PG — Select Max Version",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -384,
-        352
+        -12064,
+        320
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -1323,13 +1325,13 @@
           "dotNotation": true
         }
       },
-      "id": "c6e1a159-384d-4960-aa23-93e8a245b23c",
-      "name": "ERR � Source PG Select Version",
+      "id": "42df8e53-d047-4801-8fc2-719d3b7965d2",
+      "name": "ERR — Source PG Select Version",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -112,
-        496
+        -11136,
+        832
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -1340,13 +1342,13 @@
             {
               "id": "msg-fk2",
               "name": "_message_fk",
-              "value": "={{ $('IF � Message Exists').item.json.id }}",
+              "value": "={{ $('IF — Message Exists').item.json.db.existing_msg.id }}",
               "type": "number"
             },
             {
               "id": "ver-no2",
               "name": "_version_no",
-              "value": "={{ ($json.version_no || 0) + 1 }}",
+              "value": "={{ ($json.db.max_version.version_no || 0) + 1 }}",
               "type": "number"
             }
           ]
@@ -1356,41 +1358,27 @@
           "dotNotation": true
         }
       },
-      "id": "998cb144-75b9-4eb0-9448-655c59e786ec",
-      "name": "Set � Existing Message FK (next version)",
+      "id": "5f677b39-90f2-4913-8ce0-cd0ff9ff9218",
+      "name": "Set — Existing Message FK (next version)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -192,
-        272
+        -11552,
+        160
       ],
       "notes": "Set message_fk and increment version_no for edited message.\nInput: { version_no, ... } from select or empty.\nOutput: Adds _message_fk from prior IF node, _version_no = current + 1.\nWHY: Edited message gets next version number."
     },
     {
       "parameters": {},
-      "id": "5dddb4a1-2a3a-4042-a0ad-9be7bd402b8c",
-      "name": "Merge � Message Paths",
+      "id": "e7effb55-ab23-434c-9e68-2db5ffc81544",
+      "name": "Merge — Message Paths",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        208,
-        240
+        -11280,
+        272
       ],
       "notes": "Merge: new message path (version 1) + existing message path (version N+1).\nInput 1: New message with _message_fk, _version_no=1.\nInput 2: Existing message with _message_fk, _version_no=N+1.\nOutput: Single stream ready for version insert.\nWHY: Converge after IF Message Exists."
-    },
-    {
-      "parameters": {
-        "jsCode": "// Compute SHA256 hash of content for content_sha256 column\n// WHY Code: Need cryptographic hash, Crypto node only outputs to 'data' field\n// and we need to hash JSON content deterministically.\n\nconst crypto = require('crypto');\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const parsed = item.json._parsed || {};\n  const contentObj = {\n    text: parsed.text,\n    caption: parsed.caption,\n    entities: parsed.entities,\n    caption_entities: parsed.caption_entities\n  };\n  const contentStr = JSON.stringify(contentObj);\n  const hash = crypto.createHash('sha256').update(contentStr).digest('hex');\n  \n  results.push({\n    json: {\n      ...item.json,\n      _content_sha256: '\\\\x' + hash\n    }\n  });\n}\n\nreturn results;"
-      },
-      "id": "1e0f96ad-e386-4617-914d-ae59d9f84af6",
-      "name": "Code � Hash Content",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        416,
-        240
-      ],
-      "notes": "Compute SHA256 hash of content for tg.message_versions.content_sha256.\nInput: { _parsed: { text, caption, entities, caption_entities } }\nOutput: Adds _content_sha256 as hex string with \\x prefix for bytea.\nWHY Code: Need to hash JSON content deterministically for deduplication. No network calls."
     },
     {
       "parameters": {
@@ -1447,14 +1435,14 @@
             {
               "id": "ver-ent",
               "name": "entities",
-              "value": "={{ JSON.stringify($json._parsed.entities) }}",
-              "type": "string"
+              "value": "={{ $json._parsed.entities }}",
+              "type": "object"
             },
             {
               "id": "ver-cap-ent",
               "name": "caption_entities",
-              "value": "={{ JSON.stringify($json._parsed.caption_entities) }}",
-              "type": "string"
+              "value": "={{ $json._parsed.caption_entities }}",
+              "type": "object"
             },
             {
               "id": "ver-reply",
@@ -1501,8 +1489,8 @@
             {
               "id": "ver-payload",
               "name": "payload",
-              "value": "={{ JSON.stringify($json.req.update) }}",
-              "type": "string"
+              "value": "={{ $json.req.update }}",
+              "type": "object"
             }
           ]
         },
@@ -1511,13 +1499,13 @@
           "dotNotation": true
         }
       },
-      "id": "a795a95f-4e25-48ab-ac8f-2e92a70ea263",
-      "name": "Set � Prepare Version Insert",
+      "id": "6de31a57-bce4-4981-bf6c-5ac323ff3407",
+      "name": "Set — Prepare Version Insert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        608,
-        240
+        -10864,
+        496
       ],
       "notes": "Prepare fields for tg.message_versions insert.\nInput: { _message_fk, _version_no, _parsed, _content_sha256, req.update }\nOutput: All version fields mapped from parsed data.\nWHY: Map Telegram message content to tg.message_versions schema."
     },
@@ -1761,13 +1749,13 @@
           ]
         }
       },
-      "id": "c81f65d1-2d63-4cb8-9d3d-1ac69f39e86d",
-      "name": "PG � Insert tg.message_versions",
+      "id": "26f598ad-ae54-427f-bcae-885c2e001356",
+      "name": "PG — Insert tg.message_versions",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        816,
-        336
+        -10656,
+        400
       ],
       "credentials": {
         "postgres": {
@@ -1807,13 +1795,13 @@
           "dotNotation": true
         }
       },
-      "id": "493b520c-e8b5-49eb-8d31-2553b256a801",
-      "name": "ERR � Source PG Insert Version",
+      "id": "9b64da11-94c0-4b1a-9e09-6671b5b89af3",
+      "name": "ERR — Source PG Insert Version",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1264,
-        480
+        -10496,
+        544
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -1824,7 +1812,7 @@
             {
               "id": "ver-id",
               "name": "_version_id",
-              "value": "={{ $json.id }}",
+              "value": "={{ $json.db.version.id }}",
               "type": "number"
             }
           ]
@@ -1834,13 +1822,13 @@
           "dotNotation": true
         }
       },
-      "id": "1fd60761-d93f-46c7-96fe-3b818c785c0b",
-      "name": "Set � Store Version ID",
+      "id": "df495d7c-a427-4594-a6e1-17c635f0f2d6",
+      "name": "Set — Store Version ID",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1008,
-        240
+        -10144,
+        192
       ],
       "notes": "Store inserted version ID for later use.\nInput: { id: <version id> }\nOutput: Adds _version_id.\nWHY: Need version ID to update tg.messages.current_version_id and for attachments."
     },
@@ -1985,13 +1973,13 @@
         },
         "options": {}
       },
-      "id": "5038cea6-c95c-4f1e-b730-2b76846a7700",
-      "name": "PG � Update messages.current_version_id",
+      "id": "68b4fa18-4500-4b92-8ff9-d916a1324185",
+      "name": "PG — Update messages.current_version_id",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1216,
-        240
+        -9936,
+        112
       ],
       "credentials": {
         "postgres": {
@@ -2031,13 +2019,13 @@
           "dotNotation": true
         }
       },
-      "id": "7fb1e91d-371f-40c7-b317-27dcbb58c2b6",
-      "name": "ERR � Source PG Update Message",
+      "id": "f0cce614-b75d-4954-917c-81d9a926f1c7",
+      "name": "ERR — Source PG Update Message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1504,
-        400
+        -9424,
+        512
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -2045,13 +2033,13 @@
       "parameters": {
         "jsCode": "// Process file attachments and URLs for discovery\n// WHY Code: Need to iterate over files and URLs, create multiple attachment records\n// Standard nodes cannot handle variable number of attachments per message\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const parsed = item.json._parsed || {};\n  const version_id = item.json._version_id;\n  \n  const files = [];\n  const urls = parsed.discovered_urls || [];\n  \n  // Collect file attachments\n  const fileTypes = ['document', 'video', 'audio', 'voice', 'animation', 'sticker'];\n  for (const ft of fileTypes) {\n    if (parsed[ft]) {\n      files.push({\n        type: ft,\n        file_id: parsed[ft].file_id,\n        file_unique_id: parsed[ft].file_unique_id,\n        mime_type: parsed[ft].mime_type,\n        file_name: parsed[ft].file_name,\n        file_size: parsed[ft].file_size,\n        width: parsed[ft].width,\n        height: parsed[ft].height,\n        duration: parsed[ft].duration,\n        payload: parsed[ft]\n      });\n    }\n  }\n  \n  // Handle photos (array of PhotoSize, take largest)\n  if (parsed.photo && Array.isArray(parsed.photo) && parsed.photo.length > 0) {\n    const largest = parsed.photo.reduce((a, b) => (b.file_size > a.file_size) ? b : a);\n    files.push({\n      type: 'photo',\n      file_id: largest.file_id,\n      file_unique_id: largest.file_unique_id,\n      mime_type: 'image/jpeg',\n      file_name: null,\n      file_size: largest.file_size,\n      width: largest.width,\n      height: largest.height,\n      duration: null,\n      payload: largest\n    });\n  }\n  \n  results.push({\n    json: {\n      ...item.json,\n      _attachments: {\n        files,\n        urls,\n        files_count: files.length,\n        urls_count: urls.length\n      }\n    }\n  });\n}\n\nreturn results;"
       },
-      "id": "354e6572-17e9-4f9d-a92c-e877d5974970",
-      "name": "Code � Collect Attachments",
+      "id": "c0f80ef2-6c6b-4d4b-93ce-eed9995b040a",
+      "name": "Code — Collect Attachments",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1408,
-        240
+        -9360,
+        288
       ],
       "notes": "Collect file attachments and URLs for discovery persistence.\nInput: { _parsed with document/photo/video/etc, _version_id }\nOutput: Adds _attachments.files[], _attachments.urls[], counts.\nWHY Code: Need to normalize variable file types (document/photo/video) into array for batch insert. No network calls."
     },
@@ -2077,13 +2065,13 @@
         },
         "options": {}
       },
-      "id": "9422e056-0459-4c56-88d1-5f372f1a2179",
-      "name": "IF � Has File Attachments",
+      "id": "a53eb0a0-5f3b-4764-bef9-eaf7005d8e9c",
+      "name": "IF — Has File Attachments",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1616,
-        240
+        -9152,
+        368
       ],
       "notes": "Check if message has file attachments to persist.\nInput: { _attachments: { files_count } }\nOutput true: Has files, process attachments.\nOutput false: No files, skip to URL processing.\nWHY: Only run file persistence if files exist."
     },
@@ -2091,13 +2079,13 @@
       "parameters": {
         "jsCode": "// Expand files into individual items for batch insert\n// WHY Code: Need to split array of files into multiple items\n// for Postgres batch insert into tg.files, tg.file_instances, tg.message_attachments\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const files = item.json._attachments?.files || [];\n  const baseJson = item.json;\n  \n  for (const file of files) {\n    results.push({\n      json: {\n        ...baseJson,\n        _file: file\n      }\n    });\n  }\n  \n  // If no files, still need to pass through for merge\n  if (files.length === 0) {\n    results.push({ json: baseJson });\n  }\n}\n\nreturn results;"
       },
-      "id": "4fc679d5-b76c-4492-8e22-cb9cb6ea5d13",
-      "name": "Code � Expand Files",
+      "id": "78eb9f45-f0db-4d76-b8ac-1f997282f4c6",
+      "name": "Code — Expand Files",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1808,
-        144
+        -8912,
+        368
       ],
       "notes": "Expand files array into individual items for batch processing.\nInput: { _attachments: { files: [...] } }\nOutput: Multiple items, each with _file object.\nWHY Code: Need to split array for Postgres per-item operations. No network calls."
     },
@@ -2208,13 +2196,13 @@
         },
         "options": {}
       },
-      "id": "1b307fb2-5d7f-4dfa-aaf9-50239e6f1897",
-      "name": "PG � Upsert tg.files",
+      "id": "8223fe1f-8725-410e-8403-77bdc37f18c7",
+      "name": "PG — Upsert tg.files",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2016,
-        144
+        -8624,
+        432
       ],
       "credentials": {
         "postgres": {
@@ -2254,13 +2242,13 @@
           "dotNotation": true
         }
       },
-      "id": "ba940e1f-1b92-4d01-887a-295f91112528",
-      "name": "ERR � Source PG Upsert File",
+      "id": "b00b6c2d-c25f-4c82-9a67-c16bef4692ad",
+      "name": "ERR — Source PG Upsert File",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2256,
-        384
+        -8112,
+        672
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -2341,13 +2329,13 @@
         },
         "options": {}
       },
-      "id": "ac74cb4c-6ddd-419c-ac3e-2f8f09794aa7",
-      "name": "PG � Upsert tg.file_instances",
+      "id": "c37f61a3-6347-4a5b-a041-fe58bea6a3ea",
+      "name": "PG — Upsert tg.file_instances",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2224,
-        48
+        -7744,
+        160
       ],
       "credentials": {
         "postgres": {
@@ -2387,13 +2375,13 @@
           "dotNotation": true
         }
       },
-      "id": "0a89e992-7d5f-44ee-9b51-37a1133ddb5c",
-      "name": "ERR � Source PG Upsert File Instance",
+      "id": "7aa15de6-438f-4809-beb0-8bc3f554eea6",
+      "name": "ERR — Source PG Upsert File Instance",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2432,
-        304
+        -6848,
+        656
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -2553,13 +2541,13 @@
         },
         "options": {}
       },
-      "id": "9b64ba51-548c-4ffd-bea2-c15e52167ba8",
-      "name": "PG � Insert tg.message_attachments",
+      "id": "68936e2a-8770-48e0-9a71-0c6675e7499e",
+      "name": "PG — Insert tg.message_attachments",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2432,
-        32
+        -6032,
+        1168
       ],
       "credentials": {
         "postgres": {
@@ -2599,25 +2587,25 @@
           "dotNotation": true
         }
       },
-      "id": "10ad52b0-1129-48b0-a306-3be3cc154c09",
-      "name": "ERR � Source PG Insert Attachment",
+      "id": "3b9e2829-5c64-4e20-b47a-405a3630e723",
+      "name": "ERR — Source PG Insert Attachment",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2608,
-        240
+        -5904,
+        1504
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
     {
       "parameters": {},
-      "id": "c63aeea9-0049-4835-aadf-94b83758cca1",
-      "name": "Merge � Files Done",
+      "id": "52e75f8d-fdf6-46ee-963b-0ef8d339630c",
+      "name": "Merge — Files Done",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2816,
-        192
+        -5664,
+        1360
       ],
       "notes": "Merge: file attachments path + no-files path.\nInput 1: Items after file processing.\nInput 2: Items without files.\nOutput: Single stream for URL processing.\nWHY: Converge after IF Has Files."
     },
@@ -2643,13 +2631,13 @@
         },
         "options": {}
       },
-      "id": "794e42c9-168f-4cbd-b315-c551c864c501",
-      "name": "IF � Has URLs",
+      "id": "bd0603b9-5429-44d3-997d-8f702cf5a8b4",
+      "name": "IF — Has URLs",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3008,
-        192
+        -5408,
+        1920
       ],
       "notes": "Check if message has discovered URLs.\nInput: { _attachments: { urls_count } }\nOutput true: Has URLs, persist to content.urls.\nOutput false: No URLs, skip.\nWHY: Only process URLs if found."
     },
@@ -2657,13 +2645,13 @@
       "parameters": {
         "jsCode": "// Expand URLs into individual items for batch insert\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const urls = item.json._attachments?.urls || [];\n  const baseJson = item.json;\n  \n  for (const urlObj of urls) {\n    results.push({\n      json: {\n        ...baseJson,\n        _url: urlObj.url\n      }\n    });\n  }\n  \n  if (urls.length === 0) {\n    results.push({ json: baseJson });\n  }\n}\n\nreturn results;"
       },
-      "id": "789215a3-e604-434a-a8db-900138a2edde",
-      "name": "Code � Expand URLs",
+      "id": "32120a25-94aa-4812-bff8-42b0992ee4e3",
+      "name": "Code — Expand URLs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3216,
-        80
+        -5248,
+        1696
       ],
       "notes": "Expand URLs array into individual items for batch upsert.\nInput: { _attachments: { urls: [...] } }\nOutput: Multiple items, each with _url string.\nWHY Code: Need to split array for Postgres per-item operations."
     },
@@ -2755,13 +2743,13 @@
         },
         "options": {}
       },
-      "id": "7b6e67c0-5b6c-4ae2-99ed-702843880c53",
-      "name": "PG � Upsert content.urls",
+      "id": "6f641b2a-605c-4a7e-b14b-c8f282b659d8",
+      "name": "PG — Upsert content.urls",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3424,
-        80
+        -4928,
+        1824
       ],
       "credentials": {
         "postgres": {
@@ -2801,25 +2789,25 @@
           "dotNotation": true
         }
       },
-      "id": "37d1e998-a9f6-4c2c-891a-c88c6f22d5bd",
-      "name": "ERR � Source PG Upsert URL",
+      "id": "3c6287c0-716f-453f-abb8-daf8eca31856",
+      "name": "ERR — Source PG Upsert URL",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3632,
-        336
+        -4736,
+        1968
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
     {
       "parameters": {},
-      "id": "da6af0d1-687f-4cae-88f3-29d305d52baf",
-      "name": "Merge � URLs Done",
+      "id": "0b674d5d-e7a6-4133-983c-a5e9241648a5",
+      "name": "Merge — URLs Done",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        3824,
-        192
+        -3248,
+        2048
       ],
       "notes": "Merge: URL processing path + no-URLs path.\nInput 1: Items after URL upsert.\nInput 2: Items without URLs.\nOutput: Single stream for success envelope.\nWHY: Converge after IF Has URLs."
     },
@@ -2947,13 +2935,13 @@
           "dotNotation": true
         }
       },
-      "id": "9df90392-7944-4c7b-b7c2-c656a7684c52",
-      "name": "Set � SuccessEnvelope (Message)",
+      "id": "33e11a1b-320b-4f9e-a760-1d6787e04dba",
+      "name": "Set — SuccessEnvelope (Message)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4016,
-        192
+        -3040,
+        2320
       ],
       "notes": "Build SuccessEnvelope for message-like updates.\nInput: { _ctx, _parsed, _message_fk, _version_id, _attachments }\nOutput: SuccessEnvelope per I/O contract.\nWHY: Final output format per Contracts canvas."
     },
@@ -2994,14 +2982,14 @@
             {
               "id": "mem-payload",
               "name": "membership_payload",
-              "value": "={{ JSON.stringify($json._parsed.membership_update || {}) }}",
-              "type": "string"
+              "value": "={{ $json._parsed.membership_update || {} }}",
+              "type": "object"
             },
             {
               "id": "mem-role",
               "name": "role_payload",
-              "value": "={{ JSON.stringify($json._parsed.membership_update?.new_chat_member || {}) }}",
-              "type": "string"
+              "value": "={{ $json._parsed.membership_update?.new_chat_member || {} }}",
+              "type": "object"
             }
           ]
         },
@@ -3010,13 +2998,13 @@
           "dotNotation": true
         }
       },
-      "id": "3a8fb22f-1341-4187-afc3-638eb72c7a93",
-      "name": "Set � Prepare Membership Data",
+      "id": "4f7237ec-f1e7-4950-988e-287a93ee25dd",
+      "name": "Set — Prepare Membership Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1632,
-        640
+        -13952,
+        1248
       ],
       "notes": "Prepare fields for membership event insert.\nInput: { _parsed.membership_update }\nOutput: Adds membership_chat_id, membership_user_id, old_status, new_status, etc.\nWHY: Map Telegram membership update to tg.chat_member_events schema."
     },
@@ -3136,13 +3124,13 @@
         },
         "options": {}
       },
-      "id": "419e6608-153c-417d-8ec3-9522a9a30eb9",
-      "name": "PG � Insert tg.chat_member_events",
+      "id": "55c55aec-5944-412a-85ec-f81a7cd06ec9",
+      "name": "PG — Insert tg.chat_member_events",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1440,
-        640
+        -13776,
+        1216
       ],
       "credentials": {
         "postgres": {
@@ -3182,13 +3170,13 @@
           "dotNotation": true
         }
       },
-      "id": "c9a1d673-af45-42d5-8a52-918498c4b262",
-      "name": "ERR � Source PG Insert Member Event",
+      "id": "bb3b0519-0892-497e-b583-e8a1575847f8",
+      "name": "ERR — Source PG Insert Member Event",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1184,
-        896
+        -13456,
+        1424
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -3281,13 +3269,13 @@
         },
         "options": {}
       },
-      "id": "19e62ddb-20ce-402d-ba66-56c99c8826ac",
-      "name": "PG � Upsert tg.chat_memberships_current",
+      "id": "c198652d-98f1-46c7-b6e4-7a78d51b7737",
+      "name": "PG — Upsert tg.chat_memberships_current",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1232,
-        640
+        -12992,
+        1680
       ],
       "credentials": {
         "postgres": {
@@ -3327,13 +3315,13 @@
           "dotNotation": true
         }
       },
-      "id": "307b0f24-8b81-4aa2-a5ca-9392b520ead1",
-      "name": "ERR � Source PG Upsert Membership",
+      "id": "ef0f235b-a922-4cee-bcba-1546615884c5",
+      "name": "ERR — Source PG Upsert Membership",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -944,
-        800
+        -12656,
+        1824
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -3461,13 +3449,13 @@
           "dotNotation": true
         }
       },
-      "id": "fc6e1c14-e0cd-452c-a1a6-c735f7801a30",
-      "name": "Set � SuccessEnvelope (Membership)",
+      "id": "64403f2f-c63a-427c-bd97-c1d39545c177",
+      "name": "Set — SuccessEnvelope (Membership)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1040,
-        640
+        -11984,
+        1792
       ],
       "notes": "Build SuccessEnvelope for membership updates.\nInput: { _ctx, _parsed, membership_chat_id }\nOutput: SuccessEnvelope per I/O contract.\nWHY: Membership updates don't have message_id/version_id."
     },
@@ -3595,13 +3583,13 @@
           "dotNotation": true
         }
       },
-      "id": "28284a74-b15a-4946-9806-874166b8f999",
-      "name": "Set � SuccessEnvelope (Other)",
+      "id": "46910bb1-f382-43c6-bf73-6479328dc6e9",
+      "name": "Set — SuccessEnvelope (Other)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1632,
-        992
+        -13952,
+        1600
       ],
       "notes": "Build SuccessEnvelope for 'other' update types.\nInput: { _ctx }\nOutput: SuccessEnvelope with update_kind='other', nulls for message fields.\nWHY: No-op for unrecognized update types but still return valid envelope."
     },
@@ -3658,13 +3646,13 @@
           "dotNotation": true
         }
       },
-      "id": "58469f67-81f3-4baa-acea-ce4db4a47284",
-      "name": "Set � Prepare ErrorPipe v1",
+      "id": "e8fd41d8-02eb-485d-bdb5-1542cb938017",
+      "name": "Set — Prepare ErrorPipe v1",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4304,
-        992
+        -2752,
+        3408
       ],
       "notes": "Prepare ErrorPipe v1 payload for WF99.\nInput: { _ctx, _err, message/error from PG error output }\nOutput: { ctx, error_context } per ErrorPipe Contract v1.\nWHY: Normalize error format before calling WF99."
     },
@@ -3672,13 +3660,13 @@
       "parameters": {
         "numberInputs": 15
       },
-      "id": "e46713f7-ec2f-4fbe-b2a7-5eaf7e11150e",
-      "name": "Merge � All Error Paths",
+      "id": "15bb03d3-5556-4fa6-9df0-6ca92eae2ae1",
+      "name": "Merge — All Error Paths",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        4096,
-        992
+        -2960,
+        3296
       ],
       "notes": "Merge all error outputs from Postgres nodes.\nInput: Multiple error streams from different PG nodes (13 original + 2 job insert errors).\nOutput: Single error stream for ErrorPipe preparation.\nWHY: Centralize error handling. numberInputs=15 for all PG error outputs."
     },
@@ -3701,13 +3689,13 @@
         },
         "options": {}
       },
-      "id": "766e1212-23e2-489d-ba0c-429cae0a308b",
-      "name": "Execute Workflow � WF99",
+      "id": "09587460-349a-4b43-94d1-95b89e392979",
+      "name": "Execute Workflow — WF99",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4496,
-        992
+        -2448,
+        3472
       ],
       "notes": "Call WF99 Global Error Handler.\nInput: { ctx, error_context, message, error, etc. }\nOutput: ErrorEnvelope from WF99.\nWHY: Centralized error handling per ErrorPipe Contract v1. No StopAndError after - returns ErrorEnvelope."
     },
@@ -3715,91 +3703,27 @@
       "parameters": {
         "numberInputs": 3
       },
-      "id": "8eca5ee3-6189-4b32-86af-c043c7c09e46",
-      "name": "Merge � All Success Paths",
+      "id": "10b1c772-1b9c-47e6-86e0-440f3b6fc97c",
+      "name": "Merge — All Success Paths",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        4224,
-        544
+        -2784,
+        2656
       ],
       "notes": "Merge all success outputs (message, membership, other).\nInput 1: Message success envelope.\nInput 2: Membership success envelope.\nInput 3: Other success envelope.\nOutput: Final SuccessEnvelope.\nWHY: Single exit point for success. numberInputs=3."
     },
     {
       "parameters": {},
-      "id": "2de7338b-1460-4414-9602-790c8da875ff",
+      "id": "4674a205-86b7-479a-9e21-e661de338d55",
       "name": "Manual Trigger (TEST)",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -3392,
-        992
+        -15712,
+        1584
       ],
       "notes": "TEST trigger for manual testing.\nInput: None.\nOutput: Triggers test case switch.\nWHY: Allows testing without Job Runner."
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict"
-                },
-                "conditions": [
-                  {
-                    "id": "cond-happy",
-                    "leftValue": "=true",
-                    "rightValue": "true",
-                    "operator": {
-                      "type": "boolean",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              },
-              "renameOutput": true,
-              "outputKey": "happy"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict"
-                },
-                "conditions": [
-                  {
-                    "id": "cond-edge",
-                    "leftValue": "=false",
-                    "rightValue": "true",
-                    "operator": {
-                      "type": "boolean",
-                      "operation": "equals"
-                    }
-                  }
-                ]
-              },
-              "renameOutput": true,
-              "outputKey": "edge"
-            }
-          ]
-        },
-        "options": {
-          "fallbackOutput": "extra"
-        }
-      },
-      "id": "fe88e949-2301-45b0-a2ce-333aedf0703a",
-      "name": "Switch — Test Case",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.4,
-      "position": [
-        -3184,
-        992
-      ],
-      "notes": "Route to different test cases.\nInput: Manual trigger.\nOutput 0 (happy): New message with URL.\nOutput 1 (edge): Edited message.\nOutput 2 (fail): Error trigger.\nWHY: Test different code paths."
     },
     {
       "parameters": {
@@ -3835,13 +3759,13 @@
           "dotNotation": true
         }
       },
-      "id": "b47a323f-0b5a-425b-b5af-aea88f5693c8",
+      "id": "6bf174d7-67b9-412b-8698-6719273e27dd",
       "name": "Set — Test Happy Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2976,
-        832
+        -15296,
+        1424
       ],
       "notes": "Happy path test data: new message with URL.\nInput: None.\nOutput: { req: { tenant_id, update, trace_id, correlation_id } }\nWHY: Tests complete message+URL flow. Uses test IDs (-999xxx)."
     },
@@ -3879,13 +3803,13 @@
           "dotNotation": true
         }
       },
-      "id": "7335fe42-0d80-496e-be29-7dd26d709ec4",
+      "id": "94119020-d9a9-4ca2-bc54-436a93137335",
       "name": "Set — Test Edge Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2976,
-        992
+        -15296,
+        1584
       ],
       "notes": "Edge case test data: edited message.\nInput: None.\nOutput: { req: { tenant_id, update (edited_message), ... } }\nWHY: Tests edit flow with version increment."
     },
@@ -3923,13 +3847,13 @@
           "dotNotation": true
         }
       },
-      "id": "23400566-24d3-4c84-b20b-416a2a14837d",
+      "id": "3136423e-8e55-49fe-9309-753ec892dabe",
       "name": "Set — Test Fail Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2976,
-        1152
+        -15296,
+        1744
       ],
       "notes": "Fail path test data: triggers error.\nInput: None.\nOutput: { req: { update with null user id } }\nWHY: Tests error handling path with invalid data."
     },
@@ -3937,13 +3861,13 @@
       "parameters": {
         "numberInputs": 3
       },
-      "id": "45a7912e-1c60-4f98-a71c-12992802cccf",
+      "id": "542950ed-d78f-481b-8ea4-f003de000aa9",
       "name": "Merge — Test Cases",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -2768,
-        992
+        -15088,
+        1584
       ],
       "notes": "Merge test case outputs.\nInput 0: Happy path data.\nInput 1: Edge case data.\nInput 2: Fail case data.\nOutput: Single item for correlation check.\nWHY: Converge test paths before main flow."
     },
@@ -3966,8 +3890,8 @@
             {
               "id": "job-payload",
               "name": "_job_file.payload",
-              "value": "={{ JSON.stringify({\n  file_id: $json._file.file_id,\n  file_unique_id: $json._file.file_unique_id,\n  file_type: $json._file.file_type,\n  message_fk: $json._message_fk,\n  version_id: $json._version_id\n}) }}",
-              "type": "string"
+              "value": "={{ {\n  file_id: $json._file.file_id,\n  file_unique_id: $json._file.file_unique_id,\n  file_type: $json._file.file_type,\n  message_fk: $json._message_fk,\n  version_id: $json._version_id\n} }}",
+              "type": "object"
             },
             {
               "id": "job-corr",
@@ -3988,13 +3912,13 @@
           "dotNotation": true
         }
       },
-      "id": "bd83b461-fc7d-4ce1-aa65-de300df2b96b",
+      "id": "e49dea3b-f95c-4317-adb9-b4343bdb84a1",
       "name": "Set — Prepare Job File Fetch",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2464,
-        160
+        -7040,
+        800
       ],
       "notes": "Prepare ops.jobs payload for fetch_tg_file.\nInput: { _file, _ctx, _message_fk, _version_id }\nOutput: Adds _job_file object.\nWHY: Create background job to fetch file content from Telegram."
     },
@@ -4059,13 +3983,13 @@
         },
         "options": {}
       },
-      "id": "ca4297d2-8f09-460f-9804-5c52aa293431",
+      "id": "77bde4c8-bd92-44ce-a188-58849cc5fcc1",
       "name": "PG — Insert ops.jobs (File)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2672,
-        160
+        -6384,
+        960
       ],
       "credentials": {
         "postgres": {
@@ -4105,13 +4029,13 @@
           "dotNotation": true
         }
       },
-      "id": "2c5aa5ab-c53f-4233-91b5-1317866abb96",
+      "id": "b3cce0c4-e590-4613-8578-aca5d057af17",
       "name": "ERR — Source PG Insert Job File",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2880,
-        320
+        -5008,
+        1344
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error from job insert.\nOutput: Adds _err metadata.\nWHY: Identify error source for WF99."
     },
@@ -4134,8 +4058,8 @@
             {
               "id": "job-payload",
               "name": "_job_url.payload",
-              "value": "={{ JSON.stringify({\n  url_id: $json.id,\n  normalized_url: $json._url.normalized,\n  canonical_url: $json._url.canonical,\n  message_fk: $json._message_fk,\n  version_id: $json._version_id\n}) }}",
-              "type": "string"
+              "value": "={{ {\n  url_id: $json.db.url.id,\n  normalized_url: $json._url.normalized,\n  canonical_url: $json._url.canonical,\n  message_fk: $json._message_fk,\n  version_id: $json._version_id\n} }}",
+              "type": "object"
             },
             {
               "id": "job-corr",
@@ -4156,13 +4080,13 @@
           "dotNotation": true
         }
       },
-      "id": "1da8a91e-1d00-42d4-85c4-7c5a36c96143",
+      "id": "066f5240-9fcc-4906-b8c2-a3f52dc989db",
       "name": "Set — Prepare Job URL Fetch",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3632,
-        0
+        -3856,
+        1760
       ],
       "notes": "Prepare ops.jobs payload for fetch_url.\nInput: { _url, _ctx, _message_fk, _version_id }\nOutput: Adds _job_url object.\nWHY: Create background job to fetch URL content."
     },
@@ -4227,13 +4151,13 @@
         },
         "options": {}
       },
-      "id": "9fe9a0e1-ee12-4e33-9fd4-f4d970ba96b9",
+      "id": "db18cf79-c2a0-4417-8ce4-cbca08ce3296",
       "name": "PG — Insert ops.jobs (URL)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3840,
-        0
+        -3536,
+        1888
       ],
       "credentials": {
         "postgres": {
@@ -4273,15 +4197,634 @@
           "dotNotation": true
         }
       },
-      "id": "462222ef-70d7-45d6-a631-f990f28f25d1",
+      "id": "6c3a04b4-8a45-40ff-830a-331b1382c2ad",
       "name": "ERR — Source PG Insert Job URL",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4048,
-        160
+        -3280,
+        2368
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error from job insert.\nOutput: Adds _err metadata.\nWHY: Identify error source for WF99."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5083c986-fae7-4467-bfbe-742e799c1ec1",
+              "name": "db.user",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "1ff6e231-f9e2-4c83-a4f8-68c2a2b0b36e",
+      "name": "Set — Wrap PG — Upsert tg.users",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -13648,
+        720
+      ],
+      "notes": "Wrap PG result into db.user namespace.\nInput: PG result.\nOutput: { db.user: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "2c8ff0ac-c1ad-4dfa-8be4-fb3827acc87f",
+      "name": "Merge — Restore After PG — Upsert tg.users",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -13520,
+        400
+      ],
+      "notes": "Restore working item after PG � Upsert tg.users.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.user).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5539114d-5042-4426-a871-6372794173ef",
+              "name": "db.chat",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "8320dfbb-7662-4d95-b0b4-8c6eef6bda73",
+      "name": "Set — Wrap PG — Upsert tg.chats",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -13040,
+        672
+      ],
+      "notes": "Wrap PG result into db.chat namespace.\nInput: PG result.\nOutput: { db.chat: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "bdd67517-3cae-402f-a992-d3e600d9f203",
+      "name": "Merge — Restore After PG — Upsert tg.chats",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -12880,
+        496
+      ],
+      "notes": "Restore working item after PG � Upsert tg.chats.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.chat).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eddf95dd-b480-4de2-b8a0-515df92dd2d2",
+              "name": "db.existing_msg",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "ca399501-accc-4e47-b4d3-e127e549144a",
+      "name": "Set — Wrap PG — Select Existing Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -12608,
+        608
+      ],
+      "notes": "Wrap PG result into db.existing_msg namespace.\nInput: PG result.\nOutput: { db.existing_msg: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "c957b9fb-07fc-4cc9-a55c-5fee63e42832",
+      "name": "Merge — Restore After PG — Select Existing Message",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -12496,
+        304
+      ],
+      "notes": "Restore working item after PG � Select Existing Message.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.existing_msg).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72bd2133-9cac-4527-9e1e-53b97813e6dc",
+              "name": "db.new_message",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "17e33984-b49e-499f-9160-524b33c5385d",
+      "name": "Set — Wrap Insert tg.messages",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -11728,
+        560
+      ],
+      "notes": "Wrap PG result into db.new_message namespace.\nInput: PG result.\nOutput: { db.new_message: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "b87df7de-15d8-46e5-a5e4-d73eeeea8815",
+      "name": "Merge — Restore After Insert tg.messages",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -11584,
+        464
+      ],
+      "notes": "Restore working item after PG — Insert tg.messages.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.new_message).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4189566b-29a3-48b1-8002-a3ab2c58edeb",
+              "name": "db.max_version",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "84ad46b1-d911-4d7f-992c-767599d949e6",
+      "name": "Set — Wrap Select Max Version",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -11920,
+        208
+      ],
+      "notes": "Wrap PG result into db.max_version namespace.\nInput: PG result.\nOutput: { db.max_version: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "d778e65f-834f-4595-9aa1-bd3754ce0ef9",
+      "name": "Merge — Restore After Select Max Version",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -11760,
+        80
+      ],
+      "notes": "Restore working item after PG — Select Max Version.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.max_version).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a892cf57-874d-4b57-ad59-a02938afdccd",
+              "name": "db.version",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "6e560421-8b66-461d-b9c1-b9a74a41228a",
+      "name": "Set — Wrap Insert tg.message_versions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -10464,
+        352
+      ],
+      "notes": "Wrap PG result into db.version namespace.\nInput: PG result.\nOutput: { db.version: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "e0e7654f-aef7-488c-b55f-7e3d94faa1c6",
+      "name": "Merge — Restore After Insert tg.message_versions",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -10320,
+        192
+      ],
+      "notes": "Restore working item after PG — Insert tg.message_versions.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.version).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8480dde-a675-421e-b3e3-46e89811c887",
+              "name": "db.update_result",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "e822ba91-75d2-4328-8c90-3941c7e61173",
+      "name": "Set — Wrap Update messages.current_version_id",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -9712,
+        112
+      ],
+      "notes": "Wrap PG result into db.update_result namespace.\nInput: PG result.\nOutput: { db.update_result: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "8265f142-32af-4161-a42b-281a8441435b",
+      "name": "Merge — Restore After Update messages.current_version_id",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -9504,
+        240
+      ],
+      "notes": "Restore working item after PG — Update messages.current_version_id.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.update_result).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b478f005-8c2c-455e-aae9-f74247dce197",
+              "name": "db.url",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "f07708b1-4e94-4c49-809f-dc838d438c92",
+      "name": "Set — Wrap Upsert content.urls",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4416,
+        1936
+      ],
+      "notes": "Wrap PG result into db.url namespace.\nWHY: Preserve _ctx/_url/_message_fk/_version_id after URL upsert."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "2b3f4d53-f140-4ba8-8675-abd05f2f334c",
+      "name": "Merge — Restore After Upsert URLs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -4176,
+        1664
+      ],
+      "notes": "Restore working item after URL upsert.\nWHY: Need _ctx, _url, _message_fk, _version_id for job creation."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5fcb05b-8946-45a8-953a-5cd1f85eaea5",
+              "name": "db.file",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "ede93970-9048-416a-bcd3-817c06c625fa",
+      "name": "Set — Wrap Upsert tg.files",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8304,
+        288
+      ],
+      "notes": "Wrap PG result into db.file.\nWHY: Preserve _file/_ctx context."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "510aaa96-382d-42c8-a804-3e9b5a8182fc",
+      "name": "Merge — Restore After Upsert tg.files",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -8144,
+        80
+      ],
+      "notes": "Restore context after PG — Upsert tg.files.\nWHY: Need _file, _ctx for downstream operations."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "17d21812-2d27-4a1d-89be-a74b516fe613",
+              "name": "db.file_instance",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "78dbf05d-4514-4cbf-b382-dbb74b650b0c",
+      "name": "Set — Wrap Upsert tg.file_instances",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -7600,
+        384
+      ],
+      "notes": "Wrap PG result into db.file_instance.\nWHY: Preserve _file/_ctx context."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "df4913b3-1396-41d6-b260-cd25c04901e5",
+      "name": "Merge — Restore After Upsert tg.file_instances",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -7312,
+        608
+      ],
+      "notes": "Restore context after PG — Upsert tg.file_instances.\nWHY: Need _file, _ctx for downstream operations."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9b487f58-fc92-437f-a780-6f44b2c2cf9e",
+              "name": "db.member_event",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "aa1194d4-2681-4641-bf6b-5eccc28df0f3",
+      "name": "Set — Wrap Insert tg.chat_member_events",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -13392,
+        1232
+      ],
+      "notes": "Wrap PG result into db.member_event.\nWHY: Preserve _ctx/_parsed/membership_* context."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "47fd80a9-7df1-4bae-8e66-bcb36bf7bcb8",
+      "name": "Merge — Restore After Insert tg.chat_member_events",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -13200,
+        1648
+      ],
+      "notes": "Restore context after PG — Insert tg.chat_member_events.\nWHY: Need _ctx, _parsed for SuccessEnvelope."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "54f0fbd8-2978-408d-bd4c-314c46815fff",
+              "name": "db.membership",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "e0f8c3e7-eaff-450c-999b-077f0d9bfd14",
+      "name": "Set — Wrap Upsert tg.chat_memberships_current",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -12736,
+        1360
+      ],
+      "notes": "Wrap PG result into db.membership.\nWHY: Preserve _ctx/_parsed/membership_* context."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          }
+        }
+      },
+      "id": "ab77fb89-349c-4f64-b135-244136183087",
+      "name": "Merge — Restore After Upsert tg.chat_memberships_current",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -12384,
+        1696
+      ],
+      "notes": "Restore context after PG — Upsert tg.chat_memberships_current.\nWHY: Need _ctx, _parsed for SuccessEnvelope."
+    },
+    {
+      "parameters": {
+        "type": "SHA256",
+        "value": "={{ JSON.stringify({ text: String($json._parsed?.text || ''), caption: String($json._parsed?.caption || ''), entities: $json._parsed?.entities || null, caption_entities: $json._parsed?.caption_entities || null }) }}",
+        "dataPropertyName": "_hash_hex"
+      },
+      "id": "1d172a43-976e-4fc2-9f63-1591cf0db959",
+      "name": "Crypto — SHA256 Content",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -11152,
+        336
+      ],
+      "notes": "Compute SHA256 hash of message content.\nInput: Item with _parsed.text, _parsed.caption, _parsed.entities, _parsed.caption_entities.\nOutput: Adds _hash_hex field with hex-encoded hash.\nWHY: content_sha256 column for deduplication."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a2a644cd-eeba-4272-8a02-3a5a36c3bdb4",
+              "name": "_content_sha256",
+              "value": "={{ '\\\\x' + $json._hash_hex }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "567a7345-b167-468b-8442-9111d7e0e8d5",
+      "name": "Set — Format Content Hash",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -11008,
+        416
+      ],
+      "notes": "Format hash as PostgreSQL bytea.\nInput: _hash_hex from Crypto node.\nOutput: _content_sha256 = '\\x' + hex_hash.\nWHY: PostgreSQL bytea column needs \\x prefix."
     }
   ],
   "pinData": {},
@@ -4290,784 +4833,828 @@
       "main": [
         [
           {
-            "node": "IF � Correlation ID Exists",
+            "node": "IF — Correlation ID Exists",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "IF � Correlation ID Exists": {
+    "IF — Correlation ID Exists": {
       "main": [
         [
           {
-            "node": "Merge � Correlation Paths",
+            "node": "Merge — Correlation Paths",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Crypto � Generate UUID",
+            "node": "Crypto — Generate UUID",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Crypto � Generate UUID": {
+    "Crypto — Generate UUID": {
       "main": [
         [
           {
-            "node": "Set � Assign Generated Correlation ID",
+            "node": "Set — Assign Generated Correlation ID",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set � Assign Generated Correlation ID": {
+    "Set — Assign Generated Correlation ID": {
       "main": [
         [
           {
-            "node": "Merge � Correlation Paths",
+            "node": "Merge — Correlation Paths",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "Merge � Correlation Paths": {
+    "Merge — Correlation Paths": {
       "main": [
         [
           {
-            "node": "Set � Build _ctx",
+            "node": "Set — Build _ctx",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set � Build _ctx": {
+    "Set — Build _ctx": {
       "main": [
         [
           {
-            "node": "Code � Parse Telegram Update",
+            "node": "Code — Parse Telegram Update",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Code � Parse Telegram Update": {
+    "Code — Parse Telegram Update": {
       "main": [
         [
           {
-            "node": "Switch � Update Kind",
+            "node": "Switch — Update Kind",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Switch � Update Kind": {
+    "Switch — Update Kind": {
       "main": [
         [
           {
-            "node": "Set � Prepare User Upsert",
+            "node": "Set — Prepare User Upsert",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Set � Prepare User Upsert",
+            "node": "Set — Prepare User Upsert",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Set � Prepare User Upsert",
+            "node": "Set — Prepare User Upsert",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Set � Prepare User Upsert",
+            "node": "Set — Prepare User Upsert",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Set � Prepare Membership Data",
+            "node": "Set — Prepare Membership Data",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Set � Prepare Membership Data",
+            "node": "Set — Prepare Membership Data",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Set � SuccessEnvelope (Other)",
+            "node": "Set — SuccessEnvelope (Other)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set � Prepare User Upsert": {
+    "Set — Prepare User Upsert": {
       "main": [
         [
           {
-            "node": "PG � Upsert tg.users",
+            "node": "PG — Upsert tg.users",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After PG — Upsert tg.users",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "PG � Upsert tg.users": {
+    "PG — Upsert tg.users": {
       "main": [
         [
           {
-            "node": "Set � Prepare Chat Upsert",
+            "node": "Set — Wrap PG — Upsert tg.users",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Upsert tg.users",
+            "node": "ERR — Source PG Upsert tg.users",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Upsert tg.users": {
+    "ERR — Source PG Upsert tg.users": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set � Prepare Chat Upsert": {
+    "Set — Prepare Chat Upsert": {
       "main": [
         [
           {
-            "node": "PG � Upsert tg.chats",
+            "node": "PG — Upsert tg.chats",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After PG — Upsert tg.chats",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "PG � Upsert tg.chats": {
+    "PG — Upsert tg.chats": {
       "main": [
         [
           {
-            "node": "PG � Select Existing Message",
+            "node": "Set — Wrap PG — Upsert tg.chats",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Upsert tg.chats",
+            "node": "ERR — Source PG Upsert tg.chats",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Upsert tg.chats": {
+    "ERR — Source PG Upsert tg.chats": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "PG � Select Existing Message": {
+    "PG — Select Existing Message": {
       "main": [
         [
           {
-            "node": "IF � Message Exists",
+            "node": "Set — Wrap PG — Select Existing Message",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Select Message",
+            "node": "ERR — Source PG Select Message",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Select Message": {
+    "ERR — Source PG Select Message": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 2
           }
         ]
       ]
     },
-    "IF � Message Exists": {
+    "IF — Message Exists": {
       "main": [
         [
           {
-            "node": "PG � Select Max Version",
+            "node": "PG — Select Max Version",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After Select Max Version",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Set � Prepare New Message Insert",
+            "node": "Set — Prepare New Message Insert",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set � Prepare New Message Insert": {
+    "Set — Prepare New Message Insert": {
       "main": [
         [
           {
-            "node": "PG � Insert tg.messages",
+            "node": "PG — Insert tg.messages",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After Insert tg.messages",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "PG � Insert tg.messages": {
+    "PG — Insert tg.messages": {
       "main": [
         [
           {
-            "node": "Set � New Message FK (version 1)",
+            "node": "Set — Wrap Insert tg.messages",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Insert Message",
+            "node": "ERR — Source PG Insert Message",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Insert Message": {
+    "ERR — Source PG Insert Message": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 3
           }
         ]
       ]
     },
-    "Set � New Message FK (version 1)": {
+    "Set — New Message FK (version 1)": {
       "main": [
         [
           {
-            "node": "Merge � Message Paths",
+            "node": "Merge — Message Paths",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "PG � Select Max Version": {
+    "PG — Select Max Version": {
       "main": [
         [
           {
-            "node": "Set � Existing Message FK (next version)",
+            "node": "Set — Wrap Select Max Version",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Select Version",
+            "node": "ERR — Source PG Select Version",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Select Version": {
+    "ERR — Source PG Select Version": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 4
           }
         ]
       ]
     },
-    "Set � Existing Message FK (next version)": {
+    "Set — Existing Message FK (next version)": {
       "main": [
         [
           {
-            "node": "Merge � Message Paths",
+            "node": "Merge — Message Paths",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "Merge � Message Paths": {
+    "Merge — Message Paths": {
       "main": [
         [
           {
-            "node": "Code � Hash Content",
+            "node": "Crypto — SHA256 Content",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Code � Hash Content": {
+    "Set — Prepare Version Insert": {
       "main": [
         [
           {
-            "node": "Set � Prepare Version Insert",
+            "node": "PG — Insert tg.message_versions",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After Insert tg.message_versions",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set � Prepare Version Insert": {
+    "PG — Insert tg.message_versions": {
       "main": [
         [
           {
-            "node": "PG � Insert tg.message_versions",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "PG � Insert tg.message_versions": {
-      "main": [
-        [
-          {
-            "node": "Set � Store Version ID",
+            "node": "Set — Wrap Insert tg.message_versions",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Insert Version",
+            "node": "ERR — Source PG Insert Version",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Insert Version": {
+    "ERR — Source PG Insert Version": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 5
           }
         ]
       ]
     },
-    "Set � Store Version ID": {
+    "Set — Store Version ID": {
       "main": [
         [
           {
-            "node": "PG � Update messages.current_version_id",
+            "node": "PG — Update messages.current_version_id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After Update messages.current_version_id",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "PG � Update messages.current_version_id": {
+    "PG — Update messages.current_version_id": {
       "main": [
         [
           {
-            "node": "Code � Collect Attachments",
+            "node": "Set — Wrap Update messages.current_version_id",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Update Message",
+            "node": "ERR — Source PG Update Message",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Update Message": {
+    "ERR — Source PG Update Message": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 6
           }
         ]
       ]
     },
-    "Code � Collect Attachments": {
+    "Code — Collect Attachments": {
       "main": [
         [
           {
-            "node": "IF � Has File Attachments",
+            "node": "IF — Has File Attachments",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "IF � Has File Attachments": {
+    "IF — Has File Attachments": {
       "main": [
         [
           {
-            "node": "Code � Expand Files",
+            "node": "Code — Expand Files",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Merge � Files Done",
+            "node": "Merge — Files Done",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "Code � Expand Files": {
+    "Code — Expand Files": {
       "main": [
         [
           {
-            "node": "PG � Upsert tg.files",
+            "node": "PG — Upsert tg.files",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After Upsert tg.files",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After Upsert tg.file_instances",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "PG � Upsert tg.files": {
+    "PG — Upsert tg.files": {
       "main": [
         [
           {
-            "node": "PG � Upsert tg.file_instances",
+            "node": "Set — Wrap Upsert tg.files",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Upsert File",
+            "node": "ERR — Source PG Upsert File",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Upsert File": {
+    "ERR — Source PG Upsert File": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 7
           }
         ]
       ]
     },
-    "PG � Upsert tg.file_instances": {
+    "PG — Upsert tg.file_instances": {
       "main": [
         [
           {
-            "node": "Set — Prepare Job File Fetch",
+            "node": "Set — Wrap Upsert tg.file_instances",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Upsert File Instance",
+            "node": "ERR — Source PG Upsert File Instance",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Upsert File Instance": {
+    "ERR — Source PG Upsert File Instance": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 8
           }
         ]
       ]
     },
-    "PG � Insert tg.message_attachments": {
+    "PG — Insert tg.message_attachments": {
       "main": [
         [
           {
-            "node": "Merge � Files Done",
+            "node": "Merge — Files Done",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Insert Attachment",
+            "node": "ERR — Source PG Insert Attachment",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Insert Attachment": {
+    "ERR — Source PG Insert Attachment": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 9
           }
         ]
       ]
     },
-    "Merge � Files Done": {
+    "Merge — Files Done": {
       "main": [
         [
           {
-            "node": "IF � Has URLs",
+            "node": "IF — Has URLs",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "IF � Has URLs": {
+    "IF — Has URLs": {
       "main": [
         [
           {
-            "node": "Code � Expand URLs",
+            "node": "Code — Expand URLs",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Merge � URLs Done",
+            "node": "Merge — URLs Done",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "Code � Expand URLs": {
+    "Code — Expand URLs": {
       "main": [
         [
           {
-            "node": "PG � Upsert content.urls",
+            "node": "PG — Upsert content.urls",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After Upsert URLs",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "PG � Upsert content.urls": {
+    "PG — Upsert content.urls": {
       "main": [
         [
           {
-            "node": "Set — Prepare Job URL Fetch",
+            "node": "Set — Wrap Upsert content.urls",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Upsert URL",
+            "node": "ERR — Source PG Upsert URL",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Upsert URL": {
+    "ERR — Source PG Upsert URL": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 10
           }
         ]
       ]
     },
-    "Merge � URLs Done": {
+    "Merge — URLs Done": {
       "main": [
         [
           {
-            "node": "Set � SuccessEnvelope (Message)",
+            "node": "Set — SuccessEnvelope (Message)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set � SuccessEnvelope (Message)": {
+    "Set — SuccessEnvelope (Message)": {
       "main": [
         [
           {
-            "node": "Merge � All Success Paths",
+            "node": "Merge — All Success Paths",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set � Prepare Membership Data": {
+    "Set — Prepare Membership Data": {
       "main": [
         [
           {
-            "node": "PG � Insert tg.chat_member_events",
+            "node": "PG — Insert tg.chat_member_events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After Insert tg.chat_member_events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After Upsert tg.chat_memberships_current",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "PG � Insert tg.chat_member_events": {
+    "PG — Insert tg.chat_member_events": {
       "main": [
         [
           {
-            "node": "PG � Upsert tg.chat_memberships_current",
+            "node": "Set — Wrap Insert tg.chat_member_events",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Insert Member Event",
+            "node": "ERR — Source PG Insert Member Event",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Insert Member Event": {
+    "ERR — Source PG Insert Member Event": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 11
           }
         ]
       ]
     },
-    "PG � Upsert tg.chat_memberships_current": {
+    "PG — Upsert tg.chat_memberships_current": {
       "main": [
         [
           {
-            "node": "Set � SuccessEnvelope (Membership)",
+            "node": "Set — Wrap Upsert tg.chat_memberships_current",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR � Source PG Upsert Membership",
+            "node": "ERR — Source PG Upsert Membership",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "ERR � Source PG Upsert Membership": {
+    "ERR — Source PG Upsert Membership": {
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 12
           }
         ]
       ]
     },
-    "Set � SuccessEnvelope (Membership)": {
+    "Set — SuccessEnvelope (Membership)": {
       "main": [
         [
           {
-            "node": "Merge � All Success Paths",
+            "node": "Merge — All Success Paths",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "Set � SuccessEnvelope (Other)": {
+    "Set — SuccessEnvelope (Other)": {
       "main": [
         [
           {
-            "node": "Merge � All Success Paths",
+            "node": "Merge — All Success Paths",
             "type": "main",
             "index": 2
           }
         ]
       ]
     },
-    "Merge � All Error Paths": {
+    "Merge — All Error Paths": {
       "main": [
         [
           {
-            "node": "Set � Prepare ErrorPipe v1",
+            "node": "Set — Prepare ErrorPipe v1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set � Prepare ErrorPipe v1": {
+    "Set — Prepare ErrorPipe v1": {
       "main": [
         [
           {
-            "node": "Execute Workflow � WF99",
+            "node": "Execute Workflow — WF99",
             "type": "main",
             "index": 0
           }
@@ -5078,30 +5665,15 @@
       "main": [
         [
           {
-            "node": "Switch — Test Case",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Switch — Test Case": {
-      "main": [
-        [
-          {
             "node": "Set — Test Happy Data",
             "type": "main",
             "index": 0
-          }
-        ],
-        [
+          },
           {
             "node": "Set — Test Edge Data",
             "type": "main",
             "index": 0
-          }
-        ],
-        [
+          },
           {
             "node": "Set — Test Fail Data",
             "type": "main",
@@ -5147,7 +5719,7 @@
       "main": [
         [
           {
-            "node": "IF � Correlation ID Exists",
+            "node": "IF — Correlation ID Exists",
             "type": "main",
             "index": 0
           }
@@ -5169,7 +5741,7 @@
       "main": [
         [
           {
-            "node": "PG � Insert tg.message_attachments",
+            "node": "PG — Insert tg.message_attachments",
             "type": "main",
             "index": 0
           }
@@ -5187,7 +5759,7 @@
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 13
           }
@@ -5209,7 +5781,7 @@
       "main": [
         [
           {
-            "node": "Merge � URLs Done",
+            "node": "Merge — URLs Done",
             "type": "main",
             "index": 0
           }
@@ -5227,23 +5799,314 @@
       "main": [
         [
           {
-            "node": "Merge � All Error Paths",
+            "node": "Merge — All Error Paths",
             "type": "main",
             "index": 14
           }
         ]
       ]
+    },
+    "Set — Wrap PG — Upsert tg.users": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After PG — Upsert tg.users",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After PG — Upsert tg.users": {
+      "main": [
+        [
+          {
+            "node": "Set — Prepare Chat Upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap PG — Upsert tg.chats": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After PG — Upsert tg.chats",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After PG — Upsert tg.chats": {
+      "main": [
+        [
+          {
+            "node": "PG — Select Existing Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore After PG — Select Existing Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap PG — Select Existing Message": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After PG — Select Existing Message",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After PG — Select Existing Message": {
+      "main": [
+        [
+          {
+            "node": "IF — Message Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap Insert tg.messages": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After Insert tg.messages",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Insert tg.messages": {
+      "main": [
+        [
+          {
+            "node": "Set — New Message FK (version 1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap Select Max Version": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After Select Max Version",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Select Max Version": {
+      "main": [
+        [
+          {
+            "node": "Set — Existing Message FK (next version)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap Insert tg.message_versions": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After Insert tg.message_versions",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Insert tg.message_versions": {
+      "main": [
+        [
+          {
+            "node": "Set — Store Version ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap Update messages.current_version_id": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After Update messages.current_version_id",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Update messages.current_version_id": {
+      "main": [
+        [
+          {
+            "node": "Code — Collect Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap Upsert content.urls": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After Upsert URLs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Upsert URLs": {
+      "main": [
+        [
+          {
+            "node": "Set — Prepare Job URL Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap Upsert tg.files": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After Upsert tg.files",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Upsert tg.files": {
+      "main": [
+        [
+          {
+            "node": "PG — Upsert tg.file_instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap Upsert tg.file_instances": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After Upsert tg.file_instances",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Upsert tg.file_instances": {
+      "main": [
+        [
+          {
+            "node": "Set — Prepare Job File Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap Insert tg.chat_member_events": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After Insert tg.chat_member_events",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Insert tg.chat_member_events": {
+      "main": [
+        [
+          {
+            "node": "PG — Upsert tg.chat_memberships_current",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Wrap Upsert tg.chat_memberships_current": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore After Upsert tg.chat_memberships_current",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Upsert tg.chat_memberships_current": {
+      "main": [
+        [
+          {
+            "node": "Set — SuccessEnvelope (Membership)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto — SHA256 Content": {
+      "main": [
+        [
+          {
+            "node": "Set — Format Content Hash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Format Content Hash": {
+      "main": [
+        [
+          {
+            "node": "Set — Prepare Version Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "808488e9-c119-4f66-b93e-bcc1c8aaaba7",
+  "versionId": "edb5428a-64af-45c0-9965-c6c3b5277398",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
-  "id": "ZpAPQXdHdm0ObAjTw9xIw",
+  "id": "-0hFbxSj-HB7MD1sbkWF0",
   "tags": []
 }

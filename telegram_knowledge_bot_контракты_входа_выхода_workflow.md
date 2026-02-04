@@ -30,10 +30,66 @@
 
 ### 0.2 Visibility и приватность
 
-Используется `core.visibility_scope`:
+Используется `core.visibility_scope` (см. `SQL.txt`):
 
 - `group`: данные из групп/каналов доступны участникам (с учётом allowlist в `core.tenant_users` и фактического membership в `tg.chat_memberships_current`).
-- `dm`: данные из лички доступны только владельцу (`dm_owner_user_id`) и админам (роль в `core.tenant_users`).
+- `dm_private`: данные из лички доступны только владельцу (`dm_owner_user_id`) и админам (роль в `core.tenant_users`).
+- `admin_only`: данные доступны только админам (используем точечно для сервисных логов/внутренних заметок).
+
+### 0.2.1 Триггеры ответа (DM vs Group)
+
+**DM (личная переписка):**
+
+- Если пользователь `enabled=true` в `core.tenant_users` — бот считает осмысленное сообщение обращением к нему и отвечает.
+- В DM пользователь может запрашивать информацию из других чатов **только в пределах прав**:
+  - DM владельца (dm\_owner\_user\_id=user)
+  -
+    - чаты, где пользователь является **текущим** участником (`tg.chat_memberships_current`) и чат разрешён политикой.
+
+**Group (публичный чат):**
+
+- Бот отвечает только при явном обращении:
+  1. mention `@<bot_username>` в `entities/caption_entities`, ИЛИ
+  2. reply на сообщение бота (`reply_to_message` от бота), ИЛИ
+  3. `/command@<bot_username>` (если включена поддержка команд).
+- В group-ответах источники строго ограничены **текущим ****chat\_id**. Запросы «принеси из другого чата/лички» в группе — отказ.
+
+### 0.2.2 Голосовые сообщения (STT): авто и по запросу
+
+Настройки на уровне chat policy (в `core.chat_policies` или эквивалент по SQL.txt):
+
+- `auto_transcribe_voice` (bool)
+- `assistant_name` / `wake_name` (string)
+
+Поведение:
+
+- `auto_transcribe_voice=true`: любое voice → job `voice_transcribe` → транскрипт в БД → reply транскриптом.
+- `auto_transcribe_voice=false`: только по запросу:
+  - текстом: reply на voice + mention + «расшифруй»;
+  - голосом: voice с `wake_name` + просьба;
+  - для экономии: допускается `voice_probe` (2–5 сек) → если wake найден → `voice_transcribe`.
+
+### 0.2.3 Авто-анализ мультимедиа и ссылок (обязательный контур знаний)
+
+Требование: **любой** мультимедиа-объект (аудио/voice, видео, изображение, документ, ссылка) должен быть не только сохранён, но и **проанализирован** так, чтобы его можно было находить по смыслу.
+
+Политика (на уровне чата/tenant, хранить в `core.chat_policies.meta` или эквиваленте):
+
+- `auto_analyze_media` (bool): анализировать вложения автоматически.
+- `auto_transcribe_voice` (bool): auto-STT для voice.
+- `allow_file_download` / `allow_url_fetch` / `allow_embedding` (bool): разрешения на скачивание/парсинг/эмбеддинг.
+
+Единый принцип хранения результатов:
+
+- **основной поисковый текст** → `content.documents.text`
+- **структурированные результаты** → `content.documents.meta` (JSON):
+  - для audio/voice: `transcript`, `language`, `segments?`
+  - для video: `description`, `scenes?`, `objects?`, `timestamps?`
+  - для image: `caption`, `ocr_text?`, `objects?`
+  - для docs: `extracted_text`, `ocr_text?`, `tables?`
+  - для url: `page_text`, `title`, `summary?`
+
+Дальше весь этот текст проходит общий конвейер: `chunk_document` → `embed_chunks`, чтобы искать **по смыслу**.
 
 ### 0.3 Канонические envelopes
 
@@ -111,7 +167,9 @@
 
 ### 0.4 Общий `ctx`
 
-`ctx` — нормализованный контекст для ACL/приватности/маршрутизации. Каноническое имя в меж-WF контрактах — ``. `_ctx` допустим только как внутренний контейнер внутри одного WF.
+`ctx` — нормализованный контекст для ACL/приватности/маршрутизации.
+
+Каноническое имя в меж-WF контрактах — `ctx`. `_ctx` допустим только как внутренний контейнер внутри одного WF.
 
 Минимальный контракт `ctx`:
 
@@ -121,7 +179,24 @@
   "tg_user_id": "<bigint>",
   "chat_id": "<bigint|null>",
   "channel": "group|dm",
-  "visibility": "group|dm",
+  "visibility": "group|dm_private|admin_only",
+  "dm_owner_user_id": "<bigint|null>",
+  "role": "admin|user|readonly|blocked",
+  "is_allowed": true,
+  "trace_id": "<string|null>",
+  "correlation_id": "<uuid>",
+  "job_id": "<number|null>",
+  "contracts": {
+    "errorpipe": 1
+  }
+}
+```json
+{
+  "tenant_id": "<uuid>",
+  "tg_user_id": "<bigint>",
+  "chat_id": "<bigint|null>",
+  "channel": "group|dm",
+  "visibility": "group|dm_private",
   "dm_owner_user_id": "<bigint|null>",
   "role": "admin|user|blocked",
   "is_allowed": true,
@@ -162,7 +237,7 @@
 **Output:** SuccessEnvelope с `data.ctx`.
 
 ```json
-{ "ctx": { "tenant_id": "...", "role": "...", "is_allowed": true, "visibility": "group|dm", "chat_policy": {"allow_url_fetch":true, "allow_file_download":true, "allow_embedding":true, "retention_days_raw":90, "retention_days_documents":3650 } } }
+{ "ctx": { "tenant_id": "...", "role": "...", "is_allowed": true, "visibility": "group|dm_private", "chat_policy": {"allow_url_fetch":true, "allow_file_download":true, "allow_embedding":true, "retention_days_raw":90, "retention_days_documents":3650 } } }
 ```
 
 **DB side-effects:**
@@ -223,11 +298,11 @@
 
 ---
 
-### WF20 — Update Processor (Upsert tg.\* + content discovery)
+### WF20 — Update Processor (Upsert tg.* + discovery + job fan-out)
 
-**Назначение:** разобрать update, записать факты в tg.\* и создать задачи на контент (urls/files).
+**Назначение:** разобрать update, записать факты в `tg.*`, определить необходимость ответа (DM/Group rules) и создать задачи `ops.jobs` на дальнейшую обработку контента и/или ответ.
 
-**Trigger:** Execute Workflow Trigger (запускается Job Runner’ом с job payload).
+**Trigger:** Execute Workflow Trigger (запускается Job Runner’ом/worker).
 
 **Input:**
 
@@ -235,36 +310,39 @@
 { "req": { "tenant_id":"<uuid>", "update": { /* raw telegram update */ }, "trace_id":"<string|null>" } }
 ```
 
-**Output:** SuccessEnvelope:
-
-```json
-{
-  "data": {
-    "chat_id": 123,
-    "message_id": 45,
-    "message_fk": 999,
-    "message_version_id": 1001,
-    "created_jobs": { "url_jobs": [1,2], "file_jobs": [3] }
-  }
-}
-```
+**Output:** SuccessEnvelope (как и ранее), но `created_jobs` отражает типы из `ops.job_type`.
 
 **DB side-effects:**
 
 - UPSERT/UPDATE: `tg.users`, `tg.chats`
-- INSERT: `tg.messages` (identity), `tg.message_versions`, `tg.message_attachments`
-- UPSERT/UPDATE: `tg.files`, `tg.file_instances` (если есть file\_id)
-- INSERT: `tg.chat_member_events` и UPDATE `tg.chat_memberships_current` (если update о member’ах)
-- WRITE: `ops.jobs` для URL/file/download/extract, если найден контент
+- INSERT/UPSERT: `tg.messages` (identity), `tg.message_versions`, `tg.message_attachments`
+- UPSERT/UPDATE: `tg.files`, `tg.file_instances` (если есть file_id)
+- INSERT/UPDATE: `tg.chat_member_events` и `tg.chat_memberships_current` (если update о member’ах)
+
+- WRITE: `ops.jobs` (payload — **объект**, без stringify) — **строго enum из `ops.job_type` (см. `SQL.txt`)**:
+  - `fetch_tg_file` — для каждого file/voice/video/photo/document
+  - `fetch_url` — для каждого URL
+  - `build_document` — создать/обновить `content.documents` (doc_type=`file|url|message`, visibility и связи)
+  - `extract_text` — **универсальный анализ**:
+    - voice/audio → transcript
+    - video → описание/сцены
+    - image → caption + OCR (если нужно)
+    - docs → извлечённый текст (+ OCR для сканов)
+    - url → page text (+ title/summary)
+  - `chunk_document` → `embed_chunks` (если policy `allow_embedding=true`)
+  - `answer_query` — если `interaction.should_respond=true`
 
 **Idempotency:**
 
 - `tg.messages` уникален по `(tenant_id, chat_id, message_id)`
 - `tg.message_versions` уникален по `(message_fk, version_no)`
 
----
+**Idempotency:**
 
-### WF30 — URL Normalizer (Message → content.urls + fetch job)
+- `tg.messages` уникален по `(tenant_id, chat_id, message_id)`
+- `tg.message_versions` уникален по `(message_fk, version_no)`
+
+### WF30 — URL Normalizer (Message → content.urls + fetch job) (Message → content.urls + fetch job)
 
 **Назначение:** принять URL, нормализовать, upsert `content.urls`, создать `content.url_fetches` через job.
 
@@ -277,7 +355,7 @@
   "req": {
     "tenant_id": "<uuid>",
     "url": "<string>",
-    "ctx": { "chat_id": "<bigint|null>", "visibility": "group|dm", "dm_owner_user_id": "<bigint|null>", "message_version_id": "<bigint|null>" }
+    "ctx": { "chat_id": "<bigint|null>", "visibility": "group|dm_private", "dm_owner_user_id": "<bigint|null>", "message_version_id": "<bigint|null>" }
   }
 }
 ```
@@ -349,7 +427,76 @@
 
 ---
 
-### WF33 — Document Extractor (documents.pending → documents.text)
+### WF35 — Voice Probe (Wake-word detector / STT-lite)
+
+**Назначение:** короткая расшифровка первых N секунд voice, чтобы понять, есть ли обращение к ассистенту/команда (wake-word) и стоит ли делать полную транскрипцию.
+
+**Trigger:** Execute Workflow Trigger (job).
+
+**Input:**
+
+```json
+{
+  "req": {
+    "tenant_id": "<uuid>",
+    "message_version_id": 1001,
+    "document_id": 101,
+    "wake_name": "<string>",
+    "max_seconds": 5,
+    "language": "<string|null>",
+    "trace_id": "<string|null>"
+  }
+}
+```
+
+**Output:** SuccessEnvelope:
+
+```json
+{ "data": { "wake_detected": true, "confidence": 0.9, "probe_text": "...", "next_action": "transcribe_full|ignore" } }
+```
+
+**DB side-effects (по `SQL.txt`):**
+
+- UPDATE: `content.documents.meta.voice_probe` (json) + `updated_at`
+- `content.documents.status` **не переводить в `succeeded`** (probe — вспомогательный шаг)
+
+---
+
+### WF34 — Voice Transcriber (Full STT)
+
+**Назначение:** полная расшифровка voice (или аудио), сохранение транскрипта как основного поискового текста документа.
+
+**Trigger:** Execute Workflow Trigger (job).
+
+**Input:**
+
+```json
+{
+  "req": {
+    "tenant_id": "<uuid>",
+    "message_version_id": 1001,
+    "document_id": 101,
+    "language": "<string|null>",
+    "trace_id": "<string|null>"
+  }
+}
+```
+
+**Output:** SuccessEnvelope:
+
+```json
+{ "data": { "transcript": "...", "token_count": 123, "document_id": 101 } }
+```
+
+**DB side-effects (по `SQL.txt`):**
+
+- UPDATE: `content.documents`:
+  - `text` = transcript (поиск/цитирование)
+  - `status` = `succeeded`
+  - `token_count`, `language`, `meta.transcript`/`meta.segments?`
+- WRITE: `ops.jobs` → `chunk_document` → `embed_chunks` (если policy `allow_embedding=true`)
+
+### WF33 — Extractor (documents.pending → documents.text)
 
 **Назначение:** извлечь текст (PDF/DOCX/HTML/изображения по необходимости), заполнить `content.documents.text`, выставить status.
 
@@ -450,9 +597,9 @@
 
 ### WF51 — Answerer (Mention/DM question → answer + citations)
 
-**Назначение:** принять вопрос, проверить ACL через WF00c, найти релевантные chunks (pgvector), сформировать ответ, записать turn+citations, ответить в Telegram.
+**Назначение:** принять вопрос, проверить ACL через WF00c, сделать retrieval (pgvector + joins), сформировать ответ с цитатами/ссылками, записать audit и отправить ответ в Telegram.
 
-**Trigger:** Execute Workflow Trigger (job) ИЛИ напрямую из Update Processor для упоминания.
+**Trigger:** Execute Workflow Trigger (job) или вызов из worker по контракту.
 
 **Input:**
 
@@ -463,12 +610,17 @@
     "tg_user_id":123,
     "channel":"group|dm",
     "chat_id":456,
-    "question": "<text>",
-    "question_message_version_id": 1001,
+    "question":"<text>",
+    "question_message_version_id":1001,
     "trace_id":"<string|null>"
   }
 }
 ```
+
+**Retrieval scope (обязательный инвариант):**
+
+- `channel=group`: источники **только** `chat_id` вопроса.
+- `channel=dm`: источники = DM владельца + все чаты, где пользователь current member (`tg.chat_memberships_current`) и чат разрешён политикой.
 
 **Output:** SuccessEnvelope:
 
@@ -476,20 +628,19 @@
 {
   "data": {
     "session_id":"<uuid>",
-    "turn_id": 555,
-    "answer_text": "...",
-    "citations": [ {"rank":1,"chunk_id":77,"score":0.82,"snippet":"...","source_ref":{}} ]
+    "turn_id":555,
+    "answer_text":"...",
+    "citations":[{"rank":1,"chunk_id":77,"score":0.82,"snippet":"...","source_ref":{}}]
   }
 }
 ```
 
 **DB side-effects:**
 
-- CALL: WF00c (required) → ctx.is\_allowed
-- WRITE: `audit.qa_turns`, `audit.qa_citations`
-- READ: `kg.chunk_embeddings_1536` + join `kg.chunks` + join `content.documents` (с фильтрами visibility/tenant)
-
----
+- CALL: WF00c (required) → ctx.is\_allowed + ctx.visibility/chat\_policy
+- READ: `kg.chunk_embeddings_1536` + join `kg.chunks` + join `content.documents` (с ACL-фильтрами)
+- WRITE: `audit.qa_sessions`, `audit.qa_turns`, `audit.qa_citations`
+- I/O: Telegram sendMessage/editMessageText (ответ в чат/личку)
 
 ### WF60 — Retention & Pruning (policy-driven)
 
@@ -538,6 +689,33 @@
 - CALL: WF20/WF31/WF32/WF33/WF40/WF41/WF51
 
 ---
+
+### WF98 — Platform Error Catcher (n8n Error Workflow fallback)
+
+**Назначение:** «последний рубеж» обработки ошибок на уровне n8n Error Workflow. Запускается, когда execution завершился ошибкой (неуправляемый сбой) или когда основной WF завершился StopAndError.
+
+**Trigger:** Error Trigger.
+
+**Input:** payload Error Trigger (структура n8n), минимум:
+
+- исходный workflow/execution id
+- error message/stack/details
+
+**Output:** SuccessEnvelope (всегда, чтобы не создавать каскад ошибок):
+
+```json
+{ "data": { "correlation_id":"<uuid>", "dedup_skipped": false, "wf99_called": true } }
+```
+
+**Dedup guard (обязателен):**
+
+- Перед вызовом WF99 проверить `ops.errors` по `correlation_id`.
+- Если запись уже есть — **не вызывать WF99** (`dedup_skipped=true`).
+
+**DB side-effects:**
+
+- OPTIONAL READ: `ops.errors` (dedup)
+- CALL: WF99 (только если не dedup)
 
 ### WF99 — Global ERR Handler
 

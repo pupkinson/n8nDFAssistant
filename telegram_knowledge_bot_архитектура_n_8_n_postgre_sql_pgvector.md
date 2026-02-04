@@ -18,6 +18,68 @@
 5. **Обработка вложений/ссылок**: бот скачивает документы/страницы, извлекает содержимое, индексирует и привязывает к исходному сообщению.
 6. **Аудит**: фиксируются запросы к боту, использованные источники, ошибки обработки.
 
+## 2.6) Модель общения и триггеры ответа (DM vs Group)
+
+### 2.6.1 DM (личная переписка)
+
+- **Когда отвечает:** бот отвечает пользователю в личке на осмысленные сообщения, если пользователь в allowlist (`core.tenant_users.enabled=true`).
+- **Какие источники может использовать:**
+  - данные DM владельца (visibility=dm\_private, dm\_owner\_user\_id=user);
+  - данные из всех чатов tenant, где пользователь является **текущим** участником (`tg.chat_memberships_current`) и чат разрешён политикой (`core.chat_policies`).
+
+### 2.6.2 Group (публичные группы/чаты) (публичные группы/чаты)
+
+- **Когда отвечает (строго):**
+  1. есть mention `@<bot_username>` в `entities/caption_entities`, ИЛИ
+  2. сообщение — reply на сообщение бота, ИЛИ
+  3. команда `/command@<bot_username>` (если поддержка команд включена).
+- **Какие источники может использовать:** только информация, ранее опубликованная \*\*в этом же \*\*\`\`. Запросы «принеси из другого чата/лички» в группе — отказ. Запросы «принеси из другого чата/лички» в группе — отказ.
+- **Формат ответа:** публичный reply на сообщение обращения; допускается серия сообщений (пагинация/лимиты Telegram) и deep‑links на найденные сообщения.
+
+### 2.6.3 Голосовые сообщения (STT): авто и по запросу
+
+- Настройки (в `core.chat_policies` или эквивалент по SQL.txt):
+  - `auto_transcribe_voice` (bool)
+  - `assistant_name` / `wake_name` (string)
+- **auto\_transcribe\_voice=true:** любое voice → job `voice_transcribe` → транскрипт в БД → reply транскриптом.
+- **auto\_transcribe\_voice=false:** только по запросу:
+  - текстом: reply на voice + mention + «расшифруй»;
+  - голосом: voice с `wake_name` + просьба.
+
+**Опциональная оптимизация (рекомендуется):**
+
+- Чтобы не транскрибировать всё подряд в режиме OFF: `WF35 voice_probe` (2–5 сек для детекта wake) → если wake найден → `WF34 voice_transcribe`.
+
+## 2.7) Авто-анализ мультимедиа и ссылок (обязательный контур знаний)
+
+Требование: **любой** мультимедиа-объект (аудио/voice, видео, изображение, документ, ссылка) должен:
+
+1. быть сохранён/привязан к исходному сообщению;
+2. пройти **автоматический анализ**;
+3. результаты анализа должны быть сохранены так, чтобы объект можно было искать **по смыслу**.
+
+### 2.7.1 Что именно анализируем
+
+- **Voice/Audio:** полная транскрипция (WF34), + при необходимости voice\_probe (WF35).
+- **Video:** краткое описание происходящего (VLM/LLM), при возможности — сцены/таймкоды.
+- **Image:** caption/описание + OCR (если есть текст).
+- **Documents (PDF/DOCX/XLSX/сканы):** извлечённый текст + OCR для сканов; при возможности — структура (заголовки/таблицы).
+- **URLs:** скачивание/парсинг readable text + title; при необходимости — краткое summary.
+
+### 2.7.2 Где хранить результаты
+
+Единый принцип:
+
+- основной поисковый текст → `content.documents.text`
+- структурированные результаты → `content.documents.meta` (JSON):
+  - audio/voice: `meta.transcript`, `meta.language`, `meta.segments?`
+  - video: `meta.description`, `meta.scenes?`, `meta.timestamps?`
+  - image: `meta.caption`, `meta.ocr_text?`, `meta.objects?`
+  - docs: `meta.extracted_text`, `meta.ocr_text?`, `meta.tables?`
+  - url: `meta.page_text`, `meta.title`, `meta.summary?`
+
+Далее всё идёт по общему контуру знаний: `chunk_document` → `embed_chunks` → поиск по смыслу.
+
 ## 3) Высокоуровневая схема
 
 ```
@@ -30,11 +92,19 @@ Telegram Groups/DM
 [WF20 Normalize & Persist] ---> canonical (users/chats/messages/files/links)
       |
       +--> [WF30 Fetch Files] ----+
-      |                           |
-      +--> [WF31 Fetch Links] ----+--> [WF40 Extract Content]
+|                           |
++--> [WF31 Fetch Links] ----+--> [extract_text job router]
+                                 |
+                                 +--> [WF35 Voice Probe] (extract_kind=voice_probe)
+                                 |
+                                 +--> [WF34 Voice Transcribe] (extract_kind=voice_transcribe)
+                                 |
+                                 +--> [WF40 Content Extract] (extract_kind=doc_text|url_text)
+                                 |
+                                 +--> [WF42 Media Describe] (extract_kind=image_*|video_*)
                                       |
                                       v
-                               [WF41 Chunk & Embed]
+                               [WF41 Chunk & Embed] (after `content.documents.text/meta` is available)
                                       |
                                       v
                                pgvector knowledge_index
@@ -59,6 +129,16 @@ Telegram Reply
 - Режимы: групповой чат и личные сообщения.
 - Требование: бот должен получать сообщения в группах (privacy mode/права бота — на стороне Telegram настроек).
 
+**Поведение ответа:**
+
+- DM: отвечает allowed‑пользователю; retrieval может охватывать все доступные чаты пользователя (по membership).
+- Group: отвечает только при mention/reply-to-bot/command; retrieval ограничен текущим `chat_id`.
+
+**Голосовые (STT):**
+
+- При включённой политике `auto_transcribe_voice` бот автоматически расшифровывает voice и отвечает транскриптом.
+- При выключенной политике — расшифровка только по запросу (в т.ч. voice‑запрос с `wake_name`).
+
 ### 4.2 Оркестратор: n8n
 
 - Все интеграции/логика пайплайнов выполняются workflow.
@@ -82,7 +162,8 @@ Telegram Reply
 - WF98 обязан:
   - сформировать минимальный `ctx` (workflow="WF98", correlation\_id, ts, execution\_id, исходный workflow\_name),
   - сформировать `error_context` из payload Error Trigger,
-  - вызвать **WF99** и завершиться.
+  - **сделать дедуп-guard по correlation\_id**: перед вызовом WF99 проверить `ops.errors` и пропустить WF99, если ошибка уже залогирована,
+  - иначе вызвать **WF99** и завершиться.
 - Важно: Error Workflow **не заменяет** ErrorPipe v1, а только страхует случаи, когда ErrorPipe не успел отработать.
 
 ### 4.3 Хранилище: PostgreSQL + pgvector
@@ -107,7 +188,7 @@ Telegram Reply
 
 ## 5) Данные и сущности (сопоставление с текущей DDL)
 
-**Источник истины по именам схем/таблиц/колонок — файл ****SQL.txt****.**
+**Источник истины по именам схем/таблиц/колонок — файл ********SQL.txt********.**
 
 ### 5.1 Core (тенантность, боты, доступ, политики)
 
@@ -181,6 +262,134 @@ Telegram Reply
 
 ## 7) Пайплайны обработки
 
+## 7.0) Ops Jobs — единый каталог `ops.job_type` и контракт payload
+
+Источник истины по перечислению типов: `telegram_knowledge_bot_schema.sql` / `SQL.txt`.
+
+### 7.0.1 Базовые принципы
+
+- `ops.jobs.job_type` — **строго enum**:
+  - `normalize_update`
+  - `upsert_membership`
+  - `fetch_tg_file`
+  - `fetch_url`
+  - `build_document`
+  - `extract_text`
+  - `chunk_document`
+  - `embed_chunks`
+  - `answer_query`
+  - `reembed_model_migration`
+- Расширение поведения делаем **не через новые job\_type**, а через `payload.kind/mode` (например, `extract_text` покрывает voice/image/video/docs/url).
+- `ops.jobs.correlation_id` — основной ключ сквозной трассировки. Любые дочерние jobs наследуют `correlation_id` родителя.
+- В `payload` **не stringify JSON**: всегда объект.
+- Idempotency: каждый job обязан иметь детерминированные ключи в payload (например `raw_update_id` или `document_id`), чтобы воркеры могли делать safe-upsert и избегать дубликатов.
+
+### 7.0.2 Общий payload (минимальный слой)
+
+Минимум, который должен быть в payload у большинства jobs:
+
+- `tenant_id` (uuid)
+- `bot_id` (uuid)
+- `trace_id` (string|null)
+- `correlation_id` (uuid) — обычно берём из `ops.jobs.correlation_id`, но можно дублировать для удобства
+- `visibility` (`group|dm_private|admin_only`)
+- `chat_id` (bigint|null)
+- `message_version_id` (bigint|null)
+
+### 7.0.3 Контракты payload по `job_type`
+
+**A) normalize\_update** (WF20)
+
+- `raw_update_id` (bigint) **или** `(update_id, received_at, request_id)`
+- `update_type` (string)
+
+**B) upsert\_membership** (WF20 или отдельный worker)
+
+- `chat_id` (bigint)
+- `tg_user_id` (bigint)
+- `event_type` (join/leave/promote/…)
+- `raw_update_id` (bigint)
+
+**C) fetch\_tg\_file** (WF30)
+
+- `tg_file_id` (string)
+- `file_unique_id` (string)
+- `file_kind` (voice|audio|video|photo|document|sticker|…)
+- `message_version_id` (bigint)
+
+**D) fetch\_url** (WF31)
+
+- `url_id` (bigint)
+- `url` (string)
+- `message_version_id` (bigint)
+
+**E) build\_document** (WF20/WF30/WF31)
+
+- `doc_type` (`message|file|url`)
+- `source_ref` (object) — один из:
+  - `{ "message_version_id": <id> }`
+  - `{ "file_unique_id": "..." }`
+  - `{ "url_id": <id> }`
+- `chat_id`, `visibility`, `dm_owner_user_id?`
+
+**F) extract\_text** (WF34/WF35/WF40/WF42 routed)
+
+- `document_id` (bigint)
+- `extract_kind` (string, обязателен), например:
+  - `voice_probe` (WF35)
+  - `voice_transcribe` (WF34)
+  - `doc_text` (WF40)
+  - `url_text` (WF40)
+  - `image_caption` / `image_ocr` (WF42)
+  - `video_describe` (WF42)
+  - `audio_transcribe` (WF34)
+- `source_locator` (object):
+  - для file/audio/video/image: `{ "blob_object_id": <id>, "mime": "..." }`
+  - для url: `{ "url_fetch_id": <id> }`
+- `language_hint` (string|null)
+- `max_seconds` (int|null) — только для `voice_probe`
+
+**G) chunk\_document** (WF41)
+
+- `document_id` (bigint)
+- `strategy` (string|null)
+
+**H) embed\_chunks** (WF41)
+
+- `document_id` (bigint)
+- `embedding_model_id` (bigint)
+
+**I) answer\_query** (WF50/WF51)
+
+- `channel` (`group_chat|dm`)
+- `chat_id` (bigint)
+- `tg_user_id` (bigint)
+- `question` (string)
+- `question_message_version_id` (bigint|null)
+
+**J) reembed\_model\_migration** (WF92/WF41)
+
+- `from_model_id` (bigint)
+- `to_model_id` (bigint)
+- фильтры: `tenant_id`, `chat_id?`, `doc_type?`, `since?`, `until?`
+
+### 7.0.4 Роутинг jobs → workflow
+
+- `normalize_update` → WF20
+- `fetch_tg_file` → WF30
+- `fetch_url` → WF31
+- `build_document` → WF20 (message) / WF30 (file) / WF31 (url)
+- `extract_text` → Switch по `payload.extract_kind`:
+  - `voice_probe` → WF35
+  - `voice_transcribe` / `audio_transcribe` → WF34
+  - `doc_text` / `url_text` → WF40
+  - `image_*` / `video_*` → WF42
+- `chunk_document` / `embed_chunks` → WF41
+- `answer_query` → WF50 → WF51
+- `reembed_model_migration` → WF92 (batch) → WF41
+
+---
+
 ### 7.1 Ingest (Telegram → RAW)
 
 - Вход: webhook updates.
@@ -197,6 +406,26 @@ Telegram Reply
   - ссылок (url entities);
   - редактирований (edited\_message) как новая версия.
 
+**Interaction routing (когда отвечать):**
+
+- На этапе Normalize определяется `should_respond`:
+  - DM: практически всегда (если пользователь allowed),
+  - Group: только mention/reply-to-bot/command.
+
+**Постановка задач (ops.jobs):**
+
+- Normalize не отвечает сам, а создаёт jobs на универсальный анализ:
+  - `fetch_tg_file` / `fetch_url`
+  - `build_document`
+  - `extract_text` (универсальный анализ):
+    - voice/audio → transcript
+    - video → description/scenes
+    - image → caption + OCR
+    - docs → extracted text (+ OCR)
+    - url → page text (+ title)
+  - `chunk_document` → `embed_chunks`
+  - `answer_query` (если нужно ответить)
+
 ### 7.3 Enrich (files/links)
 
 - Файлы:
@@ -204,20 +433,41 @@ Telegram Reply
 - Ссылки:
   - скачать html/контент → извлечь readable text → sha256.
 
-### 7.4 Extract → Chunk → Embed
+**Важно:** enrich отвечает только за доставку контента. Смысловой анализ выполняется в Extract/Describe воркерах.
 
-- Extract:
-  - нормализация текста, язык, структура (заголовки/таблицы где возможно).
+### 7.4 Extract/Describe → Chunk → Embed
+
+Смысловой анализ строится вокруг `ops.jobs.job_type='extract_text'` и параметра `payload.extract_kind`.
+
+- Extract/Describe (универсальный анализ мультимедиа):
+  - voice/audio → `extract_kind=voice_probe|voice_transcribe|audio_transcribe` (WF35/WF34)
+  - image → `extract_kind=image_caption|image_ocr` (WF42)
+  - video → `extract_kind=video_describe` (WF42)
+  - docs → `extract_kind=doc_text` (WF40)
+  - url → `extract_kind=url_text` (WF40)
+
+**Единое правило хранения результата:**
+
+- основной поисковый текст → `content.documents.text`
+
+- доп. структура → `content.documents.meta` (JSON)
+
 - Chunk:
-  - чанкинг по структуре; хранить chunk\_index + метаданные.
+
+  - `chunk_document` (WF41): чанкинг по структуре; хранить `chunk_index` + метаданные.
+
 - Embed:
-  - эмбеддинг для каждого chunk; фиксировать embedding\_model.
+
+  - `embed_chunks` (WF41): эмбеддинг для каждого chunk; фиксировать `embedding_model_id`.
 
 ### 7.5 Query (вопрос → ответ)
 
+- Триггер ответа:
+  - DM: любое осмысленное сообщение allowed‑пользователя.
+  - Group: mention/reply-to-bot/command.
 - Определить контекст:
-  - group chat question → источники только этого чата (и зависимых, если политика разрешает).
-  - DM question → источники лички владельца + разрешённые чаты.
+  - group chat question → источники только этого `chat_id`.
+  - DM question → источники лички владельца + все чаты, где пользователь current member и чат разрешён политикой.
 - Retrieval:
   - hybrid: текстовый поиск + векторный поиск → объединение top‑K.
 - Rerank (опционально): LLM‑ранжирование top‑N.
@@ -235,17 +485,25 @@ Telegram Reply
 - **WF11 — Bot Transport Watchdog**
   - мониторит webhook/polling, фиксирует состояние транспорта.
 - **WF20 — Normalize & Persist**
-  - читает RAW/`ops.jobs`, пишет canonical.
+  - читает RAW/`ops.jobs`, пишет canonical, определяет `should_respond`, ставит jobs на универсальный media/URL анализ.
 - **WF30 — File Fetcher**
   - скачивание файлов Telegram, дедуп по sha256.
 - **WF31 — Link Fetcher**
   - скачивание страниц, дедуп.
+- **WF35 — Voice Probe**
+  - короткий STT (2–5 сек) для детекта wake-слова/команды (используется когда `auto_transcribe_voice=false`).
+- **WF34 — Voice Transcriber (Full STT)**
+  - полная расшифровка voice/audio, сохранение транскрипта как `content.documents.text` + опциональный reply.
+- **WF42 — Media Describe (Image/Video/Audio)**
+  - описание изображений/видео (caption/scene summary), OCR, метаданные — сохраняется в `content.documents`.
 - **WF40 — Content Extractor**
-  - извлечение текста из файлов/страниц.
+  - извлечение текста из документов/страниц (PDF/DOCX/HTML) + нормализация.
 - **WF41 — Chunk & Embed**
   - чанкинг + эмбеддинги + запись в pgvector.
-- **WF50 — Query Orchestrator (Answer with citations)**
-  - принимает вопрос, делает retrieval (ACL-first), генерирует ответ, возвращает в Telegram.
+- **WF50 — Query Orchestrator (ACL-first retrieval)**
+  - готовит retrieval scope, вызывает генератор ответа.
+- **WF51 — Answerer (Answer with citations)**
+  - генерация ответа + цитаты/ссылки, запись audit, отправка в Telegram.
 
 ### Администрирование и поддержка
 

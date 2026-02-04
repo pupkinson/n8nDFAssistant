@@ -89,6 +89,48 @@
 
 ---
 
+### Запрет deleteTable (обязательное)
+
+- Запрещено использовать в Postgres нодах операцию `deleteTable` (особенно в тестах/cleanup).
+- Разрешено только `delete` с явным WHERE по ключам теста/корреляции.
+- Cleanup обязан удалять **только** данные теста (по `correlation_id`, `(bot_id, update_id)`, `(tenant_id, chat_id, message_id)` и т.п.).
+
+### Инвариант сохранения исходных данных после I/O (Carry/Restore pattern)
+
+**Проблема n8n:** Postgres/HTTP/Telegram и многие I/O-ноды на success-выходе возвращают *только свой результат* и тем самым затирают исходный item (например `ctx`, `req`, `_parsed`, промежуточные поля). Это приводит к «потере данных после Postgres».
+
+**Жёсткое правило:** если после I/O шага workflow продолжает использовать поля, сформированные до I/O, то workflow обязан сохранить и восстановить рабочие данные одним из паттернов ниже (nocode).
+
+**PATTERN C1 (рекомендуемый, nocode): CARRY → I/O → RESTORE**
+1) В начале core pipeline создать контейнер `carry` (Set, dotNotation):
+   - `carry.ctx = ctx` (или `_ctx` внутри WF)
+   - `carry.req = req`
+   - `carry.parsed = _parsed` (если есть)
+   - `carry.*` для любых промежуточных массивов/ключей
+2) После каждой I/O-ноды, если дальше нужны поля из carry — выполнить Restore (Set):
+   - вернуть `ctx/req/_parsed/...` из `carry.*` обратно в корень item.
+3) Результат I/O никогда не распылять в корень без неймспейса.
+
+**PATTERN C2 (рекомендуемый, nocode): BRANCH + MERGE (by index)**
+- Разветвить поток:
+  - Ветка A: “anchor” item до I/O → Merge Input 1
+  - Ветка B: I/O → Set “Wrap result into db.*” → Merge Input 2
+- Merge должен возвращать единый item, содержащий исходные поля + `db.*`.
+- Все DB-результаты хранить под `db.<entity>.*` (во избежание коллизий).
+
+**Инварианты паттернов:**
+- После каждого I/O шага, где требуется продолжение логики, должны присутствовать `ctx` и ключевые поля (`req`, `message keys`, `correlation_id`).
+- Запрещено строить downstream-логику на предположении, что Postgres нода «сохранит» исходные поля.
+
+### JSON/JSONB поля: только объекты (расширение правила)
+
+- Для колонок типов `json/jsonb` запрещены:
+  - `JSON.stringify(...)`
+  - object-literal в выражениях (`={{ {a:1} }}`)
+- Объекты формировать через `Set` + `dotNotation`.
+- Вставлять/апдейтить jsonb поля нужно **как объект**, а не как строку.
+- Особенно критично для: `ops.jobs.payload`, `tg.*.payload`, `tg.message_versions.entities/caption_entities` и любых `content.*` jsonb полей.
+
 ## 6) STRICT обработка ошибок I/O (Postgres/HTTP/Telegram)
 
 Цель: любая I/O ошибка даёт управляемый ErrorEnvelope, **всегда** логируется через `ops.errors` и не ведёт к «частичным успехам». Формат и поведение строго соответствуют **ErrorPipe Contract v1**.
@@ -210,11 +252,17 @@
 5. Не используются запрещённые практики:
    - `raw jsonOutput`/«резать item целиком»,
    - `JSON.stringify(...)` для json/jsonb,
-   - object-literal в выражениях.
+   - object-literal в выражениях,
+   - `deleteTable` в Postgres нодах.
 6. Merge ноды: `numberInputs` соответствует входящим связям.
 7. Нет Execute Query (если это не отдельное явно разрешённое исключение, зафиксированное решением).
-8. Есть тестовая ветка (Manual Trigger) с записью в БД + verify + cleanup.
+8. Есть тестовая ветка (Manual Trigger) с записью в БД + verify + cleanup (DELETE по ключам теста).
 9. Любой workflow, который используется как sub-workflow, документирует вход/выход в canvas «Контракты входа/выхода workflow» и использует канонические имена (`ctx`, `error_context`, `req`).
+10. Проверка на «потерю данных после I/O»:
+   - если downstream использует поля, сформированные до I/O, то применён Carry/Restore или Branch+Merge паттерн;
+   - после каждого такого I/O шага `ctx` и ключевые поля (`req`, `correlation_id`, message keys) присутствуют.
+11. Для проекта с Error Workflow (WF98):
+   - WF98 обязан иметь дедуп-guard по `correlation_id` (проверка `ops.errors` перед вызовом WF99), чтобы исключить двойное логирование при StopAndError.
 
 ## 9) Связанные документы
 
