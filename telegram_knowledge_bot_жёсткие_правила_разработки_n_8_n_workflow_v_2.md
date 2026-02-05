@@ -6,7 +6,7 @@
 
 - **DB схема:** `SQL.txt`
 - **Credentials / версии нод:** `Credentials.json`
-- **Справочник по нодам n8n:** 2×MCP (см. canvas «Telegram Knowledge Bot — единый регламент проекта (n8n 2.4.8) + 2×MCP»)
+- **Справочник по нодам n8n:** 2×MCP (см. canvas «Telegram Knowledge Bot — единый регламент проекта (n8n 2.6.3) + 2×MCP»)
   - MCP#1: `n8n-mcp` (параметры/версии нод, справочник)
   - MCP#2: второй MCP сервера проекта (имя и правила использования — в «едином регламенте»)
 
@@ -16,7 +16,7 @@
 
 1. **Secrets НЕ хранить в БД.** Всё — только в **n8n Credentials**.
 2. Исключения (если и появятся) фиксируются отдельным решением и документируются.
-3. **\$env.\***\*\* в workflow запрещён\*\* (в любых выражениях и полях).
+3. `$env.*` в workflow запрещён (в любых выражениях и полях).
 
 ---
 
@@ -102,23 +102,26 @@
 **Жёсткое правило:** если после I/O шага workflow продолжает использовать поля, сформированные до I/O, то workflow обязан сохранить и восстановить рабочие данные одним из паттернов ниже (nocode).
 
 **PATTERN C1 (рекомендуемый, nocode): CARRY → I/O → RESTORE**
-1) В начале core pipeline создать контейнер `carry` (Set, dotNotation):
+
+1. В начале core pipeline создать контейнер `carry` (Set, dotNotation):
    - `carry.ctx = ctx` (или `_ctx` внутри WF)
    - `carry.req = req`
    - `carry.parsed = _parsed` (если есть)
    - `carry.*` для любых промежуточных массивов/ключей
-2) После каждой I/O-ноды, если дальше нужны поля из carry — выполнить Restore (Set):
+2. После каждой I/O-ноды, если дальше нужны поля из carry — выполнить Restore (Set):
    - вернуть `ctx/req/_parsed/...` из `carry.*` обратно в корень item.
-3) Результат I/O никогда не распылять в корень без неймспейса.
+3. Результат I/O никогда не распылять в корень без неймспейса.
 
 **PATTERN C2 (рекомендуемый, nocode): BRANCH + MERGE (by index)**
+
 - Разветвить поток:
   - Ветка A: “anchor” item до I/O → Merge Input 1
-  - Ветка B: I/O → Set “Wrap result into db.*” → Merge Input 2
+  - Ветка B: I/O → Set “Wrap result into db.\*” → Merge Input 2
 - Merge должен возвращать единый item, содержащий исходные поля + `db.*`.
 - Все DB-результаты хранить под `db.<entity>.*` (во избежание коллизий).
 
 **Инварианты паттернов:**
+
 - После каждого I/O шага, где требуется продолжение логики, должны присутствовать `ctx` и ключевые поля (`req`, `message keys`, `correlation_id`).
 - Запрещено строить downstream-логику на предположении, что Postgres нода «сохранит» исходные поля.
 
@@ -146,21 +149,21 @@
    - запрещены `JSON.stringify(...)` там, где ожидаются объекты;
    - запрещены `raw jsonOutput`, который затирает item целиком;
    - запрещены object-literal в выражениях (`={{ {a:1} }}`) — сборка объектов только через Set + dotNotation.
-5. Job-path (ops.jobs/ops.job\_runs) выполняется **только если **``** задан**.
+5. Job-path (ops.jobs/ops.job_runs) выполняется **только если `ctx.job_id` задан**.
 
 ### 6.2 PATTERN A (по умолчанию) — ErrorPipe через WF99
 
 Для каждой I/O ноды (Postgres/HTTP/Telegram):
 
 1. На I/O ноде включить **Continue using error output**.
-2. Error output → **Set: **``
+2. Error output → **Set: `ERR — Source <NodeName>`**
    - `includeOtherFields=true` (чтобы не потерять `message/error/description/n8nDetails`)
    - записать строками:
      - `_err.node = "<Exact NodeName>"` (точное имя ноды)
      - `_err.operation = "select|insert|update|delete|upsert"` (для Postgres)
      - `_err.table = "schema.table"` (для Postgres)
    - приклеить `_ctx` (или `ctx`) из ранней точки контекста (см. раздел про контракты).
-3. **Set: **`` (nocode, dotNotation)
+3. **Set: `ERR — Prepare ErrorPipe v1`** (nocode, dotNotation)
    - `ctx = _ctx` (каноническое имя для меж-WF контрактов)
    - `ctx.contracts.errorpipe = 1`
    - `error_context.node = _err.node`
@@ -177,7 +180,7 @@
 
 ### 6.3 Исключение (только внутри WF99)
 
-- WF99 обязан **пытаться писать в **``** всегда**; если запись не удалась, WF99 не должен падать, но обязан отметить `persist_failed=true` в details.
+- WF99 обязан **пытаться писать в `ops.errors` всегда**; если запись не удалась, WF99 не должен падать, но обязан отметить `persist_failed=true` в details.
 
 ### 6.4 Retry On Fail
 
@@ -259,10 +262,13 @@
 8. Есть тестовая ветка (Manual Trigger) с записью в БД + verify + cleanup (DELETE по ключам теста).
 9. Любой workflow, который используется как sub-workflow, документирует вход/выход в canvas «Контракты входа/выхода workflow» и использует канонические имена (`ctx`, `error_context`, `req`).
 10. Проверка на «потерю данных после I/O»:
-   - если downstream использует поля, сформированные до I/O, то применён Carry/Restore или Branch+Merge паттерн;
-   - после каждого такого I/O шага `ctx` и ключевые поля (`req`, `correlation_id`, message keys) присутствуют.
+
+- если downstream использует поля, сформированные до I/O, то применён Carry/Restore или Branch+Merge паттерн;
+- после каждого такого I/O шага `ctx` и ключевые поля (`req`, `correlation_id`, message keys) присутствуют.
+
 11. Для проекта с Error Workflow (WF98):
-   - WF98 обязан иметь дедуп-guard по `correlation_id` (проверка `ops.errors` перед вызовом WF99), чтобы исключить двойное логирование при StopAndError.
+
+- WF98 обязан иметь дедуп-guard по `correlation_id` (проверка `ops.errors` перед вызовом WF99), чтобы исключить двойное логирование при StopAndError.
 
 ## 9) Связанные документы
 

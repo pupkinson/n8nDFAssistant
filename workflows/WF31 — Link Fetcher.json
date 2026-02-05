@@ -1,0 +1,3630 @@
+{
+  "name": "WF31 — Link Fetcher",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        800
+      ],
+      "id": "7154be62-90db-41a7-bb83-e6c5d4474f82",
+      "name": "IN — Execute Workflow Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d05a742-d256-4acf-9a13-49ce5e416170",
+              "name": "_carry.tenant_id",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "730d9f2c-02c5-42e4-9045-3c2529c9f125",
+              "name": "_carry.bot_id",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3435d1b3-9604-4725-a33c-448c806aed0e",
+              "name": "_carry.correlation_id",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ae8d732b-3948-4990-b271-e0dc18d135c7",
+              "name": "_carry.trace_id",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "440eb9da-7260-4743-9184-fa34e24b67d0",
+              "name": "_carry.visibility",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "a6649ceb-95a5-4294-9575-63c0fba17050",
+              "name": "_carry.chat_id",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e7e96961-b50a-4ffc-8b54-470274c02e00",
+              "name": "_carry.message_version_id",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "77d60dc5-1e36-480d-b902-ca77209a446d",
+              "name": "_carry.job_id",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f1283cb2-9264-432f-9b5a-2bac6cd8b05e",
+              "name": "_carry.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "cd66bbe1-a47a-49d5-b903-f74d4ad4c9da",
+              "name": "_carry.url",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.job.payload.url }}",
+              "type": "string"
+            },
+            {
+              "id": "b19926e3-2619-42a4-9834-0e2698112445",
+              "name": "_carry.url_id_input",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.job.payload.url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dc58122-e8f1-4aca-b49f-71dc68a648da",
+              "name": "_carry.link_text",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.job.payload.link_text }}",
+              "type": "string"
+            },
+            {
+              "id": "116d1344-7c75-4d15-ab07-32264bb5d97b",
+              "name": "_carry.force_refetch",
+              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.job.payload.force_refetch ?? false }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        800
+      ],
+      "id": "04264fc3-9377-4e45-910e-7e91b790e463",
+      "name": "Set — Carry"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "8e16393f-edc4-42f7-848b-e3229c5b3355",
+              "leftValue": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "a44eeea2-0f41-4ebf-9636-d5ffc76955d9",
+              "leftValue": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "19914b19-05f6-4e13-888f-7e0b36fc6cf6",
+              "leftValue": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "449222b8-ae9b-49f9-a7e5-f0ef31463fb6",
+              "leftValue": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            },
+            {
+              "id": "fac74c50-b6b9-4f85-93f0-d89d2bb61e95",
+              "leftValue": "={{ $('Set — Carry').item.json._carry.url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        400,
+        800
+      ],
+      "id": "1a3e2c28-7bf4-45fb-a7d6-8607b3792c4d",
+      "name": "IF — Valid Input?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d09d7821-015b-4297-995c-aeef857d000f",
+              "name": "_err.node",
+              "value": "IF — Valid Input?",
+              "type": "string"
+            },
+            {
+              "id": "06351cd9-023b-4b68-a40c-8fccf0071320",
+              "name": "_err.operation",
+              "value": "validate_input",
+              "type": "string"
+            },
+            {
+              "id": "6983b8e8-89d3-404c-8ecb-67cedc2829ce",
+              "name": "_err.kind",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "0cd58237-fcc1-412d-9472-f442ad847b2c",
+              "name": "_err.http_status",
+              "value": "400",
+              "type": "number"
+            },
+            {
+              "id": "7315463a-8ddb-499b-b644-04b7fffe2033",
+              "name": "_err.retryable",
+              "value": "false",
+              "type": "boolean"
+            },
+            {
+              "id": "89508706-c730-478b-9187-11f3a198530a",
+              "name": "_err.message",
+              "value": "Missing required fields: tenant_id, bot_id, correlation_id, job_id, or url",
+              "type": "string"
+            },
+            {
+              "id": "572a3765-e4a5-405e-8c5b-f21e5af28312",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "28e901dd-835f-434a-af2c-a35c2a14a6d4",
+              "name": "ctx.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b69ed2c6-3aed-4e50-b414-fcab469c9885",
+              "name": "ctx.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ed10a530-735a-4d86-9145-3dd22fde7330",
+              "name": "ctx.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3648f199-aaaf-4fef-8659-e517b448a396",
+              "name": "ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "9462e7fb-72b9-4c41-a3b0-b7ed773c3332",
+              "name": "ctx.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        2000
+      ],
+      "id": "90809e4b-3445-4725-ac77-1a371ebb283c",
+      "name": "Set — ERR Input Validation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "8bbc6a8e-9e71-412f-b50e-a168f5dca0d0",
+              "leftValue": "={{ $('Set — Carry').item.json._carry.url_id_input }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        608,
+        800
+      ],
+      "id": "228dc67a-92d2-404e-8dfe-e6c8850b9aff",
+      "name": "IF — url_id Provided?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "76b72325-5426-464a-9e89-0471beb7417f",
+              "name": "_url_id",
+              "value": "={{ $('Set — Carry').item.json._carry.url_id_input }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        704
+      ],
+      "id": "a3c07407-d6b4-460d-8cc6-bb0b300eb951",
+      "name": "Set — Use Existing url_id"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "715bc26d-90f7-4da8-bd1a-659e8f7ad652",
+              "name": "normalized_url",
+              "value": "={{ $('Set — Carry').item.json._carry.url.trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "38c33063-7458-4fec-b851-11dedc58fad4",
+              "name": "meta",
+              "value": "{}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        912
+      ],
+      "id": "f6afcbab-72c3-45d1-8ba1-16266cd864c6",
+      "name": "Set — Prep URL Upsert"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "urls"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "normalized_url": "={{ $json.normalized_url }}",
+            "meta": "={{ $json.meta }}"
+          },
+          "matchingColumns": [
+            "normalized_url"
+          ],
+          "schema": [
+            {
+              "id": "normalized_url",
+              "displayName": "normalized_url",
+              "required": true,
+              "defaultMatch": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "meta",
+              "displayName": "meta",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "display": true
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "normalized_url"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1008,
+        912
+      ],
+      "id": "9e37c74f-9d7b-405f-83b2-3678c5aceee7",
+      "name": "PG — Upsert content.urls",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6c1761e-e605-43d9-9881-15b5db01246c",
+              "name": "_err.node",
+              "value": "PG — Upsert content.urls",
+              "type": "string"
+            },
+            {
+              "id": "2f81a057-b485-4153-aeae-a3e7bd8bbc5a",
+              "name": "_err.operation",
+              "value": "upsert",
+              "type": "string"
+            },
+            {
+              "id": "2a225ccd-a9ee-45c9-bdd2-3c11f8f4c394",
+              "name": "_err.table",
+              "value": "content.urls",
+              "type": "string"
+            },
+            {
+              "id": "e12d2c6e-2177-4e8d-b6b6-dc0cfda45d91",
+              "name": "_err.kind",
+              "value": "pg",
+              "type": "string"
+            },
+            {
+              "id": "f666c51b-eb9e-4d87-a5e0-d7e1d28f41e4",
+              "name": "_err.http_status",
+              "value": "500",
+              "type": "number"
+            },
+            {
+              "id": "34eb1bfc-1da3-48f1-b230-be675b4e0ad7",
+              "name": "_err.retryable",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "caf10adb-e7ee-48d5-ab60-7902a74fb258",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "722495d6-bfcb-499d-a8e4-681653084d71",
+              "name": "ctx.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c3b31bd8-5ba8-4f94-86cd-6cf101fff3f8",
+              "name": "ctx.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6f330399-88c5-4899-b7a2-2980ca48953b",
+              "name": "ctx.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "508e7fca-54c4-4547-9fee-334af6ecfbf0",
+              "name": "ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "df5f83c4-58a6-4e5c-b2a2-9c3ffa535df2",
+              "name": "ctx.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1424,
+        1776
+      ],
+      "id": "e6a4758f-09a5-4fb4-9a2d-ca09f9a6a108",
+      "name": "ERR — Source PG Upsert URLs"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "99683f10-de18-4bd8-a340-0849c267da5a",
+              "name": "_url_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        912
+      ],
+      "id": "f7e9cfb7-f875-4147-a7fe-eabe0060a283",
+      "name": "Set — Capture url_id"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "url_fetches"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "url_id",
+              "value": "={{ $json._url_id }}"
+            },
+            {
+              "column": "status",
+              "value": "succeeded"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "fetched_at",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "url_id",
+            "http_status",
+            "content_type",
+            "storage_url",
+            "meta"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1408,
+        800
+      ],
+      "id": "d1ce2c1a-fbad-46de-84bd-d759db879e55",
+      "name": "PG — Select Latest Fetch",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4709ec35-741f-4d4d-945b-d1aadd8db529",
+              "name": "_err.node",
+              "value": "PG — Select Latest Fetch",
+              "type": "string"
+            },
+            {
+              "id": "f7e2c37a-f295-4b15-ade6-da891ca733a9",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "5665fccc-725d-4175-99ca-ed3812b8d9a1",
+              "name": "_err.table",
+              "value": "content.url_fetches",
+              "type": "string"
+            },
+            {
+              "id": "f9036ada-4798-474d-91ac-d51dff5c4c59",
+              "name": "_err.kind",
+              "value": "pg",
+              "type": "string"
+            },
+            {
+              "id": "c9da3a1c-0fe9-4968-90ec-e163cb154fd6",
+              "name": "_err.http_status",
+              "value": "500",
+              "type": "number"
+            },
+            {
+              "id": "ce20a9e7-e693-47f8-84e1-928c892ee902",
+              "name": "_err.retryable",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "db8be78d-b532-4cfa-bc91-eb89d800bf82",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1454b7ce-6673-4ca7-ad08-3c8b501811a9",
+              "name": "ctx.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "86d20aa7-cb09-4c1a-9b04-510ce971600c",
+              "name": "ctx.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "fa16c7ad-89a9-4091-9fb3-f5581e03ad58",
+              "name": "ctx.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "71fbf3f3-045b-4f2e-8bce-b3c35169ecbd",
+              "name": "ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "9bd17a7d-7589-41cf-8690-8c33fe039e85",
+              "name": "ctx.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        1600
+      ],
+      "id": "fb1df1e9-c2b0-49f9-be3a-30f83c768497",
+      "name": "ERR — Source PG Select Fetch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "32fa914f-2525-40a1-a23f-fadb2aa29fd8",
+              "name": "_url_id",
+              "value": "={{ $('Set — Carry').item.json._carry.url_id_input || $('Set — Capture url_id').item.json._url_id || $('Set — Use Existing url_id').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "459122f7-c810-4480-9008-1e9268bdcb27",
+              "name": "_existing_fetch_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "ac619ed5-afbd-45cc-b9ed-3567cd539ca1",
+              "name": "_existing_http_status",
+              "value": "={{ $json.http_status }}",
+              "type": "string"
+            },
+            {
+              "id": "01dc184b-bdbf-4c37-b168-d141c407f4f6",
+              "name": "_existing_content_type",
+              "value": "={{ $json.content_type }}",
+              "type": "string"
+            },
+            {
+              "id": "dde3232f-1a56-4af1-92bf-16adc5df53c0",
+              "name": "_existing_storage_url",
+              "value": "={{ $json.storage_url }}",
+              "type": "string"
+            },
+            {
+              "id": "c4258dc6-0cee-4be9-81d3-45eb4a0847c3",
+              "name": "_existing_meta",
+              "value": "={{ $json.meta }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        800
+      ],
+      "id": "05647b9f-89ec-4f11-9a7d-f599eb8024a4",
+      "name": "Set — After Fetch Check"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "eaad93ea-d956-4e88-9aff-3cb6045e4706",
+              "leftValue": "={{ $('Set — Carry').item.json._carry.force_refetch }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              }
+            },
+            {
+              "id": "e480be86-d95a-436d-aa27-4c4a3fe3ef64",
+              "leftValue": "={{ $json._existing_fetch_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        800
+      ],
+      "id": "a827c76f-3efd-4efa-9eea-5549b7ca18f0",
+      "name": "IF — Reuse Fetch?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "30b71f5e-f665-4a7c-be2e-e9156e2904c7",
+              "name": "_url_id",
+              "value": "={{ $json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2028ba2a-b200-474b-8cbe-ede0ec07110f",
+              "name": "_url_fetch_id",
+              "value": "={{ $json._existing_fetch_id }}",
+              "type": "string"
+            },
+            {
+              "id": "27c174c5-41c6-412c-b9c8-9e1614a4641b",
+              "name": "_http_status",
+              "value": "={{ $json._existing_http_status }}",
+              "type": "number"
+            },
+            {
+              "id": "166d31ad-ad3f-4167-9864-e08e03f7b9a1",
+              "name": "_content_type",
+              "value": "={{ $json._existing_content_type }}",
+              "type": "string"
+            },
+            {
+              "id": "037681c7-6606-45f5-b444-04df6ac4c365",
+              "name": "_final_url",
+              "value": "={{ $('Set — Carry').item.json._carry.url }}",
+              "type": "string"
+            },
+            {
+              "id": "d59c1c3f-b90b-4f81-989b-944740899983",
+              "name": "_size_bytes",
+              "value": "={{ $json._existing_meta?.size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "ee6f80ed-b6be-4f0d-975b-4ee012157a20",
+              "name": "_body_sha256_hex",
+              "value": "={{ $json._existing_meta?.body_sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "457ffc3e-9250-40c9-b591-bf877c6761c4",
+              "name": "_blob_object_id",
+              "value": "={{ null }}",
+              "type": "string"
+            },
+            {
+              "id": "e6e6baa0-0aaf-49dd-a260-eb181dca6af5",
+              "name": "_fetched_new",
+              "value": "false",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2000,
+        704
+      ],
+      "id": "836be660-df3a-45f6-8791-f59285918e79",
+      "name": "Set — Reuse Fetch Data"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Set — Carry').item.json._carry.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "TelegramKnowledgeBot/1.0 (+fetch)"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 10
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        912
+      ],
+      "id": "2e1bafd0-0ccb-4a89-829a-33658b5ee044",
+      "name": "HTTP — Fetch URL",
+      "notesInFlow": true,
+      "onError": "continueErrorOutput",
+      "notes": "⚠️ Fetched content is UNTRUSTED. Stored for extraction only, never executed."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "02a3ec85-85d4-4b2e-91a4-80f8a491b98b",
+              "name": "_err.node",
+              "value": "HTTP — Fetch URL",
+              "type": "string"
+            },
+            {
+              "id": "c0b695ad-7bf3-4035-9e68-e6f4a266071c",
+              "name": "_err.operation",
+              "value": "http_get",
+              "type": "string"
+            },
+            {
+              "id": "2978a4ff-52bc-4bd6-a0d5-19abee6b85e4",
+              "name": "_err.http.url",
+              "value": "={{ $('Set — Carry').item.json._carry.url }}",
+              "type": "string"
+            },
+            {
+              "id": "96768288-6d66-4167-8402-042b70902a15",
+              "name": "_err.kind",
+              "value": "http",
+              "type": "string"
+            },
+            {
+              "id": "230db58e-10f3-4609-8484-343d4a32fc56",
+              "name": "_err.http_status",
+              "value": "502",
+              "type": "number"
+            },
+            {
+              "id": "ca977f59-2293-4841-bf41-7fb2e93add07",
+              "name": "_err.retryable",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "f80ca67d-9ef1-42ff-9e60-486819d478fb",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c9b9a2e3-80bd-4a40-80cf-21be8f6db6bb",
+              "name": "ctx.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a432a6b2-4463-4341-8436-4a84f9d95cb8",
+              "name": "ctx.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "27e23e56-811e-49fb-b417-87e8732e7841",
+              "name": "ctx.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a6d8a048-db77-43da-8bea-bfaeda13ab3f",
+              "name": "ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "4d8d0a76-467c-4d1a-9e65-b242362408b5",
+              "name": "ctx.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2304,
+        1456
+      ],
+      "id": "4818ced7-60fb-4899-ab11-319c361302ef",
+      "name": "ERR — Source HTTP Fetch"
+    },
+    {
+      "parameters": {
+        "type": "SHA256",
+        "value": "={{ $json.body || '' }}",
+        "dataPropertyName": "body_sha256_hex"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        912
+      ],
+      "id": "c55e08de-9b04-441e-8f4e-e833f3291595",
+      "name": "Crypto — SHA256 Body"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "999528f1-a4ad-42bf-b1df-f838dd508874",
+              "name": "url_id",
+              "value": "={{ $('Set — After Fetch Check').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cc0a3fed-dedc-464a-b9a1-714f4512e1b8",
+              "name": "status",
+              "value": "succeeded",
+              "type": "string"
+            },
+            {
+              "id": "cdcf8c11-9187-43a7-8b26-7009354641e4",
+              "name": "http_status",
+              "value": "={{ $('Crypto — SHA256 Body').item.json.statusCode }}",
+              "type": "number"
+            },
+            {
+              "id": "47bf11de-b035-4616-af5b-bf78e915a131",
+              "name": "content_type",
+              "value": "={{ $('Crypto — SHA256 Body').item.json.headers?.['content-type'] || null }}",
+              "type": "string"
+            },
+            {
+              "id": "72f456d0-c3e3-4ff3-ad2a-9a64753ae734",
+              "name": "meta.body_sha256_hex",
+              "value": "={{ $json.body_sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "7dd4a2a2-566a-4aad-8ee6-a25e018cb3d3",
+              "name": "meta.size_bytes",
+              "value": "={{ ($('Crypto — SHA256 Body').item.json.body || '').length }}",
+              "type": "number"
+            },
+            {
+              "id": "3c8f076f-3fc8-47b1-a5f5-71731f01e270",
+              "name": "meta.requested_url",
+              "value": "={{ $('Set — Carry').item.json._carry.url }}",
+              "type": "string"
+            },
+            {
+              "id": "b790d8d2-53c8-4c2a-b1e3-a9c90569327e",
+              "name": "meta.final_url",
+              "value": "={{ $('Set — Carry').item.json._carry.url }}",
+              "type": "string"
+            },
+            {
+              "id": "6cb4d8fa-4f30-43fa-aa4a-96d811ee6873",
+              "name": "meta.user_agent",
+              "value": "TelegramKnowledgeBot/1.0 (+fetch)",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2400,
+        912
+      ],
+      "id": "2f24b76f-442b-45f2-b1ab-f5af83bbbefb",
+      "name": "Set — Prep Fetch Insert"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "url_fetches"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "url_id": "={{ $json.url_id }}",
+            "status": "={{ $json.status }}",
+            "http_status": "={{ $json.http_status }}",
+            "content_type": "={{ $json.content_type }}",
+            "meta": "={{ $json.meta }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "url_id",
+              "displayName": "url_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "number",
+              "display": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "http_status",
+              "displayName": "http_status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "number",
+              "display": true
+            },
+            {
+              "id": "content_type",
+              "displayName": "content_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "meta",
+              "displayName": "meta",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "display": true
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "url_id",
+            "http_status",
+            "content_type",
+            "meta"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2608,
+        912
+      ],
+      "id": "7bbb1dd2-a3e0-459a-8939-09ffb379dbb0",
+      "name": "PG — Insert url_fetches",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "39d5e131-278d-4b8a-9aef-f79bf0814b0b",
+              "name": "_err.node",
+              "value": "PG — Insert url_fetches",
+              "type": "string"
+            },
+            {
+              "id": "8e5be8f8-7035-4c68-a15d-5d592721d259",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "954b83b0-7bc3-4e18-b649-306fe987e1ec",
+              "name": "_err.table",
+              "value": "content.url_fetches",
+              "type": "string"
+            },
+            {
+              "id": "9052ce0a-cad7-4dd6-9b78-2cef513951b3",
+              "name": "_err.kind",
+              "value": "pg",
+              "type": "string"
+            },
+            {
+              "id": "dad5e577-b975-434a-93da-53058a9de8e9",
+              "name": "_err.http_status",
+              "value": "500",
+              "type": "number"
+            },
+            {
+              "id": "bd5d0ae8-f7c9-4145-8306-a07a52c47394",
+              "name": "_err.retryable",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "5fb2a9ea-4839-4950-b8b2-2ac3f7864ce4",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "888ca517-5636-4df4-b925-e1b71c689fa1",
+              "name": "ctx.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b42f0aad-6f59-4d3c-8e0e-da9a050f34c6",
+              "name": "ctx.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ba93922d-b3dd-4b6e-932f-9c783241d0ca",
+              "name": "ctx.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3eebc4b9-ee78-44f8-aeb7-8ecc7548e3da",
+              "name": "ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "7a9919a3-1ae6-4b4c-9885-8f640d2cdbd7",
+              "name": "ctx.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2944,
+        1344
+      ],
+      "id": "75ee1925-e3aa-4ad6-a59c-bef46d39f28f",
+      "name": "ERR — Source PG Insert Fetch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6da57f7-2124-4f7a-b0eb-378967b17d97",
+              "name": "_url_id",
+              "value": "={{ $('Set — After Fetch Check').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d6971e5e-6a6f-4bee-b25e-d944932e063c",
+              "name": "_url_fetch_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a56e62d6-43fe-4b6b-8560-a8041a203f9d",
+              "name": "_http_status",
+              "value": "={{ $json.http_status }}",
+              "type": "number"
+            },
+            {
+              "id": "4f46df56-bb7f-452b-9848-917d7cbb8e61",
+              "name": "_content_type",
+              "value": "={{ $json.content_type }}",
+              "type": "string"
+            },
+            {
+              "id": "d5caec16-70e9-4494-a0e6-d1c1d9e9caa5",
+              "name": "_final_url",
+              "value": "={{ $('Set — Carry').item.json._carry.url }}",
+              "type": "string"
+            },
+            {
+              "id": "daf8f6fe-1872-4c9d-af19-affcf80018f9",
+              "name": "_size_bytes",
+              "value": "={{ $json.meta?.size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "830ed212-a08a-4cf1-a9e7-57a66059e1ec",
+              "name": "_body_sha256_hex",
+              "value": "={{ $json.meta?.body_sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "be3888b6-00ab-453f-bf97-332a5e2acec5",
+              "name": "_blob_object_id",
+              "value": "={{ null }}",
+              "type": "string"
+            },
+            {
+              "id": "339b6d2d-d6ba-4e37-9f0a-b0e66f90f189",
+              "name": "_fetched_new",
+              "value": "true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2800,
+        912
+      ],
+      "id": "d39cec6e-4fb4-4375-b3b0-8fbc37da6998",
+      "name": "Set — After Fetch Insert"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "documents"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}"
+            },
+            {
+              "column": "url_id",
+              "value": "={{ $json._url_id }}"
+            },
+            {
+              "column": "doc_type",
+              "value": "url"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "created_at",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "tenant_id",
+            "url_id",
+            "status"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3008,
+        800
+      ],
+      "id": "52bec9ce-d3a2-4814-83b7-20f4262b398c",
+      "name": "PG — Select Existing Doc",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dffc6083-eb81-4fb2-9f74-2627c9c75795",
+              "name": "_err.node",
+              "value": "PG — Select Existing Doc",
+              "type": "string"
+            },
+            {
+              "id": "ddd1e28e-d371-4db0-91ba-ce6a752d05b5",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "c9817129-7e85-4a0c-b518-00c02aebd8be",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "92d00fd8-9c05-4724-adef-44bb605b8b9c",
+              "name": "_err.kind",
+              "value": "pg",
+              "type": "string"
+            },
+            {
+              "id": "761e2519-c262-411a-8cce-9b9299d04f1a",
+              "name": "_err.http_status",
+              "value": "500",
+              "type": "number"
+            },
+            {
+              "id": "3c661576-6e00-49fe-80ad-48cce592f377",
+              "name": "_err.retryable",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "58fbf323-b859-4728-9e72-dd866fa1876f",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f165ea8d-eaae-45a5-a2f0-fe6b0c049efc",
+              "name": "ctx.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f3457fae-1ebf-48d3-a2f8-6d7eefafaf47",
+              "name": "ctx.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "8b73b028-1929-45ae-8f29-e991b7f7b7a5",
+              "name": "ctx.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "571c4a30-266a-4d0d-8782-fbc12c6f37e3",
+              "name": "ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "4a39338c-10d2-4e72-b281-de81d29ad732",
+              "name": "ctx.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3392,
+        1184
+      ],
+      "id": "2ed31588-2a53-4f9d-a60b-6c682735720e",
+      "name": "ERR — Source PG Select Doc"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dc2db67e-7b69-4bf9-8d4b-6f3a80f7fa1a",
+              "name": "_url_id",
+              "value": "={{ $('Set — Reuse Fetch Data').item.json._url_id ?? $('Set — After Fetch Insert').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1300afc6-c926-4dbd-be9f-648b18bed0b3",
+              "name": "_url_fetch_id",
+              "value": "={{ $('Set — Reuse Fetch Data').item.json._url_fetch_id ?? $('Set — After Fetch Insert').item.json._url_fetch_id }}",
+              "type": "string"
+            },
+            {
+              "id": "aed2dc82-932f-467c-9ee8-302450e2c5d6",
+              "name": "_http_status",
+              "value": "={{ $('Set — Reuse Fetch Data').item.json._http_status ?? $('Set — After Fetch Insert').item.json._http_status }}",
+              "type": "number"
+            },
+            {
+              "id": "4cdca77f-4387-449c-9610-8925cabe81d5",
+              "name": "_content_type",
+              "value": "={{ $('Set — Reuse Fetch Data').item.json._content_type ?? $('Set — After Fetch Insert').item.json._content_type }}",
+              "type": "string"
+            },
+            {
+              "id": "5b068e83-817b-4f8c-8044-95430e1f91a8",
+              "name": "_final_url",
+              "value": "={{ $('Set — Reuse Fetch Data').item.json._final_url ?? $('Set — After Fetch Insert').item.json._final_url }}",
+              "type": "string"
+            },
+            {
+              "id": "0cc0eb51-ec45-4225-933e-f407f4da96fc",
+              "name": "_size_bytes",
+              "value": "={{ $('Set — Reuse Fetch Data').item.json._size_bytes ?? $('Set — After Fetch Insert').item.json._size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "0f65c117-42c0-4f27-ac7d-72dd77cebc06",
+              "name": "_body_sha256_hex",
+              "value": "={{ $('Set — Reuse Fetch Data').item.json._body_sha256_hex ?? $('Set — After Fetch Insert').item.json._body_sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "45917ed6-e0e4-4ad7-a163-118c2a845add",
+              "name": "_blob_object_id",
+              "value": "={{ null }}",
+              "type": "string"
+            },
+            {
+              "id": "466097d9-1b3d-4f04-8cba-37ae8ef4d19e",
+              "name": "_existing_doc_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3200,
+        800
+      ],
+      "id": "6f984957-9d99-485d-9078-02555ad92497",
+      "name": "Set — After Doc Check"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "7bb0bd46-23bb-4f87-ae85-1ce758e3376d",
+              "leftValue": "={{ $json._existing_doc_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3408,
+        800
+      ],
+      "id": "10c5ecde-c1e3-40cb-9cf3-61de4decdd6b",
+      "name": "IF — Doc Exists?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "73f26b67-00f8-442f-a65e-51e5c6d98d35",
+              "name": "_doc_id",
+              "value": "={{ $json._existing_doc_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3600,
+        704
+      ],
+      "id": "d178e238-ec22-4fe0-8ac5-4dcef79ae77d",
+      "name": "Set — Existing Doc ID"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "15edd7ea-06ee-4472-9ce7-170fecc291cd",
+              "name": "tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1c75d409-c4c0-4d70-a911-1e4f9a7438d8",
+              "name": "doc_type",
+              "value": "url",
+              "type": "string"
+            },
+            {
+              "id": "8e55c6a5-cd9b-4302-8fef-ef238ed04008",
+              "name": "visibility",
+              "value": "={{ $('Set — Carry').item.json._carry.visibility || 'group' }}",
+              "type": "string"
+            },
+            {
+              "id": "4a6603be-178c-4a73-93c0-5b173f4f71b9",
+              "name": "chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "baeb5de5-2476-4b00-8cc7-7563cac3f8ad",
+              "name": "message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cb2c90c1-4981-4c00-9ddf-288b74f4481d",
+              "name": "url_id",
+              "value": "={{ $json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2ac95c32-6c8e-469e-8daf-5e8238af836b",
+              "name": "title",
+              "value": "={{ $('Set — Carry').item.json._carry.link_text || $('Set — Carry').item.json._carry.url }}",
+              "type": "string"
+            },
+            {
+              "id": "39746945-bb1a-4852-947a-ea3db0eb0fe6",
+              "name": "status",
+              "value": "pending",
+              "type": "string"
+            },
+            {
+              "id": "07437769-f2b5-4b36-8d30-16280c3382af",
+              "name": "meta.source_url",
+              "value": "={{ $json._final_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3600,
+        912
+      ],
+      "id": "35bd6f50-0e66-4b5a-92c5-5587c56fc27e",
+      "name": "Set — Prep Doc Insert"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "documents"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json.tenant_id }}",
+            "doc_type": "={{ $json.doc_type }}",
+            "visibility": "={{ $json.visibility }}",
+            "chat_id": "={{ $json.chat_id }}",
+            "message_version_id": "={{ $json.message_version_id }}",
+            "url_id": "={{ $json.url_id }}",
+            "title": "={{ $json.title }}",
+            "status": "={{ $json.status }}",
+            "meta": "={{ $json.meta }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "doc_type",
+              "displayName": "doc_type",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "visibility",
+              "displayName": "visibility",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "number",
+              "display": true
+            },
+            {
+              "id": "message_version_id",
+              "displayName": "message_version_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "number",
+              "display": true
+            },
+            {
+              "id": "url_id",
+              "displayName": "url_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "number",
+              "display": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "meta",
+              "displayName": "meta",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "display": true
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "tenant_id",
+            "url_id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3808,
+        912
+      ],
+      "id": "02b96cc4-22c7-4c47-9853-e63d511e4a2a",
+      "name": "PG — Insert content.documents",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c269807d-0be4-497e-9924-fba2306cd5a6",
+              "name": "_err.node",
+              "value": "PG — Insert content.documents",
+              "type": "string"
+            },
+            {
+              "id": "72286fe1-305e-478b-b887-b9959275a29e",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "7e499f17-a914-4516-9bea-123b73eaf754",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "a6f5aa3d-e9b2-4768-b53d-b9c86b3957da",
+              "name": "_err.kind",
+              "value": "pg",
+              "type": "string"
+            },
+            {
+              "id": "bcdeb61f-6d1f-4e2f-89fc-b9a2bc93ca78",
+              "name": "_err.http_status",
+              "value": "500",
+              "type": "number"
+            },
+            {
+              "id": "844705d9-5a5f-4e21-ab02-77d4e19dd3f2",
+              "name": "_err.retryable",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "00b18afb-3a5a-441e-8542-4bd20fa29adf",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "131d7f47-9b43-4c2f-953e-0eaca9428a2a",
+              "name": "ctx.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "97f4a52a-cdba-4fa2-8082-734bd1ad7170",
+              "name": "ctx.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7a2cda61-c3df-437f-882c-83dcc40e4608",
+              "name": "ctx.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f63cc4d8-76da-4844-8e07-543321d193ea",
+              "name": "ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "bc7e2543-7dc4-4cf5-b361-83b2ef98580f",
+              "name": "ctx.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4080,
+        1216
+      ],
+      "id": "2a3ab4f9-9f0b-49e6-8f5c-b90500967538",
+      "name": "ERR — Source PG Insert Doc"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4bb9f40d-c5dc-4ba9-b2f7-4efd157d4bd9",
+              "name": "_doc_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "eb3a4794-6af1-48db-9646-5fa7033e6a88",
+              "name": "_url_id",
+              "value": "={{ $('Set — After Doc Check').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "606778df-6f4d-4ca6-817a-d879b2b73016",
+              "name": "_url_fetch_id",
+              "value": "={{ $('Set — After Doc Check').item.json._url_fetch_id }}",
+              "type": "string"
+            },
+            {
+              "id": "308b6c5a-9f3f-4019-bdb5-466543cf2d91",
+              "name": "_http_status",
+              "value": "={{ $('Set — After Doc Check').item.json._http_status }}",
+              "type": "number"
+            },
+            {
+              "id": "725fa6a2-22c0-4c68-8492-db901e25d8cc",
+              "name": "_content_type",
+              "value": "={{ $('Set — After Doc Check').item.json._content_type }}",
+              "type": "string"
+            },
+            {
+              "id": "36993d11-f19d-41f4-99a4-7c7e6c80650f",
+              "name": "_final_url",
+              "value": "={{ $('Set — After Doc Check').item.json._final_url }}",
+              "type": "string"
+            },
+            {
+              "id": "94f69ba8-6d6b-4120-9beb-633a05487f32",
+              "name": "_size_bytes",
+              "value": "={{ $('Set — After Doc Check').item.json._size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "29966cf9-59fa-472a-9c41-c3fa78b31e42",
+              "name": "_body_sha256_hex",
+              "value": "={{ $('Set — After Doc Check').item.json._body_sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "cf14b325-a846-49cf-be14-3c88fe7ddd63",
+              "name": "_blob_object_id",
+              "value": "={{ null }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4000,
+        912
+      ],
+      "id": "a73ce1f0-e0f7-4042-929e-5a9643e34fbe",
+      "name": "Set — After Doc Insert"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9b64cbfd-ee58-478f-b7ae-9bc7f6ec7fad",
+              "name": "tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "173a5d55-1fc0-43ce-badd-d7f935613181",
+              "name": "job_type",
+              "value": "extract_text",
+              "type": "string"
+            },
+            {
+              "id": "fd4c4fb6-ad65-428e-a6c9-09e142200db4",
+              "name": "status",
+              "value": "queued",
+              "type": "string"
+            },
+            {
+              "id": "3c45c62c-4416-4103-a6c7-27a0937b0d9e",
+              "name": "priority",
+              "value": "100",
+              "type": "number"
+            },
+            {
+              "id": "f3800dd0-ed0d-4932-a4c1-adfa8fb6689d",
+              "name": "correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c35aa8d7-5bd7-43b3-888c-4116741f8c38",
+              "name": "payload.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f792dc4d-d5e3-434b-b95f-2cbcac0aa6d4",
+              "name": "payload.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e7966875-858d-4148-ac2c-10fa24852387",
+              "name": "payload.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "06143e2a-b1ce-4a51-8583-4eae3df6fc1a",
+              "name": "payload.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d3a03a20-873a-4e8a-9eea-fb5b32103a73",
+              "name": "payload.visibility",
+              "value": "={{ $('Set — Carry').item.json._carry.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "d2b28b52-2bf1-4ea8-a6bb-cdf68057c50e",
+              "name": "payload.chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e2a30e99-14eb-4487-9338-bf60e52515b8",
+              "name": "payload.message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ca24b223-250a-48c5-8385-4023b3234603",
+              "name": "payload.extract_kind",
+              "value": "url_text",
+              "type": "string"
+            },
+            {
+              "id": "0d3adf93-bae4-45b5-8745-336f2f0f41d0",
+              "name": "payload.url_id",
+              "value": "={{ $json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "bfe26e56-e6c9-4bc5-a791-3775167bcf11",
+              "name": "payload.url_fetch_id",
+              "value": "={{ $json._url_fetch_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f1b8ca56-e1e3-4261-a602-5dd94687dafe",
+              "name": "payload.final_url",
+              "value": "={{ $json._final_url }}",
+              "type": "string"
+            },
+            {
+              "id": "3ae0aa11-f616-45d9-82f1-08e7b489aad8",
+              "name": "payload.document_id",
+              "value": "={{ $json._doc_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5176d1e3-b5a9-48f3-a142-185da45c2da2",
+              "name": "_url_id",
+              "value": "={{ $json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7036f464-422b-440f-af85-783b5f9417a5",
+              "name": "_url_fetch_id",
+              "value": "={{ $json._url_fetch_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3887c220-fdf8-4844-a3bf-03a42df735b3",
+              "name": "_http_status",
+              "value": "={{ $json._http_status }}",
+              "type": "number"
+            },
+            {
+              "id": "89e5bb8d-1530-4636-b77f-b36bb759e1c0",
+              "name": "_content_type",
+              "value": "={{ $json._content_type }}",
+              "type": "string"
+            },
+            {
+              "id": "e2861ada-48c8-47cf-9b43-9576fb358173",
+              "name": "_final_url",
+              "value": "={{ $json._final_url }}",
+              "type": "string"
+            },
+            {
+              "id": "38ee8470-a935-4c5d-9b05-da73f4979bd6",
+              "name": "_size_bytes",
+              "value": "={{ $json._size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "09761144-b878-43ce-8822-1fb304a2ee49",
+              "name": "_body_sha256_hex",
+              "value": "={{ $json._body_sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "8a47493e-0ef0-4bf0-b7cc-455643d6cc46",
+              "name": "_blob_object_id",
+              "value": "={{ null }}",
+              "type": "string"
+            },
+            {
+              "id": "e10be597-41a1-4db9-9267-d14deb717c89",
+              "name": "_doc_id",
+              "value": "={{ $json._doc_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4208,
+        800
+      ],
+      "id": "88de36b2-a354-4366-820e-92f58a057462",
+      "name": "Set — Prep Extract Job"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json.tenant_id }}",
+            "job_type": "={{ $json.job_type }}",
+            "status": "={{ $json.status }}",
+            "priority": "={{ $json.priority }}",
+            "correlation_id": "={{ $json.correlation_id }}",
+            "payload": "={{ $json.payload }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "number",
+              "display": true
+            },
+            {
+              "id": "correlation_id",
+              "displayName": "correlation_id",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "display": true
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "display": true
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "job_type",
+            "correlation_id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4400,
+        800
+      ],
+      "id": "f4b4ee4b-d14f-41b2-8ef1-6c9669eb1fa2",
+      "name": "PG — Insert ops.jobs extract_text",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "95a4e1dc-4c6e-461b-8a25-43786728c9f2",
+              "name": "_err.node",
+              "value": "PG — Insert ops.jobs extract_text",
+              "type": "string"
+            },
+            {
+              "id": "a79c4e7d-18e8-4bb0-8f48-20614bb1c856",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "77346b22-5573-4c76-9261-356f5556c8d9",
+              "name": "_err.table",
+              "value": "ops.jobs",
+              "type": "string"
+            },
+            {
+              "id": "05eb9f39-36d3-43c6-b1d2-91eb36985b6a",
+              "name": "_err.kind",
+              "value": "pg",
+              "type": "string"
+            },
+            {
+              "id": "f9090fe9-a02d-48eb-a0b8-ab89901ea05a",
+              "name": "_err.http_status",
+              "value": "500",
+              "type": "number"
+            },
+            {
+              "id": "19169c85-1c82-4896-ac52-bf95e942f434",
+              "name": "_err.retryable",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "94bf1725-0034-483a-9319-d468dd86576f",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ce34f3fd-a828-41ad-95ba-cddcbb34f366",
+              "name": "ctx.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "dba12916-996b-42bd-a577-d780135ebd63",
+              "name": "ctx.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0c8fb2a6-10aa-47e3-b8b9-829759104419",
+              "name": "ctx.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "dcbfbe21-ecdd-46af-8503-555d1f95ab57",
+              "name": "ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "6a8f1edc-10b9-45d3-97c1-87ce42a2f78d",
+              "name": "ctx.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4656,
+        1264
+      ],
+      "id": "093d0d88-85fc-4ea9-a729-faefbec41910",
+      "name": "ERR — Source PG Insert Job"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2509fcc9-e6a5-4155-a6ca-49b4e2cee4d0",
+              "name": "_extract_text_job_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "bc8e237e-d42c-4f9d-9100-d24113709dfc",
+              "name": "_url_id",
+              "value": "={{ $('Set — Prep Extract Job').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2fed080c-d646-40be-8ad5-0d3cb52f705a",
+              "name": "_url_fetch_id",
+              "value": "={{ $('Set — Prep Extract Job').item.json._url_fetch_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b332cf87-bfce-4f05-a4fa-227015642cd4",
+              "name": "_http_status",
+              "value": "={{ $('Set — Prep Extract Job').item.json._http_status }}",
+              "type": "number"
+            },
+            {
+              "id": "aac8e7d0-74fa-4b7c-b925-ea7020bb63e5",
+              "name": "_content_type",
+              "value": "={{ $('Set — Prep Extract Job').item.json._content_type }}",
+              "type": "string"
+            },
+            {
+              "id": "aac296ec-5870-420c-8169-2c42b2cd3c04",
+              "name": "_final_url",
+              "value": "={{ $('Set — Prep Extract Job').item.json._final_url }}",
+              "type": "string"
+            },
+            {
+              "id": "2ae8c1b7-9d5a-4110-b2cd-26472878a340",
+              "name": "_size_bytes",
+              "value": "={{ $('Set — Prep Extract Job').item.json._size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "dcc811f7-a413-41e3-b4cb-67944fb75f0d",
+              "name": "_body_sha256_hex",
+              "value": "={{ $('Set — Prep Extract Job').item.json._body_sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "ace3910c-8bd8-4a95-a7fe-bcee54f7877a",
+              "name": "_blob_object_id",
+              "value": "={{ null }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4608,
+        800
+      ],
+      "id": "016b126b-ca0a-4ab4-bb45-bb93c454054f",
+      "name": "Set — After Job Insert"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "980bcabf-e4fb-4e3f-bc93-bb26e6bd2b11",
+              "name": "data.url_id",
+              "value": "={{ $json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3d396b28-f915-4a12-87ca-24888517ed99",
+              "name": "data.url_fetch_id",
+              "value": "={{ $json._url_fetch_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d335f0db-9df0-4ffb-b35a-dc80bfafcd5c",
+              "name": "data.final_url",
+              "value": "={{ $json._final_url }}",
+              "type": "string"
+            },
+            {
+              "id": "693272eb-6864-44e7-957a-ad1a43e3e161",
+              "name": "data.http_status",
+              "value": "={{ $json._http_status }}",
+              "type": "number"
+            },
+            {
+              "id": "839776ca-4079-4827-8b9b-234d0a1330e3",
+              "name": "data.content_type",
+              "value": "={{ $json._content_type }}",
+              "type": "string"
+            },
+            {
+              "id": "e152150c-9971-40b6-b67e-2d9a980b3f37",
+              "name": "data.size_bytes",
+              "value": "={{ $json._size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "91cde3e9-1311-4f25-9952-8bdd2d0dbd7f",
+              "name": "data.body_sha256",
+              "value": "={{ $json._body_sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "2ff328e2-d784-4cf5-8133-d885328cc313",
+              "name": "data.blob_object_id",
+              "value": "={{ null }}",
+              "type": "string"
+            },
+            {
+              "id": "96878e4d-8ae5-4f88-8634-8d0b452e9ceb",
+              "name": "data.enqueued_extract_text_job_id",
+              "value": "={{ $json._extract_text_job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0c9097b8-3f16-4823-8107-ceddb823101a",
+              "name": "data.enqueued_build_document_job_id",
+              "value": "={{ null }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4800,
+        800
+      ],
+      "id": "9fbb872b-e166-42e6-939d-0c807754c208",
+      "name": "Set — SuccessEnvelope"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a9f1027c-fe3c-4435-bb14-167dd98f1c40",
+              "name": "ctx.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9c83703e-622c-46e0-887a-c3946b916e92",
+              "name": "ctx.bot_id",
+              "value": "={{ $json.ctx?.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ea6a2731-0733-46ae-bc68-302fde707ec0",
+              "name": "ctx.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ad398841-7c53-462c-ae12-143005fff543",
+              "name": "ctx.trace_id",
+              "value": "={{ $json.ctx?.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3c60f6d8-bc74-4ccc-8d79-c6869409eb8e",
+              "name": "ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "331cb683-fa53-489a-a541-c47de754e718",
+              "name": "ctx.job_id",
+              "value": "={{ $json.ctx?.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6df55145-2799-41b2-8969-daf0daf2ee41",
+              "name": "error_context.kind",
+              "value": "={{ $json._err?.kind || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "55737cec-854c-4928-8b78-4ad6cd72490d",
+              "name": "error_context.http_status",
+              "value": "={{ $json._err?.http_status || 500 }}",
+              "type": "number"
+            },
+            {
+              "id": "deaf74d7-bb09-4979-b3c7-a7fad8ce1842",
+              "name": "error_context.retryable",
+              "value": "={{ $json._err?.retryable ?? true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "02c12c88-b2c6-4f23-9493-ecb43884da57",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "8a1ddbbd-f63b-475e-8bf3-9252b5db9405",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "2b105886-d3fe-4a03-a3ca-b91d3f9c3ebe",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table }}",
+              "type": "string"
+            },
+            {
+              "id": "974999b2-1510-464c-ad71-f51dae702af3",
+              "name": "error_context.message",
+              "value": "={{ $json._err?.message || $json.message || 'WF31 error' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5040,
+        2000
+      ],
+      "id": "fb72cf99-2eb9-4da8-b54d-8e036edaca08",
+      "name": "ERR — Prepare ErrorPipe v1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        5248,
+        2000
+      ],
+      "id": "24471bb5-6db8-4874-892e-f92744b6005c",
+      "name": "Execute Workflow — WF99"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=WF31 failed: {{ $json.error_context?.message || 'unknown error' }} (node={{ $json.error_context?.node }}, kind={{ $json.error_context?.kind }})"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5440,
+        2000
+      ],
+      "id": "3646c76c-146b-4ce0-a315-57a7cb3aaed0",
+      "name": "StopAndError"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cc6c3873-f288-4f29-996a-f99224a7cfb2",
+      "name": "Manual Trigger — Tests"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e552237f-175c-497d-bccc-c20dcefd2f5c",
+              "name": "req.ctx.tenant_id",
+              "value": "00000000-0000-0000-0000-000000000001",
+              "type": "string"
+            },
+            {
+              "id": "e51545d3-d691-4562-8146-dec1c305de66",
+              "name": "req.ctx.bot_id",
+              "value": "00000000-0000-0000-0000-000000000002",
+              "type": "string"
+            },
+            {
+              "id": "d04cb37f-7354-42cf-bb53-bec993188079",
+              "name": "req.ctx.trace_id",
+              "value": "test-t1-trace",
+              "type": "string"
+            },
+            {
+              "id": "184f6fbe-0111-4346-b9d6-74d9ff3f7f9e",
+              "name": "req.ctx.correlation_id",
+              "value": "00000000-0000-0000-0000-0000000000t1",
+              "type": "string"
+            },
+            {
+              "id": "516bdc2e-d592-41b2-9bdc-85324d477b41",
+              "name": "req.ctx.visibility",
+              "value": "group",
+              "type": "string"
+            },
+            {
+              "id": "c976fe53-771b-4aca-afd3-1fbb7069b1a4",
+              "name": "req.ctx.chat_id",
+              "value": "=-999",
+              "type": "number"
+            },
+            {
+              "id": "e24f9fda-c3ce-425b-a9e4-283e10af776f",
+              "name": "req.ctx.message_version_id",
+              "value": "=-999",
+              "type": "number"
+            },
+            {
+              "id": "b9edbe9a-e516-4657-8501-0c67870605bd",
+              "name": "req.ctx.job_id",
+              "value": "=-999",
+              "type": "number"
+            },
+            {
+              "id": "4bb9f6ad-74ed-456e-8924-a4351baa8d5a",
+              "name": "req.ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "5c8fef68-eed9-45eb-8ef4-6bd5f89de0ea",
+              "name": "req.job.id",
+              "value": "=-999",
+              "type": "number"
+            },
+            {
+              "id": "727aad5c-87e8-4166-9900-401c7a072949",
+              "name": "req.job.job_type",
+              "value": "fetch_url",
+              "type": "string"
+            },
+            {
+              "id": "cbe16ef5-ea5f-4627-a901-5c2d33107126",
+              "name": "req.job.payload.tenant_id",
+              "value": "00000000-0000-0000-0000-000000000001",
+              "type": "string"
+            },
+            {
+              "id": "2c318d20-6ba6-4f28-9166-e3a87fd5a4ac",
+              "name": "req.job.payload.bot_id",
+              "value": "00000000-0000-0000-0000-000000000002",
+              "type": "string"
+            },
+            {
+              "id": "e879d4c9-2deb-4c91-b38d-77d45af960f2",
+              "name": "req.job.payload.trace_id",
+              "value": "test-t1-trace",
+              "type": "string"
+            },
+            {
+              "id": "1b71e445-376b-43a0-909e-ad69f07aea3f",
+              "name": "req.job.payload.correlation_id",
+              "value": "00000000-0000-0000-0000-0000000000t1",
+              "type": "string"
+            },
+            {
+              "id": "2544dfe1-0130-45c5-834e-7bf7058fd616",
+              "name": "req.job.payload.visibility",
+              "value": "group",
+              "type": "string"
+            },
+            {
+              "id": "73f0d936-848f-4181-b67e-386d76005af0",
+              "name": "req.job.payload.chat_id",
+              "value": "=-999",
+              "type": "number"
+            },
+            {
+              "id": "f48230dd-7e2a-415e-8813-df378cf7d2ba",
+              "name": "req.job.payload.message_version_id",
+              "value": "=-999",
+              "type": "number"
+            },
+            {
+              "id": "a5d97356-c7b8-4d51-b080-8b4910f2fe28",
+              "name": "req.job.payload.url",
+              "value": "https://example.com",
+              "type": "string"
+            },
+            {
+              "id": "279b3f3d-5bcc-44f4-83c8-93eacc895f1d",
+              "name": "req.job.payload.url_id",
+              "value": "={{ null }}",
+              "type": "string"
+            },
+            {
+              "id": "8cf8f814-452a-493b-be70-e7572de7e55a",
+              "name": "req.job.payload.link_text",
+              "value": "Example",
+              "type": "string"
+            },
+            {
+              "id": "a174dcce-398e-4728-8023-d445d1729cfd",
+              "name": "req.job.payload.force_refetch",
+              "value": "true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2eeb9048-d733-43ab-b610-1d6e882c14e9",
+      "name": "T1 — Build Input"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "url_fetches"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "url_id",
+              "condition": ">",
+              "value": "0"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "id",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        608,
+        0
+      ],
+      "id": "569826ff-ce41-4d4b-ab2a-0cb0f4cf065f",
+      "name": "T1 — Verify url_fetches",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "jobs"
+        },
+        "limit": 5,
+        "where": {
+          "values": [
+            {
+              "column": "correlation_id",
+              "value": "00000000-0000-0000-0000-0000000000t1"
+            },
+            {
+              "column": "job_type",
+              "value": "extract_text"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "id",
+              "direction": "DESC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        0
+      ],
+      "id": "864fb532-23cc-40fc-9ed4-216cd0f2932f",
+      "name": "T1 — Verify extract_text job",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "jobs"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "correlation_id",
+              "value": "00000000-0000-0000-0000-0000000000t1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "8f05c1c8-a03e-4fcc-a878-77ef4b573ac8",
+      "name": "T1 — Cleanup jobs",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "documents"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "00000000-0000-0000-0000-000000000001"
+            },
+            {
+              "column": "doc_type",
+              "value": "url"
+            },
+            {
+              "column": "title",
+              "value": "Example"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "3f739a64-5bea-4efb-b998-4fe25a7d5d96",
+      "name": "T1 — Cleanup documents",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "url_fetches"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "meta",
+              "condition": "LIKE",
+              "value": "%test-t1-trace%"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1408,
+        0
+      ],
+      "id": "4ec2d91a-36b9-45dc-8362-125212e3e9c9",
+      "name": "T1 — Cleanup url_fetches",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "content"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "urls"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "normalized_url",
+              "value": "https://example.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1600,
+        0
+      ],
+      "id": "99e0ba97-b022-4c72-a530-a0c2d6fb8eee",
+      "name": "T1 — Cleanup urls",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "IN — Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set — Carry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Carry": {
+      "main": [
+        [
+          {
+            "node": "IF — Valid Input?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Valid Input?": {
+      "main": [
+        [
+          {
+            "node": "IF — url_id Provided?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — ERR Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — url_id Provided?": {
+      "main": [
+        [
+          {
+            "node": "Set — Use Existing url_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Prep URL Upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prep URL Upsert": {
+      "main": [
+        [
+          {
+            "node": "PG — Upsert content.urls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Upsert content.urls": {
+      "main": [
+        [
+          {
+            "node": "Set — Capture url_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source PG Upsert URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Capture url_id": {
+      "main": [
+        [
+          {
+            "node": "PG — Select Latest Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Use Existing url_id": {
+      "main": [
+        [
+          {
+            "node": "PG — Select Latest Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Select Latest Fetch": {
+      "main": [
+        [
+          {
+            "node": "Set — After Fetch Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source PG Select Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — After Fetch Check": {
+      "main": [
+        [
+          {
+            "node": "IF — Reuse Fetch?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Reuse Fetch?": {
+      "main": [
+        [
+          {
+            "node": "Set — Reuse Fetch Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP — Fetch URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP — Fetch URL": {
+      "main": [
+        [
+          {
+            "node": "Crypto — SHA256 Body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source HTTP Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto — SHA256 Body": {
+      "main": [
+        [
+          {
+            "node": "Set — Prep Fetch Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prep Fetch Insert": {
+      "main": [
+        [
+          {
+            "node": "PG — Insert url_fetches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert url_fetches": {
+      "main": [
+        [
+          {
+            "node": "Set — After Fetch Insert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source PG Insert Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Reuse Fetch Data": {
+      "main": [
+        [
+          {
+            "node": "PG — Select Existing Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — After Fetch Insert": {
+      "main": [
+        [
+          {
+            "node": "PG — Select Existing Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Select Existing Doc": {
+      "main": [
+        [
+          {
+            "node": "Set — After Doc Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source PG Select Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — After Doc Check": {
+      "main": [
+        [
+          {
+            "node": "IF — Doc Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Doc Exists?": {
+      "main": [
+        [
+          {
+            "node": "Set — Existing Doc ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Prep Doc Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prep Doc Insert": {
+      "main": [
+        [
+          {
+            "node": "PG — Insert content.documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert content.documents": {
+      "main": [
+        [
+          {
+            "node": "Set — After Doc Insert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source PG Insert Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Existing Doc ID": {
+      "main": [
+        [
+          {
+            "node": "Set — Prep Extract Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — After Doc Insert": {
+      "main": [
+        [
+          {
+            "node": "Set — Prep Extract Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prep Extract Job": {
+      "main": [
+        [
+          {
+            "node": "PG — Insert ops.jobs extract_text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert ops.jobs extract_text": {
+      "main": [
+        [
+          {
+            "node": "Set — After Job Insert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source PG Insert Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — After Job Insert": {
+      "main": [
+        [
+          {
+            "node": "Set — SuccessEnvelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — ERR Input Validation": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source PG Upsert URLs": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source PG Select Fetch": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source HTTP Fetch": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source PG Insert Fetch": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source PG Select Doc": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source PG Insert Doc": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source PG Insert Job": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe v1": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow — WF99",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow — WF99": {
+      "main": [
+        [
+          {
+            "node": "StopAndError",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger — Tests": {
+      "main": [
+        [
+          {
+            "node": "T1 — Build Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Verify url_fetches": {
+      "main": [
+        [
+          {
+            "node": "T1 — Verify extract_text job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Verify extract_text job": {
+      "main": [
+        [
+          {
+            "node": "T1 — Cleanup jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Cleanup jobs": {
+      "main": [
+        [
+          {
+            "node": "T1 — Cleanup documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Cleanup documents": {
+      "main": [
+        [
+          {
+            "node": "T1 — Cleanup url_fetches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Cleanup url_fetches": {
+      "main": [
+        [
+          {
+            "node": "T1 — Cleanup urls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Build Input": {
+      "main": [
+        [
+          {
+            "node": "T1 — Verify url_fetches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "66d22585-b3b8-471d-a32b-23ee714e7a98",
+  "meta": {
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "nfjIRSFfDpPQQ8NW4UF9c",
+  "tags": [
+    {
+      "name": "link-fetcher",
+      "id": "fCHWagfhXdHBoWxZ",
+      "updatedAt": "2026-02-05T21:21:27.719Z",
+      "createdAt": "2026-02-05T21:21:27.719Z"
+    },
+    {
+      "name": "WF31",
+      "id": "03yh93nNUMyl65MV",
+      "updatedAt": "2026-02-05T21:21:27.711Z",
+      "createdAt": "2026-02-05T21:21:27.711Z"
+    }
+  ]
+}
