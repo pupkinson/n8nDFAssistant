@@ -167,8 +167,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -4688,
-        736
+        -4672,
+        800
       ],
       "id": "85eb9894-adff-4bf7-b26b-b776b2b4f43e",
       "name": "ERR — Source Guard Input",
@@ -199,8 +199,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -4384,
-        832
+        -4368,
+        1024
       ],
       "id": "79442076-b66a-4969-9ec4-2b7b25167367",
       "name": "Call WF99 — Guard Error",
@@ -214,8 +214,8 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        -4064,
-        1008
+        -4080,
+        1024
       ],
       "id": "c447e715-7a84-45d1-ac03-3b8f33350f86",
       "name": "Stop — Guard Error",
@@ -242,8 +242,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -4624,
-        480
+        -4576,
+        624
       ],
       "id": "d1b2a673-0299-4de3-ac17-3c78b88929bf",
       "name": "Set — Snapshot Input",
@@ -396,8 +396,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -3968,
-        640
+        -3856,
+        976
       ],
       "id": "3ce1a186-64b3-4e32-ab53-6ed3401799f1",
       "name": "Call WF99 — Doc Error",
@@ -411,8 +411,8 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        -3744,
-        640
+        -3520,
+        976
       ],
       "id": "131e7348-8bfc-40cf-98f8-69f876f39e9e",
       "name": "Stop — Doc Error",
@@ -849,7 +849,7 @@
       "typeVersion": 3.4,
       "position": [
         -3088,
-        768
+        848
       ],
       "id": "151d1d50-c92a-4f10-b4da-cdd88ebda130",
       "name": "ERR — Blob Not Found",
@@ -881,7 +881,7 @@
       "typeVersion": 1.3,
       "position": [
         -2864,
-        768
+        832
       ],
       "id": "10180cee-9410-465a-b747-65e3e760826f",
       "name": "Call WF99 — Blob 404",
@@ -895,8 +895,8 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        -2640,
-        768
+        -2608,
+        832
       ],
       "id": "3cdddc73-56e4-4a0c-9df5-b1ccacd4121e",
       "name": "Stop — Blob 404",
@@ -937,8 +937,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
+            "typeValidation": "strict",
+            "version": 3
           },
           "conditions": [
             {
@@ -1042,8 +1042,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -2416,
-        640
+        -2384,
+        704
       ],
       "id": "28aa88f6-dff4-4886-8a60-983c0dff6e64",
       "name": "Call WF99 — Storage",
@@ -1057,8 +1057,8 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        -2208,
-        640
+        -2160,
+        720
       ],
       "id": "ac2ece5f-31fb-42dd-99b4-45448b1098f5",
       "name": "Stop — Storage",
@@ -2663,9 +2663,7 @@
       "notes": "Sets next_action=ignore when wake not detected or job exists.\nInput: Context\nOutput: _result with null enqueued_job_id"
     },
     {
-      "parameters": {
-        "numberInputs": 3
-      },
+      "parameters": {},
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
@@ -3641,29 +3639,29 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "b88fb143-9ea0-45a4-b68c-654cd36407e1",
+  "versionId": "441ce8a1-0d8d-4ec3-9bf2-c444d365fc0c",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
   "id": "KbQJKDHMQ_S11UtY2rgO_",
   "tags": [
     {
-      "name": "WF35",
-      "id": "Fp78KwRQYq7sqAgO",
       "updatedAt": "2026-02-04T22:00:58.757Z",
-      "createdAt": "2026-02-04T22:00:58.757Z"
+      "createdAt": "2026-02-04T22:00:58.757Z",
+      "id": "Fp78KwRQYq7sqAgO",
+      "name": "WF35"
     },
     {
-      "name": "voice",
-      "id": "1q3ObHVaO06igcHD",
       "updatedAt": "2026-02-04T22:00:58.778Z",
-      "createdAt": "2026-02-04T22:00:58.778Z"
+      "createdAt": "2026-02-04T22:00:58.778Z",
+      "id": "1q3ObHVaO06igcHD",
+      "name": "voice"
     },
     {
-      "name": "worker",
-      "id": "nJYNm0jmUv4O9etB",
       "updatedAt": "2026-02-04T22:00:58.807Z",
-      "createdAt": "2026-02-04T22:00:58.807Z"
+      "createdAt": "2026-02-04T22:00:58.807Z",
+      "id": "nJYNm0jmUv4O9etB",
+      "name": "worker"
     }
   ]
 }
