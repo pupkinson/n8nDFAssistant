@@ -21,49 +21,49 @@
             {
               "id": "6d05a742-d256-4acf-9a13-49ce5e416170",
               "name": "_carry.tenant_id",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.tenant_id }}",
+              "value": "={{ $json.req.ctx.tenant_id }}",
               "type": "string"
             },
             {
               "id": "730d9f2c-02c5-42e4-9045-3c2529c9f125",
               "name": "_carry.bot_id",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.bot_id }}",
+              "value": "={{ $json.req.ctx.bot_id }}",
               "type": "string"
             },
             {
               "id": "3435d1b3-9604-4725-a33c-448c806aed0e",
               "name": "_carry.correlation_id",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.correlation_id }}",
+              "value": "={{ $json.req.ctx.correlation_id }}",
               "type": "string"
             },
             {
               "id": "ae8d732b-3948-4990-b271-e0dc18d135c7",
               "name": "_carry.trace_id",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.trace_id }}",
+              "value": "={{ $json.req.ctx.trace_id }}",
               "type": "string"
             },
             {
               "id": "440eb9da-7260-4743-9184-fa34e24b67d0",
               "name": "_carry.visibility",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.visibility }}",
+              "value": "={{ $json.req.ctx.visibility }}",
               "type": "string"
             },
             {
               "id": "a6649ceb-95a5-4294-9575-63c0fba17050",
               "name": "_carry.chat_id",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.chat_id }}",
+              "value": "={{ $json.req.ctx.chat_id }}",
               "type": "string"
             },
             {
               "id": "e7e96961-b50a-4ffc-8b54-470274c02e00",
               "name": "_carry.message_version_id",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.message_version_id }}",
+              "value": "={{ $json.req.ctx.message_version_id }}",
               "type": "string"
             },
             {
               "id": "77d60dc5-1e36-480d-b902-ca77209a446d",
               "name": "_carry.job_id",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.ctx.job_id }}",
+              "value": "={{ $json.req.ctx.job_id }}",
               "type": "string"
             },
             {
@@ -75,25 +75,25 @@
             {
               "id": "cd66bbe1-a47a-49d5-b903-f74d4ad4c9da",
               "name": "_carry.url",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.job.payload.url }}",
+              "value": "={{ $json.req.job.payload.url }}",
               "type": "string"
             },
             {
               "id": "b19926e3-2619-42a4-9834-0e2698112445",
               "name": "_carry.url_id_input",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.job.payload.url_id }}",
+              "value": "={{ $json.req.job.payload.url_id }}",
               "type": "string"
             },
             {
               "id": "5dc58122-e8f1-4aca-b49f-71dc68a648da",
               "name": "_carry.link_text",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.job.payload.link_text }}",
+              "value": "={{ $json.req.job.payload.link_text }}",
               "type": "string"
             },
             {
               "id": "116d1344-7c75-4d15-ab07-32264bb5d97b",
               "name": "_carry.force_refetch",
-              "value": "={{ $('IN — Execute Workflow Trigger').item.json.req.job.payload.force_refetch ?? false }}",
+              "value": "={{ $json.req.job.payload.force_refetch ?? false }}",
               "type": "boolean"
             }
           ]
@@ -114,7 +114,9 @@
         "conditions": {
           "options": {
             "caseSensitive": true,
-            "leftValue": ""
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
           },
           "conditions": [
             {
@@ -737,7 +739,9 @@
         "conditions": {
           "options": {
             "caseSensitive": true,
-            "leftValue": ""
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
           },
           "conditions": [
             {
@@ -838,8 +842,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2000,
-        704
+        2400,
+        656
       ],
       "id": "836be660-df3a-45f6-8791-f59285918e79",
       "name": "Set — Reuse Fetch Data"
@@ -1366,12 +1370,12 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3008,
-        800
+        2960,
+        736
       ],
       "id": "52bec9ce-d3a2-4814-83b7-20f4262b398c",
       "name": "PG — Select Existing Doc",
-      "alwaysOutputData": true,
+      "alwaysOutputData": false,
       "credentials": {
         "postgres": {
           "id": "yckAFBLpmdhsPaDZ",
@@ -1477,43 +1481,43 @@
             {
               "id": "dc2db67e-7b69-4bf9-8d4b-6f3a80f7fa1a",
               "name": "_url_id",
-              "value": "={{ $('Set — Reuse Fetch Data').item.json._url_id ?? $('Set — After Fetch Insert').item.json._url_id }}",
+              "value": "={{ $json._url_id }}",
               "type": "string"
             },
             {
               "id": "1300afc6-c926-4dbd-be9f-648b18bed0b3",
               "name": "_url_fetch_id",
-              "value": "={{ $('Set — Reuse Fetch Data').item.json._url_fetch_id ?? $('Set — After Fetch Insert').item.json._url_fetch_id }}",
+              "value": "={{ $json._url_fetch_id }}",
               "type": "string"
             },
             {
               "id": "aed2dc82-932f-467c-9ee8-302450e2c5d6",
               "name": "_http_status",
-              "value": "={{ $('Set — Reuse Fetch Data').item.json._http_status ?? $('Set — After Fetch Insert').item.json._http_status }}",
+              "value": "={{ $json._http_status }}",
               "type": "number"
             },
             {
               "id": "4cdca77f-4387-449c-9610-8925cabe81d5",
               "name": "_content_type",
-              "value": "={{ $('Set — Reuse Fetch Data').item.json._content_type ?? $('Set — After Fetch Insert').item.json._content_type }}",
+              "value": "={{ $json._content_type }}",
               "type": "string"
             },
             {
               "id": "5b068e83-817b-4f8c-8044-95430e1f91a8",
               "name": "_final_url",
-              "value": "={{ $('Set — Reuse Fetch Data').item.json._final_url ?? $('Set — After Fetch Insert').item.json._final_url }}",
+              "value": "={{ $json._final_url }}",
               "type": "string"
             },
             {
               "id": "0cc0eb51-ec45-4225-933e-f407f4da96fc",
               "name": "_size_bytes",
-              "value": "={{ $('Set — Reuse Fetch Data').item.json._size_bytes ?? $('Set — After Fetch Insert').item.json._size_bytes }}",
+              "value": "={{ $json._size_bytes }}",
               "type": "number"
             },
             {
               "id": "0f65c117-42c0-4f27-ac7d-72dd77cebc06",
               "name": "_body_sha256_hex",
-              "value": "={{ $('Set — Reuse Fetch Data').item.json._body_sha256_hex ?? $('Set — After Fetch Insert').item.json._body_sha256_hex }}",
+              "value": "={{ $json._body_sha256_hex }}",
               "type": "string"
             },
             {
@@ -1535,8 +1539,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3200,
-        800
+        3296,
+        768
       ],
       "id": "6f984957-9d99-485d-9078-02555ad92497",
       "name": "Set — After Doc Check"
@@ -1546,7 +1550,9 @@
         "conditions": {
           "options": {
             "caseSensitive": true,
-            "leftValue": ""
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
           },
           "conditions": [
             {
@@ -1566,7 +1572,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3408,
+        3456,
         800
       ],
       "id": "10c5ecde-c1e3-40cb-9cf3-61de4decdd6b",
@@ -1788,8 +1794,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3808,
-        912
+        3792,
+        928
       ],
       "id": "02b96cc4-22c7-4c47-9853-e63d511e4a2a",
       "name": "PG — Insert content.documents",
@@ -2649,7 +2655,7 @@
             {
               "id": "184f6fbe-0111-4346-b9d6-74d9ff3f7f9e",
               "name": "req.ctx.correlation_id",
-              "value": "00000000-0000-0000-0000-0000000000t1",
+              "value": "00000000-0000-0000-0000-000000000003",
               "type": "string"
             },
             {
@@ -2667,7 +2673,7 @@
             {
               "id": "e24f9fda-c3ce-425b-a9e4-283e10af776f",
               "name": "req.ctx.message_version_id",
-              "value": "=-999",
+              "value": "=5",
               "type": "number"
             },
             {
@@ -3036,6 +3042,17 @@
           "name": "Postgres DF Assistant"
         }
       }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3168,
+        768
+      ],
+      "id": "5d0eb0cd-6c24-4109-991c-de6eb5aa3f50",
+      "name": "Merge"
     }
   ],
   "pinData": {},
@@ -3272,6 +3289,11 @@
             "node": "PG — Select Existing Doc",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
@@ -3280,7 +3302,7 @@
       "main": [
         [
           {
-            "node": "Set — After Doc Check",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -3592,9 +3614,14 @@
     },
     "T1 — Build Input": {
       "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
         [
           {
-            "node": "T1 — Verify url_fetches",
+            "node": "Set — After Doc Check",
             "type": "main",
             "index": 0
           }
@@ -3608,7 +3635,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "66d22585-b3b8-471d-a32b-23ee714e7a98",
+  "versionId": "e9f76e75-1cb2-4e15-be8d-f279f8fcf217",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
