@@ -1,0 +1,5134 @@
+{
+  "name": "WF40 — Document Builder",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "a27b2eaf-7604-40bb-9563-cf33e6aa8a47",
+      "name": "IN — Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        3568,
+        4512
+      ],
+      "notes": "Entry point. Receives 1 item with req: {ctx, job}. Uses passthrough mode to accept all data from caller (WF90 Job Runner).\nInput: req.ctx (tenant/bot/correlation/job_id/workflow), req.job (id, job_type, payload).\nOutput: passthrough of all input fields."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db84a951-87b5-4334-a9a4-b2f338206cf9",
+              "name": "_carry.tenant_id",
+              "value": "={{ $json.req.ctx.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6d786bd5-866f-4f56-964c-460355d901e6",
+              "name": "_carry.bot_id",
+              "value": "={{ $json.req.ctx.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0cc8392e-0645-4b7e-a439-2e0fa76682ca",
+              "name": "_carry.correlation_id",
+              "value": "={{ $json.req.ctx.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "380ce7c7-f862-4a2f-8fef-81c741cb95e9",
+              "name": "_carry.trace_id",
+              "value": "={{ $json.req.ctx.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cdb4a70a-b3ae-416e-90ef-c98667508b98",
+              "name": "_carry.visibility",
+              "value": "={{ $json.req.ctx.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "6f420e27-5748-411a-8e66-fd9035bef525",
+              "name": "_carry.chat_id",
+              "value": "={{ $json.req.ctx.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "02379558-b0af-4422-9aa6-9adaef2f57a3",
+              "name": "_carry.message_version_id",
+              "value": "={{ $json.req.ctx.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "27eb3fee-f095-46da-9a62-6167455ca064",
+              "name": "_carry.job_id",
+              "value": "={{ $json.req.ctx.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5c7c6bd8-498a-4e08-8b1c-76a3ed663baf",
+              "name": "_carry.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "d9c10b71-5adf-41d4-83c6-58696d8bcfae",
+              "name": "_carry.doc_type",
+              "value": "={{ $json.req.job.payload.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "a5a73662-8b4c-4bff-b1e9-263b2a84a542",
+              "name": "_carry.source_ref_file_unique_id",
+              "value": "={{ $json.req.job.payload.source_ref.file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "11e107bb-d488-499a-8efe-aa40855f552c",
+              "name": "_carry.source_ref_url_id",
+              "value": "={{ $json.req.job.payload.source_ref.url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "19319bec-77cb-4e97-bccd-031e2db6c80f",
+              "name": "_carry.source_ref_message_version_id",
+              "value": "={{ $json.req.job.payload.source_ref.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2b309cee-0e0e-4830-9631-33cdd3d46d99",
+              "name": "_carry.source_ref_blob_object_id",
+              "value": "={{ $json.req.job.payload.source_ref.blob_object_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9d350604-930e-4afe-8d21-bc833fb63972",
+              "name": "_carry.source_meta",
+              "value": "={{ $json.req.job.payload.source_meta }}",
+              "type": "json"
+            },
+            {
+              "id": "a49447a2-8680-425b-8ed1-8015e0507489",
+              "name": "_carry.job_payload",
+              "value": "={{ $json.req.job.payload }}",
+              "type": "json"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c5331e22-712d-4b6c-89f0-87dc9c3d4e62",
+      "name": "Set — Carry",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3824,
+        4512
+      ],
+      "notes": "Snapshot all context from req into _carry.* namespace for preservation across I/O nodes.\nInput: req.ctx + req.job.payload fields.\nOutput: original item + _carry.* fields for restore after every I/O.\nWHY: Postgres nodes overwrite $json; carry pattern ensures ctx survives."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0e7c102f-ba74-47b5-8e1d-8e5ef72b54ac",
+              "leftValue": "={{ $json._carry.tenant_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "47113c88-2708-4f44-bfb2-797a8c5e91e9",
+              "leftValue": "={{ $json._carry.bot_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "97b24ee0-fd81-47c4-8c19-17ef7fd885c0",
+              "leftValue": "={{ $json._carry.correlation_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "51a72778-359a-4c3c-a03d-870721f920ed",
+              "leftValue": "={{ $json._carry.job_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f8e8e6ba-e31f-4562-9926-b9df274e7fb1",
+              "leftValue": "={{ $json._carry.doc_type }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "61b28974-60d9-414d-8a4d-2ccb8f57d867",
+      "name": "IF — Valid Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4064,
+        4512
+      ],
+      "notes": "Guards required fields: tenant_id, bot_id, correlation_id, job_id, doc_type.\nInput: _carry.* from previous Set.\nOutput TRUE: all required fields present → continue.\nOutput FALSE: missing field → ErrorPipe v1 400.\nWHY: Fail fast before any I/O."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0744e0bd-7fda-4700-98d4-a9363083ce7f",
+              "leftValue": "={{ ({'url': $json._carry.source_ref_url_id, 'file': $json._carry.source_ref_file_unique_id, 'image': $json._carry.source_ref_file_unique_id, 'video': $json._carry.source_ref_file_unique_id, 'voice': $json._carry.source_ref_file_unique_id, 'audio': $json._carry.source_ref_file_unique_id, 'message': $json._carry.source_ref_message_version_id})[$json._carry.doc_type] || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c59055d0-2406-4ea6-afb0-bbcbd13bd762",
+      "name": "IF — Source Ref Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4320,
+        4512
+      ],
+      "notes": "Validates that source_ref contains the required key for the given doc_type.\nurl → source_ref.url_id, file/image/video/voice/audio → source_ref.file_unique_id, message → source_ref.message_version_id.\nInput: _carry.doc_type + _carry.source_ref_*.\nOutput TRUE: correct source_ref key present.\nOutput FALSE: missing key → ErrorPipe v1 400.\nWHY: Prevents pointless DB lookup with null keys."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7b5fb4bd-9e49-455b-95c2-34613d11046a",
+              "name": "_lookup.strategy",
+              "value": "={{ ({'url':'by_url','file':'by_file','image':'by_file','video':'by_file','voice':'by_file','audio':'by_file','message':'by_message'})[$json._carry.doc_type] }}",
+              "type": "string"
+            },
+            {
+              "id": "aab4bf99-b297-495b-a868-58debf1a7961",
+              "name": "_lookup.tenant_id",
+              "value": "={{ $json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "31cc5ed8-f7ff-4995-838d-758e077824a4",
+              "name": "_lookup.url_id",
+              "value": "={{ $json._carry.source_ref_url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "501da773-366d-4094-88fc-8d940bf0f76d",
+              "name": "_lookup.file_unique_id",
+              "value": "={{ $json._carry.source_ref_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b7387941-3e71-443a-bc43-32c16989bc6a",
+              "name": "_lookup.message_version_id",
+              "value": "={{ $json._carry.source_ref_message_version_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "5204aeba-0032-4b5d-b824-b29a89bd80e2",
+      "name": "Set — Canonical Keys",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4576,
+        4512
+      ],
+      "notes": "Computes _lookup.strategy based on doc_type:\n- url → by_url (tenant_id + url_id)\n- file/image/video/voice/audio → by_file (tenant_id + file_unique_id)\n- message → by_message (tenant_id + message_version_id)\nInput: _carry.* from snapshot.\nOutput: _lookup.* fields for Switch routing.\nWHY: content.documents has FK columns url_id, file_unique_id, message_version_id."
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "id": "e3f9c259-496e-4ee6-a0c0-866bfd98a983",
+                    "leftValue": "={{ $json._lookup.strategy }}",
+                    "rightValue": "by_url",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                }
+              },
+              "renameOutput": true,
+              "outputKey": "by_url"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "id": "d4d63955-889e-4041-98ef-f8073e944953",
+                    "leftValue": "={{ $json._lookup.strategy }}",
+                    "rightValue": "by_file",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                }
+              },
+              "renameOutput": true,
+              "outputKey": "by_file"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "id": "4f006c97-f13b-47d8-b022-733297db984a",
+                    "leftValue": "={{ $json._lookup.strategy }}",
+                    "rightValue": "by_message",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and",
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                }
+              },
+              "renameOutput": true,
+              "outputKey": "by_message"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "942497b1-28b7-4c63-86c3-33cd3fde92c4",
+      "name": "Switch — Lookup Strategy",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        4816,
+        4512
+      ],
+      "notes": "Routes to the correct Postgres SELECT based on _lookup.strategy.\nOutput 0 (by_url): url documents.\nOutput 1 (by_file): file/media documents.\nOutput 2 (by_message): message documents.\nInput: _lookup.strategy string.\nWHY: n8n Postgres SELECT uses fixed column WHERE; separate nodes needed per lookup type."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $json._lookup.tenant_id }}"
+            },
+            {
+              "column": "url_id",
+              "value": "={{ $json._lookup.url_id }}"
+            },
+            {
+              "column": "doc_type",
+              "value": "url"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "tenant_id",
+            "doc_type",
+            "file_unique_id",
+            "url_id",
+            "message_version_id",
+            "status",
+            "meta",
+            "created_at",
+            "updated_at"
+          ]
+        }
+      },
+      "id": "6d304dc5-10b4-4568-a21e-326786b1f4b2",
+      "name": "PG — Select Doc by URL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5072,
+        4304
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Optional lookup: find existing content.documents row for this URL.\nWHERE tenant_id + url_id + doc_type='url'.\nalwaysOutputData=true so downstream gets an empty item if not found.\nonError=continueErrorOutput for ErrorPipe v1.\nInput: _lookup.tenant_id, _lookup.url_id.\nOutput: document row or empty item."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $json._lookup.tenant_id }}"
+            },
+            {
+              "column": "file_unique_id",
+              "value": "={{ $json._lookup.file_unique_id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "tenant_id",
+            "doc_type",
+            "file_unique_id",
+            "url_id",
+            "message_version_id",
+            "status",
+            "meta",
+            "created_at",
+            "updated_at",
+            "id"
+          ]
+        }
+      },
+      "id": "4b10b87e-dc54-4c2e-b188-0c6fd180e1b1",
+      "name": "PG — Select Doc by File",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5072,
+        4512
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Optional lookup: find existing content.documents row for this file/media.\nWHERE tenant_id + file_unique_id.\nalwaysOutputData=true for empty handling.\nonError=continueErrorOutput.\nInput: _lookup.tenant_id, _lookup.file_unique_id.\nOutput: document row or empty item.\nWHY: file_unique_id is shared across file/image/video/voice/audio doc_types per tg.files FK."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $json._lookup.tenant_id }}"
+            },
+            {
+              "column": "message_version_id",
+              "value": "={{ $json._lookup.message_version_id }}"
+            },
+            {
+              "column": "doc_type",
+              "value": "message"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "tenant_id",
+            "doc_type",
+            "file_unique_id",
+            "url_id",
+            "message_version_id",
+            "status",
+            "meta",
+            "created_at",
+            "updated_at"
+          ]
+        }
+      },
+      "id": "21bde307-035b-45a6-8698-dc3e2dcd5a63",
+      "name": "PG — Select Doc by MsgVer",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5072,
+        4704
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Optional lookup: find existing content.documents row for this message version.\nWHERE tenant_id + message_version_id + doc_type='message'.\nalwaysOutputData=true for empty handling.\nonError=continueErrorOutput.\nInput: _lookup.tenant_id, _lookup.message_version_id.\nOutput: document row or empty item."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7f324ed8-a446-4ce4-967f-d28500922f69",
+              "name": "db.doc_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "b174f37b-1e7f-4b53-8fe0-8cbc277074e9",
+              "name": "db.doc_exists",
+              "value": "={{ $json.id ? true : false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "1e964ae0-1d80-41d7-9b13-f712cf362acd",
+              "name": "db.doc_meta",
+              "value": "={{ $json.meta }}",
+              "type": "json"
+            },
+            {
+              "id": "c81e7568-454f-4e12-8c6a-379b627f974d",
+              "name": "db.doc_status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "7da4a894-85d2-4457-b46e-fc80d600ae5f",
+              "name": "_carry.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "866feb6c-0a25-4249-9fdf-7ea09a65a4f7",
+              "name": "_carry.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4e49a4a9-afdf-4bee-b770-5f14c042b906",
+              "name": "_carry.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7b5f28a8-a7f2-4d1b-8159-1f51de3e60d1",
+              "name": "_carry.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "97a1e1a0-c13a-43f2-9850-bb852b88c6c2",
+              "name": "_carry.visibility",
+              "value": "={{ $('Set — Carry').item.json._carry.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "e21390f3-26b1-4987-bf2d-c035193b51b7",
+              "name": "_carry.chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c2c17c27-5bbc-4f62-a369-8cf522e39930",
+              "name": "_carry.message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4d3c0ffc-cc03-47b3-9842-4e6fd261a75d",
+              "name": "_carry.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2c3b30f8-7344-4e24-a992-00ffcf436fb8",
+              "name": "_carry.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "bc74eb4d-d6e0-41fd-af28-c85740acd59e",
+              "name": "_carry.doc_type",
+              "value": "={{ $('Set — Carry').item.json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "f7fd06bc-81ba-4c56-8b2e-3a11e681dccd",
+              "name": "_carry.source_ref_file_unique_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5f2d6a8a-c91c-4862-a0b0-6d5729f92417",
+              "name": "_carry.source_ref_url_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a2200724-2cc6-4e3f-8a49-e46d2cc84397",
+              "name": "_carry.source_ref_message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e5964056-be76-4f1c-8dc5-069b5a44397a",
+              "name": "_carry.source_ref_blob_object_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_blob_object_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b359d6d2-4ab4-4f85-b298-e2431aeb4ccf",
+              "name": "_carry.source_meta",
+              "value": "={{ $('Set — Carry').item.json._carry.source_meta }}",
+              "type": "json"
+            },
+            {
+              "id": "f807ce98-850e-4c01-b030-2c6a6c4b7810",
+              "name": "_carry.job_payload",
+              "value": "={{ $('Set — Carry').item.json._carry.job_payload }}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7ac993c0-d045-4fee-8089-9dbcfdaf206c",
+      "name": "Set — Restore after URL Lookup",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5328,
+        4304
+      ],
+      "notes": "Restore _carry.* from Carry snapshot after PG Select URL I/O. Capture PG result under db.doc_id, db.doc_exists, db.doc_meta.\nInput: PG result row (or empty if not found).\nOutput: _carry.* + db.* namespace.\nWHY: Postgres overwrites $json; carry/restore preserves context."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe38f808-c725-4a7e-99f2-a812864d3d01",
+              "name": "db.doc_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "b7f1e28c-d35f-4450-879f-8baad11a5c62",
+              "name": "db.doc_exists",
+              "value": "={{ $json.id ? true : false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "fb2cbb58-344e-407b-8e91-fb361bf796c4",
+              "name": "db.doc_meta",
+              "value": "={{ $json.meta }}",
+              "type": "json"
+            },
+            {
+              "id": "74a2f1c2-e087-4450-bdd1-9713faca2fb8",
+              "name": "db.doc_status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "eded3a43-f36a-4478-88cf-a84c2cdcba0f",
+              "name": "_carry.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "41505919-ba0c-4738-95d7-ca5ad6007ce4",
+              "name": "_carry.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b0dac6be-9a75-443f-a1f0-3c278bd54030",
+              "name": "_carry.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "66fa80d4-0f0d-41b5-beb4-5dac660d00c5",
+              "name": "_carry.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3b69ca02-c766-4cfc-bf83-a1fe6a7d7f5e",
+              "name": "_carry.visibility",
+              "value": "={{ $('Set — Carry').item.json._carry.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "4b191c54-b711-4092-9a65-cef52f452e59",
+              "name": "_carry.chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "39717a29-3325-4d0c-bf94-9f59e01af8fc",
+              "name": "_carry.message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cd932f71-f54e-4657-9b16-a0b28135b40d",
+              "name": "_carry.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a2c5e3f9-d8c6-489b-82d2-946ff2724da3",
+              "name": "_carry.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "f4bdde0c-7d4f-4e3b-9b02-2f5c2e613215",
+              "name": "_carry.doc_type",
+              "value": "={{ $('Set — Carry').item.json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "eeb0d356-cb9a-4f37-97d7-203c9bebd09b",
+              "name": "_carry.source_ref_file_unique_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2c039496-d194-4b9c-baf1-ab98c381d46c",
+              "name": "_carry.source_ref_url_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "41e45671-74a4-4e35-a395-515c8da1249f",
+              "name": "_carry.source_ref_message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7f1d2086-f401-4472-a7c7-1b405d92b2d8",
+              "name": "_carry.source_ref_blob_object_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_blob_object_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c9dddd7f-ab7f-4e77-b9c4-0a77ce599e15",
+              "name": "_carry.source_meta",
+              "value": "={{ $('Set — Carry').item.json._carry.source_meta }}",
+              "type": "json"
+            },
+            {
+              "id": "031ab9d9-51d2-40c9-b5f8-d196b788f228",
+              "name": "_carry.job_payload",
+              "value": "={{ $('Set — Carry').item.json._carry.job_payload }}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e1dbbd97-e3b5-4db4-9cf8-af60b640a570",
+      "name": "Set — Restore after File Lookup",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5328,
+        4512
+      ],
+      "notes": "Restore _carry.* from Carry snapshot after PG Select File I/O. Capture PG result under db.doc_id, db.doc_exists, db.doc_meta.\nInput: PG result row (or empty if not found).\nOutput: _carry.* + db.* namespace.\nWHY: Postgres overwrites $json; carry/restore preserves context."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3707fec6-3e9f-47be-bf04-49130087a402",
+              "name": "db.doc_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "24c47e6f-f2e0-4e05-8962-588db76d05a2",
+              "name": "db.doc_exists",
+              "value": "={{ $json.id ? true : false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "07972493-2d54-4805-8870-43c6815f9b5a",
+              "name": "db.doc_meta",
+              "value": "={{ $json.meta }}",
+              "type": "json"
+            },
+            {
+              "id": "a008dc87-e61f-414c-b696-77fc1bd95fe6",
+              "name": "db.doc_status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "89334889-d391-4708-905a-3a127d1fe281",
+              "name": "_carry.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d5a92b58-9582-4770-9ff7-f254b150d18b",
+              "name": "_carry.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f3b41c46-a7b7-4fe6-879a-b23ba2fe8963",
+              "name": "_carry.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "544d8ba2-5dea-47b4-9be6-89ea5fbb6778",
+              "name": "_carry.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "129cb1a4-8362-4faa-97b2-854784e51abd",
+              "name": "_carry.visibility",
+              "value": "={{ $('Set — Carry').item.json._carry.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "2b6420c3-357a-4200-8622-e43a43e2c500",
+              "name": "_carry.chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a4cecf99-5968-4305-be8e-5bd30b28137a",
+              "name": "_carry.message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ce4e8d5e-c608-487c-9a7c-eee438223f0b",
+              "name": "_carry.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "beeed835-2544-4e85-952b-01ff4d34ecd0",
+              "name": "_carry.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "28e46ff2-1f4f-46a1-8dd2-10f8549d6bef",
+              "name": "_carry.doc_type",
+              "value": "={{ $('Set — Carry').item.json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "93e361a5-228e-4c3c-934f-85f0eb0d0d81",
+              "name": "_carry.source_ref_file_unique_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5c42f82a-bf18-4cfd-95c1-0219c0812830",
+              "name": "_carry.source_ref_url_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "873409a3-08c6-4a48-9217-c6b0df6ec95e",
+              "name": "_carry.source_ref_message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ea9070fa-d70d-424e-813b-a7dd2acd8ed6",
+              "name": "_carry.source_ref_blob_object_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_blob_object_id }}",
+              "type": "string"
+            },
+            {
+              "id": "033142f7-6656-4ad6-a898-5dde213ce095",
+              "name": "_carry.source_meta",
+              "value": "={{ $('Set — Carry').item.json._carry.source_meta }}",
+              "type": "json"
+            },
+            {
+              "id": "4e08ce95-e1f2-4d0b-8460-b62d2562dcb1",
+              "name": "_carry.job_payload",
+              "value": "={{ $('Set — Carry').item.json._carry.job_payload }}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d0d0e6ce-d846-44e5-be24-e6c4cdb8ce4e",
+      "name": "Set — Restore after MsgVer Lookup",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5328,
+        4704
+      ],
+      "notes": "Restore _carry.* from Carry snapshot after PG Select MsgVer I/O. Capture PG result under db.doc_id, db.doc_exists, db.doc_meta.\nInput: PG result row (or empty if not found).\nOutput: _carry.* + db.* namespace.\nWHY: Postgres overwrites $json; carry/restore preserves context."
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "59314bde-338d-4c94-b8d2-b2daed66ad28",
+      "name": "Merge — Lookup Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5568,
+        4512
+      ],
+      "notes": "Joins the 3 exclusive lookup branches (by_url, by_file, by_message) back into a single stream.\nMode=append; only 1 branch fires per execution since Switch routes exclusively.\nnumberInputs=3.\nInput: one of the 3 Restore nodes.\nOutput: single item with db.doc_id/db.doc_exists + _carry.*.\nWHY: Branch Join Policy requires Merge for 2+ incoming connections."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9f527222-8372-4e78-acf1-1d38bb2a0622",
+              "leftValue": "={{ $json.db.doc_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b569d655-2fb5-49a4-b180-ddc65c3b3011",
+      "name": "IF — Doc Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5824,
+        4512
+      ],
+      "notes": "Checks if document was found in the optional lookup.\nInput: db.doc_id from Merge.\nOutput TRUE: document exists → use existing id.\nOutput FALSE: document not found → insert new.\nWHY: Idempotent; avoids duplicate inserts for same source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "17ccb999-cf13-47bc-8dc0-52298364fe9f",
+              "name": "doc.document_id",
+              "value": "={{ $json.db.doc_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4636ab28-73d8-4397-94ab-270808f5e487",
+              "name": "doc.is_new",
+              "value": "false",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "a8b3dfc0-b9b0-48e5-8753-e045ec1c6463",
+      "name": "Set — Use Existing Doc",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6064,
+        4352
+      ],
+      "notes": "Passes through existing document_id for downstream use.\nInput: db.doc_id from lookup.\nOutput: doc.document_id + doc.is_new=false.\nWHY: Reuse existing document record; may still enqueue jobs if pipeline flags not set."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json._carry.tenant_id }}",
+            "doc_type": "={{ $json._carry.doc_type }}",
+            "visibility": "={{ $json._carry.visibility || 'group' }}",
+            "chat_id": "={{ $json._carry.chat_id || null }}",
+            "message_version_id": "={{ $json._carry.doc_type === 'message' ? $json._carry.source_ref_message_version_id : ($json._carry.message_version_id || null) }}",
+            "file_unique_id": "={{ ['file','image','video','voice','audio'].includes($json._carry.doc_type) ? $json._carry.source_ref_file_unique_id : null }}",
+            "url_id": "={{ $json._carry.doc_type === 'url' ? $json._carry.source_ref_url_id : null }}",
+            "status": "pending",
+            "meta": "={{ {} }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "doc_type",
+              "displayName": "doc_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "url",
+                  "value": "url"
+                },
+                {
+                  "name": "file",
+                  "value": "file"
+                },
+                {
+                  "name": "message",
+                  "value": "message"
+                }
+              ]
+            },
+            {
+              "id": "visibility",
+              "displayName": "visibility",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "admin_only",
+                  "value": "admin_only"
+                },
+                {
+                  "name": "dm_private",
+                  "value": "dm_private"
+                },
+                {
+                  "name": "group",
+                  "value": "group"
+                }
+              ]
+            },
+            {
+              "id": "dm_owner_user_id",
+              "displayName": "dm_owner_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_version_id",
+              "displayName": "message_version_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "file_unique_id",
+              "displayName": "file_unique_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url_id",
+              "displayName": "url_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_created_at",
+              "displayName": "source_created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "language",
+              "displayName": "language",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "text_sha256",
+              "displayName": "text_sha256",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token_count",
+              "displayName": "token_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "failed",
+                  "value": "failed"
+                },
+                {
+                  "name": "succeeded",
+                  "value": "succeeded"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ]
+            },
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "meta",
+              "displayName": "meta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d3579985-e6b1-46ad-af85-7bf241ef7f32",
+      "name": "PG — Insert Document",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        6064,
+        4656
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Inserts new content.documents row for a source that has no existing document.\nSets tenant_id, doc_type, visibility, chat_id, source FK columns (url_id/file_unique_id/message_version_id) based on doc_type.\nstatus='pending' (content.extract_status default).\nmeta starts as empty object.\nonError=continueErrorOutput → ErrorPipe.\nInput: _carry.* context.\nOutput: inserted row with id."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e280142b-7dd9-4f2d-bddf-0ea58f977262",
+              "name": "doc.document_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f3847f97-99cb-4540-938c-d7c7a376d87b",
+              "name": "doc.is_new",
+              "value": "true",
+              "type": "boolean"
+            },
+            {
+              "id": "053ea86b-1bb3-4b4c-a555-1df033b4305d",
+              "name": "_carry.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "38473a23-33d0-44a1-a61e-0f2fa4270864",
+              "name": "_carry.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ec1cb433-4d18-4124-bf77-ff5c75ac022e",
+              "name": "_carry.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5f09561d-a835-4f86-bf85-dd0fd07c8f1a",
+              "name": "_carry.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "833690c0-c6f7-46dd-9e5d-f89126144dec",
+              "name": "_carry.visibility",
+              "value": "={{ $('Set — Carry').item.json._carry.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "f57eda00-8392-4452-9220-e5c2de3e9c5e",
+              "name": "_carry.chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "fb15b61d-8c50-4a65-81a0-a532404f17e4",
+              "name": "_carry.message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d56d6991-f2f4-4485-8f20-4069d74a29ea",
+              "name": "_carry.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6453cc54-3263-49d5-a097-7b0d8f3c5621",
+              "name": "_carry.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "3f9fdb23-436d-4367-a113-2b7d41c6be06",
+              "name": "_carry.doc_type",
+              "value": "={{ $('Set — Carry').item.json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "39071a7a-148a-4e2b-a08e-93ffcc7721d5",
+              "name": "_carry.source_ref_file_unique_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3176f715-b48d-4805-a52e-819528f7753b",
+              "name": "_carry.source_ref_url_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c1506485-f17e-422f-97fd-b4372074c52d",
+              "name": "_carry.source_ref_message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b4241418-cb41-49d4-b307-8c8fcc8526e0",
+              "name": "_carry.source_ref_blob_object_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_blob_object_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4bd98d7a-b13a-4dec-8fb2-36cc2019e7e3",
+              "name": "_carry.source_meta",
+              "value": "={{ $('Set — Carry').item.json._carry.source_meta }}",
+              "type": "json"
+            },
+            {
+              "id": "754902f7-a564-429c-8c51-58a8cddfa9d4",
+              "name": "_carry.job_payload",
+              "value": "={{ $('Set — Carry').item.json._carry.job_payload }}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9ef47bd1-6cea-497f-be24-88b38ae37d7e",
+      "name": "Set — Restore after Insert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6320,
+        4656
+      ],
+      "notes": "Restores _carry.* after PG Insert Document. Captures new document_id under doc.document_id.\nInput: PG insert result (has id).\nOutput: _carry.* + doc.document_id + doc.is_new=true.\nWHY: Carry/Restore mandatory after I/O."
+    },
+    {
+      "parameters": {},
+      "id": "d9000bc3-ea7e-4bef-b607-2c1c16d30605",
+      "name": "Merge — Doc Chosen",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        6576,
+        4512
+      ],
+      "notes": "Rejoins the 'existing doc' and 'new doc' branches after IF — Doc Exists?.\nMode=append; only 1 branch fires (exclusive join after IF).\nInput 0: Set — Use Existing Doc.\nInput 1: Set — Restore after Insert.\nOutput: single item with doc.document_id + _carry.*.\nWHY: Branch Join Policy — exclusive IF branches must rejoin via Merge."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "200809db-38ef-431e-b921-4546c52c80a4",
+              "leftValue": "={{ ($json.db.doc_meta?.pipeline?.extract_enqueued === true) || ($json.db.doc_meta?.pipeline?.describe_enqueued === true) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c2d4962a-7df2-4185-9204-50459f1d9397",
+      "name": "IF — Already Enqueued?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        6816,
+        4512
+      ],
+      "notes": "Idempotency check: if document already has pipeline.extract_enqueued or pipeline.describe_enqueued flag in meta, skip re-enqueue.\nInput: db.doc_meta from lookup (or empty for new docs).\nOutput TRUE: already enqueued → skip to SuccessEnvelope with empty enqueued_jobs.\nOutput FALSE: not yet enqueued → proceed to job insertion.\nWHY: Prevents duplicate downstream jobs on re-runs of build_document."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e2f72d0-737a-42ba-b60a-e648883cb855",
+              "name": "data.document_id",
+              "value": "={{ $json.doc.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3be8c389-01bb-430d-a9df-1f5424f68c8e",
+              "name": "data.document_version_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "0ee2c94c-5057-45b9-b666-bfd83ecaaff4",
+              "name": "data.doc_type",
+              "value": "={{ $json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "3d6b55c3-1bc3-4387-bce6-d86418c4de63",
+              "name": "data.enqueued_jobs",
+              "value": "={{ [] }}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2120700d-3008-421a-892c-2528ef8156cd",
+      "name": "Set — Already Enqueued Envelope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7904,
+        4096
+      ],
+      "notes": "SuccessEnvelope for idempotent re-run: document exists and jobs were already enqueued previously.\nenqueued_jobs is empty array.\nInput: doc.document_id + _carry.doc_type.\nOutput: data.* envelope.\nWHY: Idempotency — no duplicate jobs."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ec9d217a-d41b-4834-ab1a-5d30db18d5f9",
+              "leftValue": "={{ $json._carry.doc_type }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b47c38ba-b392-481e-8387-b1311a815941",
+              "leftValue": "={{ $json._carry.doc_type }}",
+              "rightValue": "video",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "cce7df00-83fc-40d4-bbd1-80f114292cec",
+      "name": "IF — Media Describe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        7072,
+        4608
+      ],
+      "notes": "Routes to describe_media job for image/video, or extract_text for all other doc_types.\nInput: _carry.doc_type.\nOutput TRUE (any match): image or video → describe_media.\nOutput FALSE: url/file/message/voice/audio → extract_text.\nWHY: Different downstream workers handle text extraction vs media description."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "69e6fb28-6961-414c-84d5-b51c2305a290",
+              "name": "job_insert.tenant_id",
+              "value": "={{ $json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6d624cdf-0b35-4f1e-be1f-a7a50fdf1131",
+              "name": "job_insert.job_type",
+              "value": "extract_text",
+              "type": "string"
+            },
+            {
+              "id": "b06479d3-6192-4baf-8342-a9f12663ea9a",
+              "name": "job_insert.correlation_id",
+              "value": "={{ $json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ffcdc733-5c39-41fb-88e8-3ee39795d939",
+              "name": "job_insert.payload.tenant_id",
+              "value": "={{ $json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b4551f34-9af9-4c25-9c36-333a32c8a73c",
+              "name": "job_insert.payload.bot_id",
+              "value": "={{ $json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "8890d7b7-62ad-41a9-b396-fabb52a658eb",
+              "name": "job_insert.payload.correlation_id",
+              "value": "={{ $json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5099f0a5-abd5-4075-88a4-23b8a695cf3c",
+              "name": "job_insert.payload.trace_id",
+              "value": "={{ $json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "eb7dab9e-877d-4b34-a1f4-d76c6c7a429b",
+              "name": "job_insert.payload.visibility",
+              "value": "={{ $json._carry.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "1d0a3bff-444e-4c5b-9a4b-270033c03d37",
+              "name": "job_insert.payload.chat_id",
+              "value": "={{ $json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a619b4cc-32e4-4369-9ab7-af741e3ac016",
+              "name": "job_insert.payload.document_id",
+              "value": "={{ $json.doc.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c37970df-ec69-43ce-ba01-201a20281eb6",
+              "name": "job_insert.payload.doc_type",
+              "value": "={{ $json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "be2722d7-1920-4b8e-89ea-32cc69db9a10",
+              "name": "job_insert.payload.source_ref.file_unique_id",
+              "value": "={{ $json._carry.source_ref_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ef1a384a-7bbc-4fd2-b499-e5c6d09acecd",
+              "name": "job_insert.payload.source_ref.url_id",
+              "value": "={{ $json._carry.source_ref_url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cc8a061f-d46c-4659-91c9-7cdf8d7b2870",
+              "name": "job_insert.payload.source_ref.message_version_id",
+              "value": "={{ $json._carry.source_ref_message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "bd3ccbde-e14c-4104-88e7-406b26c5c4f6",
+              "name": "job_insert.payload.source_ref.blob_object_id",
+              "value": "={{ $json._carry.source_ref_blob_object_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "e72aeb90-088a-45ec-bf59-ace29899bf0e",
+      "name": "Set — Prepare Extract Job",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7328,
+        4704
+      ],
+      "notes": "Builds the payload for an extract_text job using Set + dotNotation (no object literals).\nIncludes all context (tenant, bot, correlation, visibility, chat, document_id) plus source_ref pointers.\nInput: _carry.* + doc.document_id.\nOutput: job_insert.* namespace ready for PG insert.\nWHY: NoCode-first; dotNotation builds nested objects without Code node."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f571d8b8-497a-45d5-a70a-c1ed203d61c5",
+              "name": "job_insert.tenant_id",
+              "value": "={{ $json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "17401668-0d8e-45ee-9724-c59be2933c85",
+              "name": "job_insert.job_type",
+              "value": "describe_media",
+              "type": "string"
+            },
+            {
+              "id": "289c019a-5d48-478e-8edb-9abae2a896e6",
+              "name": "job_insert.correlation_id",
+              "value": "={{ $json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b5ad924d-cb6c-4b79-8899-b2c61531d948",
+              "name": "job_insert.payload.tenant_id",
+              "value": "={{ $json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a5b11815-078a-4aee-98ec-e316cb94bf61",
+              "name": "job_insert.payload.bot_id",
+              "value": "={{ $json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3c45e2c2-d5ce-4039-8901-7c438b2874d4",
+              "name": "job_insert.payload.correlation_id",
+              "value": "={{ $json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0d7a3314-8116-4dfa-bcae-a483f658d1d1",
+              "name": "job_insert.payload.trace_id",
+              "value": "={{ $json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0fd51074-e7a4-43b5-8c54-313b46e1870e",
+              "name": "job_insert.payload.visibility",
+              "value": "={{ $json._carry.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "b6c2d67d-f680-4a40-b171-3aaa9104a30f",
+              "name": "job_insert.payload.chat_id",
+              "value": "={{ $json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "26f50d5b-85dc-4782-8df1-b0ab7cbd1dfc",
+              "name": "job_insert.payload.document_id",
+              "value": "={{ $json.doc.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ef7e30e2-e02f-4bb8-8b2b-b39c6ae44ddf",
+              "name": "job_insert.payload.doc_type",
+              "value": "={{ $json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "0e5febaf-f5fb-4a5d-ba8d-29a47de4f132",
+              "name": "job_insert.payload.source_ref.file_unique_id",
+              "value": "={{ $json._carry.source_ref_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3fdbe77d-0222-4ff1-b0f4-aa75b6881dc9",
+              "name": "job_insert.payload.source_ref.blob_object_id",
+              "value": "={{ $json._carry.source_ref_blob_object_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "52a3948b-0ea5-47d7-aa2c-aba3b2b3537a",
+      "name": "Set — Prepare Describe Job",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7328,
+        4464
+      ],
+      "notes": "Builds the payload for a describe_media job (image/video) using Set + dotNotation.\nInput: _carry.* + doc.document_id.\nOutput: job_insert.* namespace.\nWHY: Same pattern as extract; different job_type for media description worker."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json.job_insert.tenant_id }}",
+            "job_type": "={{ $json.job_insert.job_type }}",
+            "correlation_id": "={{ $json.job_insert.correlation_id }}",
+            "payload": "={{ $json.job_insert.payload }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "telegram_update",
+                  "value": "telegram_update"
+                },
+                {
+                  "name": "test_job",
+                  "value": "test_job"
+                },
+                {
+                  "name": "reembed_model_migration",
+                  "value": "reembed_model_migration"
+                },
+                {
+                  "name": "answer_query",
+                  "value": "answer_query"
+                },
+                {
+                  "name": "embed_chunks",
+                  "value": "embed_chunks"
+                },
+                {
+                  "name": "chunk_document",
+                  "value": "chunk_document"
+                },
+                {
+                  "name": "build_document",
+                  "value": "build_document"
+                },
+                {
+                  "name": "extract_text",
+                  "value": "extract_text"
+                },
+                {
+                  "name": "fetch_url",
+                  "value": "fetch_url"
+                },
+                {
+                  "name": "fetch_tg_file",
+                  "value": "fetch_tg_file"
+                },
+                {
+                  "name": "upsert_membership",
+                  "value": "upsert_membership"
+                },
+                {
+                  "name": "normalize_update",
+                  "value": "normalize_update"
+                }
+              ]
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "dead",
+                  "value": "dead"
+                },
+                {
+                  "name": "failed",
+                  "value": "failed"
+                },
+                {
+                  "name": "succeeded",
+                  "value": "succeeded"
+                },
+                {
+                  "name": "running",
+                  "value": "running"
+                },
+                {
+                  "name": "queued",
+                  "value": "queued"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "next_run_at",
+              "displayName": "next_run_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "locked_at",
+              "displayName": "locked_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "locked_by",
+              "displayName": "locked_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "correlation_id",
+              "displayName": "correlation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "2b457f66-9fc0-4e4c-9210-f0a0d741d567",
+      "name": "PG — Insert Extract Job",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        7568,
+        4704
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Inserts ops.jobs row for extract_text.\ntenant_id + job_type + correlation_id + payload (jsonb object via dotNotation).\nstatus defaults to 'queued', priority defaults to 100.\nonError=continueErrorOutput → ErrorPipe.\nInput: job_insert.* from Prepare.\nOutput: inserted row with id (new job_id)."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json.job_insert.tenant_id }}",
+            "job_type": "={{ $json.job_insert.job_type }}",
+            "correlation_id": "={{ $json.job_insert.correlation_id }}",
+            "payload": "={{ $json.job_insert.payload }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "telegram_update",
+                  "value": "telegram_update"
+                },
+                {
+                  "name": "test_job",
+                  "value": "test_job"
+                },
+                {
+                  "name": "reembed_model_migration",
+                  "value": "reembed_model_migration"
+                },
+                {
+                  "name": "answer_query",
+                  "value": "answer_query"
+                },
+                {
+                  "name": "embed_chunks",
+                  "value": "embed_chunks"
+                },
+                {
+                  "name": "chunk_document",
+                  "value": "chunk_document"
+                },
+                {
+                  "name": "build_document",
+                  "value": "build_document"
+                },
+                {
+                  "name": "extract_text",
+                  "value": "extract_text"
+                },
+                {
+                  "name": "fetch_url",
+                  "value": "fetch_url"
+                },
+                {
+                  "name": "fetch_tg_file",
+                  "value": "fetch_tg_file"
+                },
+                {
+                  "name": "upsert_membership",
+                  "value": "upsert_membership"
+                },
+                {
+                  "name": "normalize_update",
+                  "value": "normalize_update"
+                }
+              ]
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "dead",
+                  "value": "dead"
+                },
+                {
+                  "name": "failed",
+                  "value": "failed"
+                },
+                {
+                  "name": "succeeded",
+                  "value": "succeeded"
+                },
+                {
+                  "name": "running",
+                  "value": "running"
+                },
+                {
+                  "name": "queued",
+                  "value": "queued"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "next_run_at",
+              "displayName": "next_run_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "locked_at",
+              "displayName": "locked_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "locked_by",
+              "displayName": "locked_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "correlation_id",
+              "displayName": "correlation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_error",
+              "displayName": "last_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "34da49d9-6259-4b4c-ac60-f78c53e16932",
+      "name": "PG — Insert Describe Job",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        7568,
+        4464
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Inserts ops.jobs row for describe_media.\nSame structure as extract job insert but job_type='describe_media'.\nonError=continueErrorOutput → ErrorPipe.\nInput: job_insert.* from Prepare Describe.\nOutput: inserted row with id (new job_id)."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a78db98-e038-4d2b-8875-3a1bd958f4f2",
+              "name": "db.new_job_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "087cb72d-ff20-481b-92d8-5434dd4ab8b5",
+              "name": "db.new_job_type",
+              "value": "={{ $('Set — Carry').item.json._carry.doc_type === 'image' || $('Set — Carry').item.json._carry.doc_type === 'video' ? 'describe_media' : 'extract_text' }}",
+              "type": "string"
+            },
+            {
+              "id": "07a17628-197c-443b-ac90-f6de9e65ebc5",
+              "name": "doc.document_id",
+              "value": "={{ $('Merge — Doc Chosen').item.json.doc.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "73f224a2-276e-48ca-81c9-7fde45cadbc8",
+              "name": "doc.is_new",
+              "value": "={{ $('Merge — Doc Chosen').item.json.doc.is_new }}",
+              "type": "boolean"
+            },
+            {
+              "id": "371b7e09-bf99-46a7-9a93-bb0b991619ca",
+              "name": "_carry.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0e40d4cc-ec0f-4a55-a16d-cde92b19f196",
+              "name": "_carry.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d0054a9b-9ea9-4706-96ce-6e891ef393de",
+              "name": "_carry.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "26c83361-c647-4290-9862-97c2da97effc",
+              "name": "_carry.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1c2e536a-5ee4-424e-8c24-46c8f39c169a",
+              "name": "_carry.visibility",
+              "value": "={{ $('Set — Carry').item.json._carry.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "4ed9bd87-bb7f-4bde-81bb-480e8357edd0",
+              "name": "_carry.chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "999cc06f-b548-442b-93cb-95c58183002c",
+              "name": "_carry.message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "85513861-e15f-448b-a3fd-9ff67c5733a8",
+              "name": "_carry.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "10a31b06-4103-4c92-bf42-f6fd8d5aa95e",
+              "name": "_carry.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "84b6f234-d526-4165-9c8b-33e444c5678f",
+              "name": "_carry.doc_type",
+              "value": "={{ $('Set — Carry').item.json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "bdc41ddf-af4a-4c84-bf02-e12701b22639",
+              "name": "_carry.source_ref_file_unique_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7e9fb7ca-a4bd-4ebf-a6aa-4ebfd802a94b",
+              "name": "_carry.source_ref_url_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "0257f108-6203-417c-9fd5-5c6362cf8ef9",
+              "name": "_carry.source_ref_message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "93b7796c-5657-4df6-a2d0-e0b84eee3f16",
+              "name": "_carry.source_ref_blob_object_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_blob_object_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3ebd109a-692e-455d-989a-395333deb6b1",
+              "name": "_carry.source_meta",
+              "value": "={{ $('Set — Carry').item.json._carry.source_meta }}",
+              "type": "json"
+            },
+            {
+              "id": "4f2d40b7-050d-43e2-94aa-5762c6c82458",
+              "name": "_carry.job_payload",
+              "value": "={{ $('Set — Carry').item.json._carry.job_payload }}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d14ea78d-1528-4faf-8607-9e62edfcc38b",
+      "name": "Set — Restore after Extract Job",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7824,
+        4704
+      ],
+      "notes": "Restores _carry.* after PG Insert Extract Job. Captures new job id under db.new_job_id.\nInput: PG insert result.\nOutput: _carry.* + db.new_job_id + doc.document_id.\nWHY: Carry/Restore mandatory after I/O."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "892fe083-670b-4911-87fc-e4ab27dcc78c",
+              "name": "db.new_job_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "3bd77026-3ed8-4c68-89df-279e0c5ddbf4",
+              "name": "db.new_job_type",
+              "value": "={{ $('Set — Carry').item.json._carry.doc_type === 'image' || $('Set — Carry').item.json._carry.doc_type === 'video' ? 'describe_media' : 'extract_text' }}",
+              "type": "string"
+            },
+            {
+              "id": "4d231d75-24e7-4493-aebd-ba86a285242b",
+              "name": "doc.document_id",
+              "value": "={{ $('Merge — Doc Chosen').item.json.doc.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "dabb9369-09ee-449d-8e0e-d1fba87fab8a",
+              "name": "doc.is_new",
+              "value": "={{ $('Merge — Doc Chosen').item.json.doc.is_new }}",
+              "type": "boolean"
+            },
+            {
+              "id": "0eb4afe0-1fbe-4b97-8b3e-3ac94de9646b",
+              "name": "_carry.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "57717a26-a35c-4a2b-b009-40ea49390a6b",
+              "name": "_carry.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5f0b9235-36db-4219-ba9f-d4db4803d05a",
+              "name": "_carry.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4e1cf366-7e99-4e96-bda3-d0feaae1e85a",
+              "name": "_carry.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6c9c015-19dc-49ea-bb91-6492056e7265",
+              "name": "_carry.visibility",
+              "value": "={{ $('Set — Carry').item.json._carry.visibility }}",
+              "type": "string"
+            },
+            {
+              "id": "4af30570-d360-4957-8578-36b46eb880e2",
+              "name": "_carry.chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9118c771-f8b8-4241-ad0d-0c79e50fef6a",
+              "name": "_carry.message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "768ba4ce-b564-436c-930e-4bce32915fd8",
+              "name": "_carry.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d0d39794-3ae9-4887-a91a-313fa83e2ef7",
+              "name": "_carry.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "a4da436a-e4b9-4949-a7bd-f234c9138bc9",
+              "name": "_carry.doc_type",
+              "value": "={{ $('Set — Carry').item.json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "9cb4b77f-6062-4fbc-9cb2-c0e9d7fb0491",
+              "name": "_carry.source_ref_file_unique_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3a4937c9-1647-45c1-acba-6f59ea1c0c0a",
+              "name": "_carry.source_ref_url_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "cd2bfb25-ad18-4b44-bd0a-e66b6a4320fb",
+              "name": "_carry.source_ref_message_version_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_message_version_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c602abbf-f62f-4287-b2b0-81fd08e2f287",
+              "name": "_carry.source_ref_blob_object_id",
+              "value": "={{ $('Set — Carry').item.json._carry.source_ref_blob_object_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e1ee1cc7-e6d0-42fd-b538-e8ecc4c221f3",
+              "name": "_carry.source_meta",
+              "value": "={{ $('Set — Carry').item.json._carry.source_meta }}",
+              "type": "json"
+            },
+            {
+              "id": "610e0314-6cfc-471d-ae49-b27b35a98e93",
+              "name": "_carry.job_payload",
+              "value": "={{ $('Set — Carry').item.json._carry.job_payload }}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "135bbb2b-5239-497c-92fd-1ee5b2788c26",
+      "name": "Set — Restore after Describe Job",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7824,
+        4464
+      ],
+      "notes": "Restores _carry.* after PG Insert Describe Job. Captures new job id under db.new_job_id.\nInput: PG insert result.\nOutput: _carry.* + db.new_job_id + doc.document_id.\nWHY: Carry/Restore mandatory after I/O."
+    },
+    {
+      "parameters": {},
+      "id": "3026a228-8f38-4d07-aea4-a4f91ba6524e",
+      "name": "Merge — Job Inserted",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        8064,
+        4608
+      ],
+      "notes": "Rejoins extract_text and describe_media branches after IF — Media Describe?.\nMode=append; only 1 branch fires (exclusive join).\nInput 0: Restore after Describe Job.\nInput 1: Restore after Extract Job.\nOutput: single item with db.new_job_id + doc.document_id + _carry.*.\nWHY: Branch Join Policy."
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "meta": "={{ Object.assign({}, $json.db.doc_meta || {}, {extract_enqueued: $json.db.new_job_type === 'extract_text', describe_enqueued: $json.db.new_job_type === 'describe_media', job_id: Number($json.db.new_job_id), job_type: $json.db.new_job_type}) }}",
+            "id": "={{ $json.doc.document_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "doc_type",
+              "displayName": "doc_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "url",
+                  "value": "url"
+                },
+                {
+                  "name": "file",
+                  "value": "file"
+                },
+                {
+                  "name": "message",
+                  "value": "message"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "visibility",
+              "displayName": "visibility",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "admin_only",
+                  "value": "admin_only"
+                },
+                {
+                  "name": "dm_private",
+                  "value": "dm_private"
+                },
+                {
+                  "name": "group",
+                  "value": "group"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "dm_owner_user_id",
+              "displayName": "dm_owner_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message_version_id",
+              "displayName": "message_version_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "file_unique_id",
+              "displayName": "file_unique_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "url_id",
+              "displayName": "url_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "source_created_at",
+              "displayName": "source_created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "language",
+              "displayName": "language",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "text_sha256",
+              "displayName": "text_sha256",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "token_count",
+              "displayName": "token_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "failed",
+                  "value": "failed"
+                },
+                {
+                  "name": "succeeded",
+                  "value": "succeeded"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "meta",
+              "displayName": "meta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "eadc0c5a-6624-4e72-8c5f-c66cddcbc670",
+      "name": "PG — Update Doc Meta Pipeline",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        8320,
+        4608
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Updates content.documents.meta with pipeline flags to track enqueued downstream job.\nSets meta.pipeline.extract_enqueued / describe_enqueued + job_id + job_type.\nUses Object.assign to preserve existing meta keys.\nWHERE id = doc.document_id.\nonError=continueErrorOutput → ErrorPipe.\nInput: doc.document_id + db.new_job_id + db.new_job_type.\nOutput: updated row.\nWHY: Idempotency; prevents duplicate enqueue on re-run."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "03af2f01-307c-4bf7-8b4a-d725474a34af",
+              "name": "db.new_job_id",
+              "value": "={{ $('Merge — Job Inserted').item.json.db.new_job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b96657bf-59cf-4063-b382-b638fd80175b",
+              "name": "db.new_job_type",
+              "value": "={{ $('Merge — Job Inserted').item.json.db.new_job_type }}",
+              "type": "string"
+            },
+            {
+              "id": "5da82894-a33f-4888-9bb0-c90f994732b4",
+              "name": "doc.document_id",
+              "value": "={{ $('Merge — Job Inserted').item.json.doc.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "28dc26d7-126c-425f-8321-bcd0b93bdc94",
+              "name": "_carry.doc_type",
+              "value": "={{ $('Set — Carry').item.json._carry.doc_type }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bdbe2bb9-1b29-4fe2-b978-ef2c0dfde753",
+      "name": "Set — Restore after Meta Update",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8576,
+        4608
+      ],
+      "notes": "Restores context after PG Update Meta Pipeline.\nInput: PG update result.\nOutput: db.new_job_id + doc.document_id + _carry.doc_type for SuccessEnvelope.\nWHY: Carry/Restore mandatory after I/O."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "98e6a707-1b01-4653-be0e-de8277caa6e1",
+              "name": "data.document_id",
+              "value": "={{ $json.doc.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3919b870-52fb-4a65-ba31-c66aba185700",
+              "name": "data.document_version_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "f541a52c-ce14-4ce8-b88b-94dce34cbd85",
+              "name": "data.doc_type",
+              "value": "={{ $json._carry.doc_type }}",
+              "type": "string"
+            },
+            {
+              "id": "689c08ad-df7c-42c4-8432-5806ab10fa35",
+              "name": "data.enqueued_jobs",
+              "value": "={{ [{job_type: $json.db.new_job_type, job_id: Number($json.db.new_job_id)}] }}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6c03646b-37ec-427b-9e2d-7b7436f2dc04",
+      "name": "Set — SuccessEnvelope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8784,
+        4736
+      ],
+      "notes": "Builds the WF40 output contract: data.document_id, data.document_version_id (null — no versions table), data.doc_type, data.enqueued_jobs array.\nInput: doc.document_id + db.new_job_id + db.new_job_type + _carry.doc_type.\nOutput: {data: ...} envelope returned to caller (WF90).\nWHY: Output contract compliance."
+    },
+    {
+      "parameters": {},
+      "id": "2dc5e0eb-f07c-48e2-809c-241120097c3c",
+      "name": "Merge — Final Output",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        9168,
+        4736
+      ],
+      "notes": "Rejoins normal SuccessEnvelope path and already-enqueued skip path.\nMode=append; only 1 branch fires.\nInput 0: Set — Already Enqueued Envelope.\nInput 1: Set — SuccessEnvelope.\nOutput: final envelope returned to caller.\nWHY: Branch Join Policy for IF — Already Enqueued?."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fb4210c7-0004-4553-b8ad-2b6be3f6571e",
+              "name": "_err.node",
+              "value": "IF — Valid Input",
+              "type": "string"
+            },
+            {
+              "id": "785fc521-157c-49d6-861e-581f9d95053b",
+              "name": "_err.operation",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "df8eb84e-7798-44c4-8442-efe91e1219ce",
+              "name": "_err.table",
+              "value": "n/a",
+              "type": "string"
+            },
+            {
+              "id": "321ac3be-8810-47db-8bd7-b11b8999490e",
+              "name": "_err.http_status",
+              "value": "400",
+              "type": "number"
+            },
+            {
+              "id": "21d442a3-dc95-48dc-8ff1-f3f622f79d70",
+              "name": "_err.message",
+              "value": "WF40: missing required fields (tenant_id/bot_id/correlation_id/job_id/doc_type)",
+              "type": "string"
+            },
+            {
+              "id": "d0be384a-5883-4173-ad95-08b87dba0882",
+              "name": "_err.tenant_id",
+              "value": "={{ $json._carry.tenant_id || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "2453b5a3-b898-4ffa-9c9e-d0cb10e65a1d",
+              "name": "_err.correlation_id",
+              "value": "={{ $json._carry.correlation_id || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "38ea4c82-6c72-4f0e-bd22-4c0a2b127afe",
+              "name": "_err.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "6dd87475-e684-4d61-ab2c-8cfcd47ddc67",
+              "name": "_err.job_id",
+              "value": "={{ $json._carry.job_id || 'unknown' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "bda25d26-7ecd-416d-90bc-2670f0895edb",
+      "name": "ERR — Source Valid Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4560,
+        5248
+      ],
+      "notes": "Error source for missing required ctx fields.\nInput: FALSE output from IF — Valid Input.\nOutput: _err.* for ErrorPipe v1.\nWHY: 400 controlled error for bad input."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11ecc9c3-8dac-440e-96f3-2fcea7918184",
+              "name": "_err.node",
+              "value": "IF — Source Ref Valid",
+              "type": "string"
+            },
+            {
+              "id": "758ba9bb-995f-45c7-86c2-3e2971368272",
+              "name": "_err.operation",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "cf2a963b-d69a-4536-a722-5abcc6a47040",
+              "name": "_err.table",
+              "value": "n/a",
+              "type": "string"
+            },
+            {
+              "id": "141a0a67-05f5-40d2-8d42-6845a75a3f8e",
+              "name": "_err.http_status",
+              "value": "400",
+              "type": "number"
+            },
+            {
+              "id": "ef7cab31-901d-4264-adc7-920f25074604",
+              "name": "_err.message",
+              "value": "WF40: source_ref missing required key for doc_type",
+              "type": "string"
+            },
+            {
+              "id": "1a2f95ae-4421-4d7f-85a6-0487b24a88d5",
+              "name": "_err.tenant_id",
+              "value": "={{ $json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a96f5b2d-602b-41f9-9b88-d242a22f2953",
+              "name": "_err.correlation_id",
+              "value": "={{ $json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "356fea49-a2f2-4836-89de-bad470d5a1dc",
+              "name": "_err.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "351f685a-7dca-4b04-a668-0a9861597471",
+              "name": "_err.job_id",
+              "value": "={{ $json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "418e2f3f-9a09-4124-b8f4-80c8920f7014",
+      "name": "ERR — Source Ref Guard",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4672,
+        4944
+      ],
+      "notes": "Error source for source_ref key mismatch.\nInput: FALSE output from IF — Source Ref Valid.\nOutput: _err.* for ErrorPipe v1.\nWHY: 400 controlled error when source_ref doesn't match doc_type."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0fe17740-8533-4b8c-a4fe-ef3863289970",
+              "name": "_err.node",
+              "value": "PG — Select Doc by URL",
+              "type": "string"
+            },
+            {
+              "id": "0e6edab6-d92f-43cc-b729-465fda02ee29",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "26a6853b-9021-4199-9dc4-20aa5fbcb7d3",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "c770d917-8c02-444a-8be2-24abc4ae066a",
+              "name": "_err.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7c2d819a-8bfa-4b95-8cc1-a69ba4a57b0f",
+              "name": "_err.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "55c03e94-b4f8-4d4e-9963-6152f38389d4",
+              "name": "_err.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "53e1f6ad-238c-4f86-aafc-1932c4e02079",
+              "name": "_err.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "cd2f8553-8dc2-4b49-8de7-13609a032297",
+      "name": "ERR — Source Select URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5776,
+        4800
+      ],
+      "notes": "Tags error from PG — Select Doc by URL with source metadata (_err.node/operation/table/tenant/correlation).\nincludeOtherFields=true to preserve the original error message/details from n8n.\nInput: error output from PG — Select Doc by URL.\nOutput: tagged error item for ErrorPipe.\nWHY: ErrorPipe v1 contract requires structured _err.* fields."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26edf3d1-b69f-4a92-89bd-7efe66193591",
+              "name": "_err.node",
+              "value": "PG — Select Doc by File",
+              "type": "string"
+            },
+            {
+              "id": "eced9695-8cd5-42ea-8285-a22e21fd36ab",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "4ca4b929-685c-442a-a109-01217b2983d0",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "feaae742-9601-46b8-bcda-3b22f9b0afce",
+              "name": "_err.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b2d5bbd9-e866-4b5e-a2a2-006f062719e5",
+              "name": "_err.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ccd7acad-6809-4f69-884d-92e45540b650",
+              "name": "_err.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "a0b614c2-372c-4a17-b1ff-ec9a24cc8015",
+              "name": "_err.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "952d3ec4-9049-464a-a931-c747ab2efcdc",
+      "name": "ERR — Source Select File",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5712,
+        5424
+      ],
+      "notes": "Tags error from PG — Select Doc by File with source metadata (_err.node/operation/table/tenant/correlation).\nincludeOtherFields=true to preserve the original error message/details from n8n.\nInput: error output from PG — Select Doc by File.\nOutput: tagged error item for ErrorPipe.\nWHY: ErrorPipe v1 contract requires structured _err.* fields."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aa025fa2-eaeb-44fa-bc65-ce49d07f7fce",
+              "name": "_err.node",
+              "value": "PG — Select Doc by MsgVer",
+              "type": "string"
+            },
+            {
+              "id": "bb598862-3bea-4195-bc8a-d5d881892da6",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "881662ec-d45e-4cd3-ad87-c36ce80b480b",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "397721b2-7b14-4e9a-8a75-4145e0ade49a",
+              "name": "_err.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "790e3b56-5fc3-4d3c-8ff1-24a24f1473f1",
+              "name": "_err.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "866ac8fc-426e-46ca-9ebf-e0fd8684cc3d",
+              "name": "_err.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "3e2e2a6b-8fb5-4b80-831a-8a304e7e996b",
+              "name": "_err.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "80dc6d17-e00e-4cde-bbd1-a916d072c494",
+      "name": "ERR — Source Select MsgVer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5664,
+        5152
+      ],
+      "notes": "Tags error from PG — Select Doc by MsgVer with source metadata (_err.node/operation/table/tenant/correlation).\nincludeOtherFields=true to preserve the original error message/details from n8n.\nInput: error output from PG — Select Doc by MsgVer.\nOutput: tagged error item for ErrorPipe.\nWHY: ErrorPipe v1 contract requires structured _err.* fields."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5946be3c-7f26-4030-8d9b-0274fa208bef",
+              "name": "_err.node",
+              "value": "PG — Insert Document",
+              "type": "string"
+            },
+            {
+              "id": "90e41512-52df-4ff1-96da-f8469d8a109a",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "f6824f27-f8f5-4e84-a5ea-24cc60f33e95",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "1c24783d-8ac2-46cd-96c8-cc81af2e18cc",
+              "name": "_err.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e797fc55-e57e-4df1-a576-c02cf9fcb067",
+              "name": "_err.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "07f6b606-c11b-478d-b834-69686abd6288",
+              "name": "_err.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "dab84c05-454c-4bad-9f8b-1b0da29e32bf",
+              "name": "_err.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "28f4279f-8823-4d1e-bd32-c0c160a68d91",
+      "name": "ERR — Source Insert Doc",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6416,
+        5008
+      ],
+      "notes": "Tags error from PG — Insert Document with source metadata (_err.node/operation/table/tenant/correlation).\nincludeOtherFields=true to preserve the original error message/details from n8n.\nInput: error output from PG — Insert Document.\nOutput: tagged error item for ErrorPipe.\nWHY: ErrorPipe v1 contract requires structured _err.* fields."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6030125e-c5c0-4f4e-b55a-54c66f24744c",
+              "name": "_err.node",
+              "value": "PG — Insert Extract Job",
+              "type": "string"
+            },
+            {
+              "id": "f10a160b-c90d-4543-9d9e-e272f1ad5ee8",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "033cbf4b-129b-4b57-83b5-14101502c41e",
+              "name": "_err.table",
+              "value": "ops.jobs",
+              "type": "string"
+            },
+            {
+              "id": "222b5a14-33e8-4f5a-b092-eddd4a360779",
+              "name": "_err.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3836b7f5-163e-42d5-a1d7-7c50a15b3a36",
+              "name": "_err.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "44688b2b-42cb-4487-b5ec-8702f32efd62",
+              "name": "_err.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "a7dfb6e7-752f-4d3e-9c2d-56e412081cac",
+              "name": "_err.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "5914c559-2e10-4aa2-8531-980592cfc66a",
+      "name": "ERR — Source Insert Extract",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7872,
+        5008
+      ],
+      "notes": "Tags error from PG — Insert Extract Job with source metadata (_err.node/operation/table/tenant/correlation).\nincludeOtherFields=true to preserve the original error message/details from n8n.\nInput: error output from PG — Insert Extract Job.\nOutput: tagged error item for ErrorPipe.\nWHY: ErrorPipe v1 contract requires structured _err.* fields."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "837f12da-5e53-463b-90a9-28d4c35d0be5",
+              "name": "_err.node",
+              "value": "PG — Insert Describe Job",
+              "type": "string"
+            },
+            {
+              "id": "d9b06d0b-e81f-4bb5-b170-1fca8f70f181",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "c5d9b5eb-3a8e-41a5-9834-b1b0c81df4d2",
+              "name": "_err.table",
+              "value": "ops.jobs",
+              "type": "string"
+            },
+            {
+              "id": "ad93bc6f-2cee-498a-ab01-c1b1e267abf9",
+              "name": "_err.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a0faf3d8-158d-4f0f-a2b2-c778b1a0485c",
+              "name": "_err.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ee993ce6-4e7f-46c8-bcf1-2d4e961e076c",
+              "name": "_err.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "35a8871a-f83e-4b8e-9787-e73b84ed6cfe",
+              "name": "_err.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "dd4d5c32-3828-4bca-86f1-8dd1e014673e",
+      "name": "ERR — Source Insert Describe",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8320,
+        4960
+      ],
+      "notes": "Tags error from PG — Insert Describe Job with source metadata (_err.node/operation/table/tenant/correlation).\nincludeOtherFields=true to preserve the original error message/details from n8n.\nInput: error output from PG — Insert Describe Job.\nOutput: tagged error item for ErrorPipe.\nWHY: ErrorPipe v1 contract requires structured _err.* fields."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9f873ad-869f-4c3f-b7df-5babc8d3dd20",
+              "name": "_err.node",
+              "value": "PG — Update Doc Meta Pipeline",
+              "type": "string"
+            },
+            {
+              "id": "554fec68-f7c1-42f9-8f8c-f396d4e7bcbb",
+              "name": "_err.operation",
+              "value": "update",
+              "type": "string"
+            },
+            {
+              "id": "cf5021b7-762c-4796-bb61-d206a580f71f",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "aca920e7-fda0-424d-a2a9-c9025cb88f6f",
+              "name": "_err.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c46a9df9-c596-4aed-abd3-b3e75ba1a75d",
+              "name": "_err.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e5ab57e9-3feb-41c2-8e3a-bbdcc2bfb657",
+              "name": "_err.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "e944f30a-d5c4-4c00-9008-6c4e64004029",
+              "name": "_err.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "5c1dd5e8-02c4-4188-afde-006244186142",
+      "name": "ERR — Source Update Meta",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8848,
+        5040
+      ],
+      "notes": "Tags error from PG — Update Doc Meta Pipeline with source metadata (_err.node/operation/table/tenant/correlation).\nincludeOtherFields=true to preserve the original error message/details from n8n.\nInput: error output from PG — Update Doc Meta Pipeline.\nOutput: tagged error item for ErrorPipe.\nWHY: ErrorPipe v1 contract requires structured _err.* fields."
+    },
+    {
+      "parameters": {
+        "numberInputs": 9
+      },
+      "id": "0707b4bf-d0e4-41be-9318-72fca78b9efd",
+      "name": "Merge — Error Sources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        9936,
+        6416
+      ],
+      "notes": "Collects all error sources (2 validation + 7 Postgres) into a single stream.\nMode=append; only 1 error fires per execution (first error triggers StopAndError).\nnumberInputs=9.\nInput: any ERR — Source * node.\nOutput: single error item for ErrorPipe v1 preparation.\nWHY: Branch Join Policy — all error sources must merge before shared ErrorPipe tail."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "750a2960-9e45-44e2-ac0f-ae1d696d3f42",
+              "name": "ctx.tenant_id",
+              "value": "={{ $json._err.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "783dc513-0252-45fe-a1e4-ceb78f474a43",
+              "name": "ctx.correlation_id",
+              "value": "={{ $json._err.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "37fddd6a-96df-455f-a389-50e26cd9a566",
+              "name": "ctx.workflow",
+              "value": "={{ $json._err.workflow }}",
+              "type": "string"
+            },
+            {
+              "id": "a0c6adc8-5bd8-4bc1-a174-0ef6402a8ad7",
+              "name": "ctx.job_id",
+              "value": "={{ $json._err.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "6d7f90c3-fcd5-4e78-876a-3fcef2697cc3",
+              "name": "error_context.node",
+              "value": "={{ $json._err.node }}",
+              "type": "string"
+            },
+            {
+              "id": "cd96db16-81c2-429b-8a16-6fcda9b90178",
+              "name": "error_context.operation",
+              "value": "={{ $json._err.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "cea6401e-0ff4-4a75-bfa6-a7d3cd00783e",
+              "name": "error_context.table",
+              "value": "={{ $json._err.table }}",
+              "type": "string"
+            },
+            {
+              "id": "54ff11cc-3170-4c8b-bed1-d854a798c92f",
+              "name": "error_context.http_status",
+              "value": "={{ $json._err.http_status || 500 }}",
+              "type": "number"
+            },
+            {
+              "id": "db3e46c9-80ad-471e-9d07-58d7edc998d8",
+              "name": "error_context.message",
+              "value": "={{ $json._err.message || $json.message || 'Unknown error in WF40' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ff5c2a3d-251d-40ed-8ff5-6df7bc2f8c27",
+      "name": "ERR — Prepare ErrorPipe v1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        10368,
+        6480
+      ],
+      "notes": "Formats the ErrorPipe v1 payload for WF99: ctx (tenant/correlation/workflow/job_id) + error_context (node/operation/table/status/message).\nInput: _err.* from any error source.\nOutput: structured error payload matching WF99 input contract.\nWHY: WF99 expects ctx + error_context namespaces."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "0393094e-7cc2-4f6a-bad2-033b8900858c",
+      "name": "ERR — WF99 Execute Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        10624,
+        6480
+      ],
+      "notes": "Calls WF99 — Global ERR Handler to log the error to ops.errors and notify.\nInput: ctx + error_context from ErrorPipe v1 Prepare.\nOutput: WF99 response (logged error id).\nWHY: Centralized error logging per ErrorPipe v1 contract."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $json._err.message || 'WF40 failed — see ops.errors for correlation_id ' + $json._err.correlation_id }}"
+      },
+      "id": "fa0e8f1e-95ce-49d5-88ef-f1bd76c486e1",
+      "name": "ERR — StopAndError",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        10864,
+        6480
+      ],
+      "notes": "Halts WF40 execution with an error message after WF99 has logged the error.\nInput: _err.* passthrough from WF99.\nOutput: none (execution stops).\nWHY: Controlled failure; WF98 (platform error workflow) may also catch this via errorWorkflow setting, using correlation_id for dedup."
+    },
+    {
+      "parameters": {},
+      "id": "604f21c4-888b-4d24-aed2-b2d3f600eb0f",
+      "name": "TEST — Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        3568,
+        3712
+      ],
+      "notes": "Manual trigger for WF40 integration tests. Separate from prod path.\nRun manually to execute T1/T2/T3.\nWHY: Tests write to real DB; must verify and cleanup."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3a3ae474-b4e7-4f9d-bb15-69c8f6327780",
+              "name": "test_info",
+              "value": "WF40 tests: T1=Happy URL, T2=Happy File, T3=Fail invalid payload. Run each branch separately. Tests use deterministic correlation_ids for cleanup.",
+              "type": "string"
+            },
+            {
+              "id": "784a6cd8-935d-4141-a87c-dfa6481cc21a",
+              "name": "test_tenant_id",
+              "value": "={{ $json.test_tenant_id || '00000000-0000-0000-0000-000000000001' }}",
+              "type": "string"
+            },
+            {
+              "id": "1d2ea7af-7886-4a5d-80ba-76b1d4b0f21d",
+              "name": "test_bot_id",
+              "value": "={{ $json.test_bot_id || '00000000-0000-0000-0000-000000000003' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "17317622-d9ed-4332-ba41-063776f8b359",
+      "name": "TEST — Info",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3824,
+        3712
+      ],
+      "notes": "Test setup info. Override test_tenant_id and test_bot_id if needed.\nThese UUIDs must exist in core.tenants and core.bots respectively.\nWHY: Tests require valid FK references."
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "urls",
+          "mode": "list",
+          "cachedResultName": "urls"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "normalized_url": "={{ 'https://test-wf40-' + $json.test_tenant_id + '.example.com/' + Date.now() }}",
+            "meta": "{}"
+          },
+          "matchingColumns": [
+            "normalized_url"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "normalized_url",
+              "displayName": "normalized_url",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "canonical_url",
+              "displayName": "canonical_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "first_seen_at",
+              "displayName": "first_seen_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "last_seen_at",
+              "displayName": "last_seen_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "meta",
+              "displayName": "meta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "636beb56-7964-4458-a2d8-4bcca7ca900e",
+      "name": "T1 — Insert Test URL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4064,
+        3552
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "T1: Creates a test content.urls row so WF40 can reference a real url_id.\nInput: test_tenant_id for uniqueness.\nOutput: inserted row with id (url_id for T1).\nWHY: WF40 URL path needs a valid url_id FK."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ccc2653-b1d4-4fa8-9c0e-1d50eadb7d1e",
+              "name": "req.ctx.tenant_id",
+              "value": "={{ $('TEST — Info').item.json.test_tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4cd3cc0f-4b68-4d96-96ea-9f970b36914d",
+              "name": "req.ctx.bot_id",
+              "value": "={{ $('TEST — Info').item.json.test_bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "052f489d-8a61-43e2-afeb-232a4bb8f78a",
+              "name": "req.ctx.correlation_id",
+              "value": "00000001-1000-1000-1000-100000000002",
+              "type": "string"
+            },
+            {
+              "id": "ba2be80d-26ed-446b-bd4d-d3fe57f6f85e",
+              "name": "req.ctx.visibility",
+              "value": "group",
+              "type": "string"
+            },
+            {
+              "id": "dc022b16-6fed-4032-b4a7-8f424ed23623",
+              "name": "req.ctx.job_id",
+              "value": "99999901",
+              "type": "string"
+            },
+            {
+              "id": "5caf4ceb-69bc-4f71-90b3-2b49838b9da7",
+              "name": "req.ctx.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "0ccfa284-6589-4113-97b3-cccd03314aaf",
+              "name": "req.job.id",
+              "value": "99999901",
+              "type": "string"
+            },
+            {
+              "id": "654bcb4b-4c60-40c3-aac2-8dd0343ff07e",
+              "name": "req.job.job_type",
+              "value": "build_document",
+              "type": "string"
+            },
+            {
+              "id": "facd7698-1b65-4f7d-a504-c4c1beb7ce01",
+              "name": "req.job.payload.doc_type",
+              "value": "url",
+              "type": "string"
+            },
+            {
+              "id": "22813306-7f21-4f42-9bd7-5955a94727f0",
+              "name": "req.job.payload.source_ref.url_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "351fb5a3-551c-4f98-9945-1a1ce87d97a3",
+              "name": "req.job.payload.tenant_id",
+              "value": "={{ $('TEST — Info').item.json.test_tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "da3fbec6-5513-4422-a86e-cf20fddbabe8",
+              "name": "req.job.payload.bot_id",
+              "value": "={{ $('TEST — Info').item.json.test_bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "5ee27042-44ef-423d-be75-3538b0a08890",
+              "name": "req.job.payload.correlation_id",
+              "value": "00000001-1000-1000-1000-100000000002",
+              "type": "string"
+            },
+            {
+              "id": "84abb263-3654-4757-8e85-37d2c87376b1",
+              "name": "req.job.payload.visibility",
+              "value": "group",
+              "type": "string"
+            },
+            {
+              "id": "46e7f7df-63c3-444e-b374-fdd7f6dd52b0",
+              "name": "test_url_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "add554dc-4480-4c8c-a1eb-a6afb0b4ca67",
+      "name": "T1 — Build URL Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4320,
+        3552
+      ],
+      "notes": "T1: Builds mock req matching WF40 input contract for doc_type=url.\nCaptures url_id from test URL insert for later cleanup.\nInput: PG insert result (url_id).\nOutput: req.* + test_url_id for verification."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "url_id",
+              "value": "={{ $json.test_url_id }}"
+            },
+            {
+              "column": "tenant_id",
+              "value": "={{ $json.req.ctx.tenant_id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": "id, tenant_id, doc_type, file_unique_id, url_id, message_version_id, status, meta, created_at, updated_at"
+        }
+      },
+      "id": "a28001a8-18fb-47d2-9cfe-d2e063829cb6",
+      "name": "T1 — Verify Document",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4576,
+        3552
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "T1: After WF40 would process the request, verify content.documents row was created.\nNote: In a real test harness this would call WF40 via Execute Workflow first.\nFor integration testing, run the main workflow first with T1 data, then run this verification.\nInput: test_url_id + tenant_id.\nOutput: document row if found."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "options": {}
+      },
+      "id": "4cbfdd94-5a19-4413-8493-fc51d89a40ed",
+      "name": "T1 — Cleanup Jobs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4816,
+        3552
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "T1: Cleanup — delete ops.jobs by correlation_id.\nWHERE correlation_id = T1 test UUID.\nInput: test data.\nOutput: deleted rows.\nWHY: Tests must clean up; delete order respects FK constraints (jobs first)."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "id": "352f9c7d-13d6-4de2-89d3-2346cdac23ea",
+      "name": "T1 — Cleanup Docs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5072,
+        3552
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "T1: Cleanup — delete content.documents by url_id (the test URL).\nInput: test_url_id.\nOutput: deleted rows.\nWHY: FK order: jobs deleted first, then documents."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "urls",
+          "mode": "list",
+          "cachedResultName": "urls"
+        },
+        "options": {}
+      },
+      "id": "4aa2f74b-7b5a-42e9-b468-5a52bd837f51",
+      "name": "T1 — Cleanup URL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5328,
+        3552
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "T1: Cleanup — delete content.urls row created for test.\nInput: test_url_id.\nOutput: deleted row.\nWHY: Final cleanup step for T1."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "204511fe-f614-4bb5-9a96-8c12446e8def",
+              "name": "req.ctx.tenant_id",
+              "value": "={{ $('TEST — Info').item.json.test_tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1b475f4e-107f-4d7b-9c3c-9c3c9e95f1f2",
+              "name": "req.ctx.bot_id",
+              "value": "={{ $('TEST — Info').item.json.test_bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b60e7a7b-7dab-447e-a2bd-dc56f22dde54",
+              "name": "req.ctx.correlation_id",
+              "value": "00000000-2000-0000-0000-000000000002",
+              "type": "string"
+            },
+            {
+              "id": "563ab7a9-1b00-4b6e-83de-a63b8af9d8d2",
+              "name": "req.ctx.visibility",
+              "value": "group",
+              "type": "string"
+            },
+            {
+              "id": "1c061bec-44fd-4e60-97ec-70f6928ef632",
+              "name": "req.ctx.job_id",
+              "value": "99999902",
+              "type": "string"
+            },
+            {
+              "id": "93e4347f-0a4a-4f08-80fd-75b727faaa03",
+              "name": "req.ctx.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "46a9b892-1319-4dd3-adb4-87718978594c",
+              "name": "req.job.id",
+              "value": "99999902",
+              "type": "string"
+            },
+            {
+              "id": "77474dc3-9f3d-48d8-9ddb-0d7a3dc3f5bb",
+              "name": "req.job.job_type",
+              "value": "build_document",
+              "type": "string"
+            },
+            {
+              "id": "f5005179-7364-4252-bf3e-d3c289c11f98",
+              "name": "req.job.payload.doc_type",
+              "value": "file",
+              "type": "string"
+            },
+            {
+              "id": "97decbc7-163a-4ffc-97ba-fd933cb1200b",
+              "name": "req.job.payload.source_ref.file_unique_id",
+              "value": "test_wf40_file_fixture",
+              "type": "string"
+            },
+            {
+              "id": "ed6a0679-3d28-456a-812a-22771e65370f",
+              "name": "req.job.payload.tenant_id",
+              "value": "={{ $('TEST — Info').item.json.test_tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9bc9d19f-3934-4ce4-9d5d-d4eb13bf2408",
+              "name": "req.job.payload.bot_id",
+              "value": "={{ $('TEST — Info').item.json.test_bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9aa53677-0e24-4a07-98c7-7f173fbba473",
+              "name": "req.job.payload.correlation_id",
+              "value": "00000000-2000-0000-0000-000000000002",
+              "type": "string"
+            },
+            {
+              "id": "b51dc9a9-7dcc-4d70-a9b6-8f4ddc38ac4b",
+              "name": "req.job.payload.visibility",
+              "value": "group",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c577c677-b6c4-4310-9e1c-f77a0a4a34ec",
+      "name": "T2 — Build File Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4064,
+        3712
+      ],
+      "notes": "T2: Builds mock req for doc_type=file.\nUses fixture file_unique_id='test_wf40_file_fixture'.\nNote: tg.files FK may not exist for test fixture; document insert may fail on FK if strict.\nFor full integration, pre-insert a tg.files row.\nInput: test constants.\nOutput: req.* for WF40."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "options": {}
+      },
+      "id": "6c7ddffd-0470-456b-83f5-5c1e25a5e196",
+      "name": "T2 — Cleanup Jobs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4320,
+        3712
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "T2: Cleanup — delete ops.jobs by correlation_id T2.\nInput: T2 correlation_id constant.\nOutput: deleted rows."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "id": "b123e523-792d-4074-944e-c90d7f12026b",
+      "name": "T2 — Cleanup Docs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4576,
+        3712
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "T2: Cleanup — delete content.documents by file_unique_id (test fixture).\nInput: fixture file_unique_id.\nOutput: deleted rows."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e339889d-0311-472b-88ee-3640fac33765",
+              "name": "req.ctx.tenant_id",
+              "value": "={{ $('TEST — Info').item.json.test_tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "fd8de0c4-8659-473c-bcad-6d74f36c77de",
+              "name": "req.ctx.bot_id",
+              "value": "={{ $('TEST — Info').item.json.test_bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "36196f54-2cf3-43a4-a858-fed41f3cc7a9",
+              "name": "req.ctx.correlation_id",
+              "value": "a0a0a0a0-test-4040-t003-000000000003",
+              "type": "string"
+            },
+            {
+              "id": "74b8de1e-cf33-4b7e-86a8-af8eda988c5d",
+              "name": "req.ctx.visibility",
+              "value": "group",
+              "type": "string"
+            },
+            {
+              "id": "882c0a0c-b00a-4303-838d-48b68135a20e",
+              "name": "req.ctx.job_id",
+              "value": "99999903",
+              "type": "string"
+            },
+            {
+              "id": "1e0c7ae5-85d6-4ba6-9adb-d35da414a731",
+              "name": "req.ctx.workflow",
+              "value": "WF40",
+              "type": "string"
+            },
+            {
+              "id": "d10f543b-dd58-414e-b464-daca1ea902e2",
+              "name": "req.job.id",
+              "value": "99999903",
+              "type": "string"
+            },
+            {
+              "id": "6b6e7567-893d-4bcc-8a5c-75d685ddc258",
+              "name": "req.job.job_type",
+              "value": "build_document",
+              "type": "string"
+            },
+            {
+              "id": "2a4a9a10-391c-4a68-ade1-1f8506906dec",
+              "name": "req.job.payload.doc_type",
+              "value": "url",
+              "type": "string"
+            },
+            {
+              "id": "7e64b2ab-62a8-45d2-84b1-1435293b421a",
+              "name": "req.job.payload.source_ref.file_unique_id",
+              "value": "wrong_key_for_url",
+              "type": "string"
+            },
+            {
+              "id": "dad46968-4e5e-4a16-8dbe-b52e32a645f5",
+              "name": "req.job.payload.tenant_id",
+              "value": "={{ $('TEST — Info').item.json.test_tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e78e739c-0d1a-4d86-a134-10e217270d40",
+              "name": "req.job.payload.bot_id",
+              "value": "={{ $('TEST — Info').item.json.test_bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7bd28735-fd26-4b46-bc58-88853a9e56db",
+              "name": "req.job.payload.correlation_id",
+              "value": "a0a0a0a0-test-4040-t003-000000000003",
+              "type": "string"
+            },
+            {
+              "id": "0d1e6f84-171f-4c4a-8b18-813183344d9a",
+              "name": "req.job.payload.visibility",
+              "value": "group",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ac8359b4-c87c-4e4d-aa45-93332d214bd8",
+      "name": "T3 — Build Invalid Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4064,
+        3856
+      ],
+      "notes": "T3: Builds intentionally invalid req: doc_type='url' but source_ref only has file_unique_id (no url_id).\nExpected: IF — Source Ref Valid → FALSE → ErrorPipe → WF99 → StopAndError (400).\nInput: test constants with mismatched doc_type/source_ref.\nOutput: invalid req.* to trigger controlled failure.\nWHY: Validates input guard catches source_ref mismatch."
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "errors",
+          "mode": "list",
+          "cachedResultName": "errors"
+        },
+        "options": {}
+      },
+      "id": "254c2d4a-86ac-4c34-9299-06083bd46364",
+      "name": "T3 — Cleanup Errors",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4320,
+        3856
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "T3: Cleanup — delete ops.errors by correlation_id T3.\nInput: T3 correlation_id constant.\nOutput: deleted rows.\nWHY: WF99 writes to ops.errors; clean up after test."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "IN — Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set — Carry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Carry": {
+      "main": [
+        [
+          {
+            "node": "IF — Valid Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Source Ref Valid": {
+      "main": [
+        [
+          {
+            "node": "Set — Canonical Keys",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Ref Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Canonical Keys": {
+      "main": [
+        [
+          {
+            "node": "Switch — Lookup Strategy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch — Lookup Strategy": {
+      "main": [
+        [
+          {
+            "node": "PG — Select Doc by URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PG — Select Doc by File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PG — Select Doc by MsgVer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Select Doc by URL": {
+      "main": [
+        [
+          {
+            "node": "Set — Restore after URL Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Select URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Select Doc by File": {
+      "main": [
+        [
+          {
+            "node": "Set — Restore after File Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Select File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Select Doc by MsgVer": {
+      "main": [
+        [
+          {
+            "node": "Set — Restore after MsgVer Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Select MsgVer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Restore after URL Lookup": {
+      "main": [
+        [
+          {
+            "node": "Merge — Lookup Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Restore after File Lookup": {
+      "main": [
+        [
+          {
+            "node": "Merge — Lookup Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set — Restore after MsgVer Lookup": {
+      "main": [
+        [
+          {
+            "node": "Merge — Lookup Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge — Lookup Results": {
+      "main": [
+        [
+          {
+            "node": "IF — Doc Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Doc Exists?": {
+      "main": [
+        [
+          {
+            "node": "Set — Use Existing Doc",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PG — Insert Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert Document": {
+      "main": [
+        [
+          {
+            "node": "Set — Restore after Insert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Insert Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Use Existing Doc": {
+      "main": [
+        [
+          {
+            "node": "Merge — Doc Chosen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Restore after Insert": {
+      "main": [
+        [
+          {
+            "node": "Merge — Doc Chosen",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Doc Chosen": {
+      "main": [
+        [
+          {
+            "node": "IF — Already Enqueued?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Already Enqueued?": {
+      "main": [
+        [
+          {
+            "node": "Set — Already Enqueued Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF — Media Describe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Media Describe?": {
+      "main": [
+        [
+          {
+            "node": "Set — Prepare Describe Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Prepare Extract Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prepare Extract Job": {
+      "main": [
+        [
+          {
+            "node": "PG — Insert Extract Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prepare Describe Job": {
+      "main": [
+        [
+          {
+            "node": "PG — Insert Describe Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert Extract Job": {
+      "main": [
+        [
+          {
+            "node": "Set — Restore after Extract Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Insert Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert Describe Job": {
+      "main": [
+        [
+          {
+            "node": "Set — Restore after Describe Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Insert Describe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Restore after Describe Job": {
+      "main": [
+        [
+          {
+            "node": "Merge — Job Inserted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Restore after Extract Job": {
+      "main": [
+        [
+          {
+            "node": "Merge — Job Inserted",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Job Inserted": {
+      "main": [
+        [
+          {
+            "node": "PG — Update Doc Meta Pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Update Doc Meta Pipeline": {
+      "main": [
+        [
+          {
+            "node": "Set — Restore after Meta Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Update Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Restore after Meta Update": {
+      "main": [
+        [
+          {
+            "node": "Set — SuccessEnvelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Already Enqueued Envelope": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — SuccessEnvelope": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final Output",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "IF — Valid Input": {
+      "main": [
+        [
+          {
+            "node": "IF — Source Ref Valid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Valid Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Valid Input": {
+      "main": [
+        [
+          {
+            "node": "Merge — Error Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Ref Guard": {
+      "main": [
+        [
+          {
+            "node": "Merge — Error Sources",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ERR — Source Select URL": {
+      "main": [
+        [
+          {
+            "node": "Merge — Error Sources",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "ERR — Source Select File": {
+      "main": [
+        [
+          {
+            "node": "Merge — Error Sources",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "ERR — Source Select MsgVer": {
+      "main": [
+        [
+          {
+            "node": "Merge — Error Sources",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "ERR — Source Insert Doc": {
+      "main": [
+        [
+          {
+            "node": "Merge — Error Sources",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "ERR — Source Insert Extract": {
+      "main": [
+        [
+          {
+            "node": "Merge — Error Sources",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "ERR — Source Insert Describe": {
+      "main": [
+        [
+          {
+            "node": "Merge — Error Sources",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "ERR — Source Update Meta": {
+      "main": [
+        [
+          {
+            "node": "Merge — Error Sources",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Merge — Error Sources": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe v1": {
+      "main": [
+        [
+          {
+            "node": "ERR — WF99 Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — WF99 Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "ERR — StopAndError",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "TEST — Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Info": {
+      "main": [
+        [
+          {
+            "node": "T2 — Build File Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Insert Test URL": {
+      "main": [
+        [
+          {
+            "node": "T1 — Build URL Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Build URL Request": {
+      "main": [
+        []
+      ]
+    },
+    "T1 — Verify Document": {
+      "main": [
+        [
+          {
+            "node": "T1 — Cleanup Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Cleanup Jobs": {
+      "main": [
+        [
+          {
+            "node": "T1 — Cleanup Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T1 — Cleanup Docs": {
+      "main": [
+        [
+          {
+            "node": "T1 — Cleanup URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T2 — Build File Request": {
+      "main": [
+        []
+      ]
+    },
+    "T2 — Cleanup Jobs": {
+      "main": [
+        [
+          {
+            "node": "T2 — Cleanup Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "T3 — Build Invalid Request": {
+      "main": [
+        []
+      ]
+    },
+    "Merge — Final Output": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e922929b-d9d4-47ba-8827-4fbc49ad404b",
+  "meta": {
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "r61sEB6snYIQ2XaPg804W",
+  "tags": []
+}

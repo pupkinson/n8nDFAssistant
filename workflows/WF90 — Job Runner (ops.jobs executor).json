@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "8f8756a0-46d5-455f-b2e4-009d45eba549",
+      "id": "eb1e816d-bcf9-435c-b4e6-c2269b823c7b",
       "name": "⏰ Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
@@ -50,7 +50,7 @@
           "dotNotation": true
         }
       },
-      "id": "2941f3d7-5d81-4a5a-ba31-b688da2e7969",
+      "id": "fef089eb-e22a-4c92-b68c-4cea2fa4604e",
       "name": "📋 Set Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -102,7 +102,7 @@
         },
         "options": {}
       },
-      "id": "35e9730b-fef6-4ffc-8610-88ceb7cbea7c",
+      "id": "e52ee8e0-11f2-4bdf-92b6-39ff4b07bc7c",
       "name": "📥 Select Pending Jobs",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -153,7 +153,7 @@
           "dotNotation": true
         }
       },
-      "id": "6a079841-4de5-4460-aa26-e85292334b91",
+      "id": "01ea2663-7d36-471c-8961-97f6610c6b0f",
       "name": "❌ ErrorPipe v1 (Select)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -167,10 +167,8 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
+          "value": "WF99 — Global ERR Handler",
+          "mode": "name"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -184,7 +182,7 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "42caa7fb-c915-4b1b-b44f-12cb23b555e9",
+      "id": "9d6196af-18de-490f-adcd-4a305426f87d",
       "name": "🚨 Call WF99 (Select Err)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
@@ -192,21 +190,8 @@
         -2000,
         1008
       ],
-      "notes": "PURPOSE: Escalate DB connection error to global handler.\nINPUT: Error envelope.\nOUTPUT: WF99 response.\nWHY: SELECT failure = infrastructure issue, needs alerting."
-    },
-    {
-      "parameters": {
-        "errorMessage": "={{ 'WF90: DB SELECT failed - ' + $json.error.message }}"
-      },
-      "id": "b4db13f4-f8a3-4d58-b1fb-b0fbddc619b4",
-      "name": "🛑 StopAndError (Select)",
-      "type": "n8n-nodes-base.stopAndError",
-      "typeVersion": 1,
-      "position": [
-        -1744,
-        1008
-      ],
-      "notes": "PURPOSE: Terminate WF90 with error status.\nINPUT: Error details.\nOUTPUT: Workflow fails with clear message.\nWHY: Cannot proceed without DB access."
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Escalate DB SELECT error.\nOUTPUT success→Graceful End. OUTPUT error→StopAndError."
     },
     {
       "parameters": {
@@ -231,7 +216,7 @@
         },
         "options": {}
       },
-      "id": "554ed46b-1d7d-4ce7-a475-e9851eb2300c",
+      "id": "c76dd7f8-4caf-4c4c-af64-eaf1d7490c55",
       "name": "🔀 Has Jobs?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -243,7 +228,7 @@
     },
     {
       "parameters": {},
-      "id": "ba9dac3a-bd2e-4950-b0d4-27fe75b3aaf3",
+      "id": "c7040b27-09c9-4775-a9ab-087bef85648a",
       "name": "✅ No Jobs (OK)",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -259,7 +244,7 @@
           "reset": false
         }
       },
-      "id": "67a07f94-63c5-4265-8202-3afc02c0fc93",
+      "id": "3a083274-3c71-43c4-bdef-94658396b4c9",
       "name": "🔄 Split Jobs",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
@@ -339,7 +324,7 @@
           "dotNotation": true
         }
       },
-      "id": "86d20ea6-ed9c-4ced-8e80-d91d4db2faa9",
+      "id": "878a2d8b-dfd2-46d0-b3a5-b4c84a2c8add",
       "name": "📸 Snapshot Job",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -440,7 +425,7 @@
           "outputColumns": "={{ \"updateCount\" }}"
         }
       },
-      "id": "5a0b9248-935f-40e1-844d-d31a340fa38b",
+      "id": "8d61c3ee-cac4-4e62-9330-c4f77d4b51eb",
       "name": "🔒 Claim Job (UPDATE)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -485,7 +470,7 @@
           "dotNotation": true
         }
       },
-      "id": "5ad5e0ab-6376-4e10-9c49-0b7742710061",
+      "id": "da532fd6-a30b-43bb-a468-ec1762e1129b",
       "name": "❌ ErrorPipe v1 (Claim)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -499,10 +484,8 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
+          "value": "WF99 — Global ERR Handler",
+          "mode": "name"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -516,7 +499,7 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "53a9830b-e1ac-4bb1-ae0f-2f6b656eda70",
+      "id": "6d74b809-3244-41c6-b6b0-78dfe99f8cf3",
       "name": "🚨 Call WF99 (Claim Err)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
@@ -524,21 +507,8 @@
         -1072,
         1008
       ],
-      "notes": "PURPOSE: Escalate claim DB error to global handler.\nINPUT: Error envelope.\nOUTPUT: WF99 response."
-    },
-    {
-      "parameters": {
-        "errorMessage": "={{ 'WF90: DB CLAIM failed - ' + $json.error.message }}"
-      },
-      "id": "1fd8afd5-648b-4a9a-b17d-cbd1aace79dc",
-      "name": "🛑 StopAndError (Claim)",
-      "type": "n8n-nodes-base.stopAndError",
-      "typeVersion": 1,
-      "position": [
-        -848,
-        1008
-      ],
-      "notes": "PURPOSE: Terminate WF90 on claim DB failure.\nINPUT: Error details.\nOUTPUT: Workflow fails."
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Escalate DB CLAIM error.\nOUTPUT success→Graceful End. OUTPUT error→StopAndError."
     },
     {
       "parameters": {
@@ -546,7 +516,7 @@
         "combineBy": "combineAll",
         "options": {}
       },
-      "id": "34317cf3-f722-4566-8fc8-5ab2c698f05c",
+      "id": "19b50d9e-17ae-4752-bc4b-6cfd97b05f9f",
       "name": "🔗 Merge Restore (Claim)",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
@@ -579,7 +549,7 @@
         },
         "options": {}
       },
-      "id": "281f4457-5725-4ef2-b3ef-ebff54fa24a9",
+      "id": "debb83c6-82d3-495a-bcfc-ff166894e033",
       "name": "🔀 Claimed?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -591,7 +561,7 @@
     },
     {
       "parameters": {},
-      "id": "37465888-e58c-4853-85f9-49e59b1c3bc0",
+      "id": "9bfd343a-852c-4ac8-9dcd-0d982ea23a1b",
       "name": "⏭️ Race Lost (Skip)",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -665,7 +635,7 @@
         },
         "options": {}
       },
-      "id": "9f2e708c-1b10-4206-aeac-031fd09e9e35",
+      "id": "d2830053-82ca-48f8-a6a3-32019f7ef01c",
       "name": "📝 Insert job_runs",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -688,7 +658,7 @@
         "combineBy": "combineAll",
         "options": {}
       },
-      "id": "c5fab7bb-c71b-4a8c-8e78-bd1c18760f44",
+      "id": "7c5f0424-69fe-47af-8672-c35e40c71444",
       "name": "🔗 Merge (Insert Run)",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
@@ -715,7 +685,7 @@
           "dotNotation": true
         }
       },
-      "id": "a5a98a57-0ad1-4294-a1c9-c4f2a7603e02",
+      "id": "8fb6bbd1-2bd0-4338-8613-b28f793ca03b",
       "name": "📌 Set job_run_id",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -977,13 +947,13 @@
           "fallbackOutput": "extra"
         }
       },
-      "id": "93338dd4-0adf-4505-845e-719a79c49a45",
+      "id": "a8497ab9-a536-4085-990c-69631fef3e08",
       "name": "🔀 Route by job_type",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
         -272,
-        496
+        480
       ],
       "notes": "PURPOSE: Route job to correct worker workflow based on job_type.\nINPUT: Job data with job_type enum.\nOUTPUTS: WF20, WF30, WF31, build_doc, extract, WF41, WF50, WF92, test, fallback.\nWHY: Each job_type has a specialized worker.\nWHY fallbackOutput: Handle unknown job_types gracefully."
     },
@@ -1069,13 +1039,13 @@
           "dotNotation": true
         }
       },
-      "id": "8a486c17-f47c-4af4-8937-400c2484a95f",
+      "id": "30513bc6-b7a2-4f89-afe0-8ec9000ee240",
       "name": "📦 Prepare WF20 Req",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        0
+        272,
+        -160
       ],
       "notes": "PURPOSE: Build request envelope for WF20 worker.\nINPUT: Job data from switch.\nOUTPUT: Standardized req object with ctx + job.\nWHY: Consistent contract for all worker workflows."
     },
@@ -1083,24 +1053,28 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "={{ 'WF20' }}",
+          "value": "WF20 — Update Processor (Normalize & Persist)",
           "mode": "name"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {}
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         },
         "options": {
           "waitForSubWorkflow": true
         }
       },
-      "id": "aac7a6bc-3984-4daa-bd69-9983d67a0bd5",
+      "id": "2c508f6e-fcdd-4554-bd0c-32d3c0df134b",
       "name": "▶️ Execute WF20",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        224,
-        0
+        464,
+        -192
       ],
       "onError": "continueErrorOutput",
       "notes": "PURPOSE: Dispatch normalize_update job to WF20.\nINPUT: Request envelope with ctx and job.\nOUTPUT: Success envelope from worker OR error.\nWHY waitForSubWorkflow: Need result to update job status."
@@ -1175,13 +1149,13 @@
           "dotNotation": true
         }
       },
-      "id": "0a99f1ec-81ed-41a9-b9c1-3bb2d539c26b",
+      "id": "bac22433-d777-4001-a35a-d66a49af23fd",
       "name": "📦 Prepare WF30 Req",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        160
+        272,
+        0
       ],
       "notes": "PURPOSE: Build request for WF30 fetch_tg_file worker."
     },
@@ -1189,24 +1163,28 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "={{ 'WF30' }}",
+          "value": "WF30 — File Fetcher",
           "mode": "name"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {}
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         },
         "options": {
           "waitForSubWorkflow": true
         }
       },
-      "id": "fadff37a-7578-43b4-ba19-93eaa7935d69",
+      "id": "8a671f5a-223b-411f-ad79-8b6560a5aa5f",
       "name": "▶️ Execute WF30",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        224,
-        160
+        464,
+        -32
       ],
       "onError": "continueErrorOutput",
       "notes": "PURPOSE: Dispatch fetch_tg_file job to WF30."
@@ -1281,13 +1259,13 @@
           "dotNotation": true
         }
       },
-      "id": "2701ef2e-2cd8-4730-8d5b-d50493fa2b91",
+      "id": "6615bfeb-1bda-4bfc-82e0-8569868b68f9",
       "name": "📦 Prepare WF31 Req",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        320
+        272,
+        160
       ],
       "notes": "PURPOSE: Build request for WF31 fetch_url worker."
     },
@@ -1295,24 +1273,28 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "={{ 'WF31' }}",
+          "value": "WF31 — Link Fetcher",
           "mode": "name"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {}
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         },
         "options": {
           "waitForSubWorkflow": true
         }
       },
-      "id": "4f1de65b-80db-43b9-bc61-4b5e0086a466",
+      "id": "c4e0eac9-2236-4f4c-ab75-91515cc30ea9",
       "name": "▶️ Execute WF31",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        224,
-        320
+        464,
+        128
       ],
       "onError": "continueErrorOutput",
       "notes": "PURPOSE: Dispatch fetch_url job to WF31."
@@ -1393,13 +1375,13 @@
           "fallbackOutput": "extra"
         }
       },
-      "id": "0ac26ea1-b88e-4400-85bf-76ba0e2d8cd7",
+      "id": "e88b344a-b09e-4d78-b773-e00909797e60",
       "name": "🔀 build_doc Router",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        0,
-        480
+        32,
+        432
       ],
       "notes": "PURPOSE: Route build_document by payload.doc_type.\nINPUT: Job with payload.doc_type.\nOUTPUTS: WF20 (message), WF30 (file), WF31 (url).\nWHY: build_document is dispatched to content-type-specific workers."
     },
@@ -1527,19 +1509,41 @@
                 "conditions": [
                   {
                     "leftValue": "={{ $json.job.payload.extract_kind }}",
-                    "rightValue": "",
+                    "rightValue": "image",
                     "operator": {
                       "type": "string",
                       "operation": "startsWith",
                       "singleValue": true
-                    },
-                    "name": "image"
+                    }
                   }
                 ],
                 "combinator": "and"
               },
               "renameOutput": true,
-              "outputKey": "WF42"
+              "outputKey": "WF42_image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.job.payload.extract_kind }}",
+                    "rightValue": "video",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "WF42_video"
             }
           ]
         },
@@ -1547,121 +1551,15 @@
           "fallbackOutput": "extra"
         }
       },
-      "id": "4b063d2f-d9c3-47f7-880b-ea9035f3199c",
+      "id": "339015dc-615f-4e3f-980b-62a0b61840f4",
       "name": "🔀 extract Router",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        0,
-        640
-      ],
-      "notes": "PURPOSE: Route extract_text by payload.extract_kind.\nINPUT: Job with payload.extract_kind.\nOUTPUTS: WF35 (voice_probe), WF34 (transcribe), WF40 (doc/url text), WF42 (image/video).\nWHY: Different extraction requires different AI models."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "req-ctx-tenant",
-              "name": "req.ctx.tenant_id",
-              "value": "={{ $json.job.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "req-ctx-correlation",
-              "name": "req.ctx.correlation_id",
-              "value": "={{ $json.job.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "req-ctx-job-id",
-              "name": "req.ctx.job_id",
-              "value": "={{ $json.job.id }}",
-              "type": "number"
-            },
-            {
-              "id": "req-ctx-workflow",
-              "name": "req.ctx.workflow",
-              "value": "WF90",
-              "type": "string"
-            },
-            {
-              "id": "req-job-id",
-              "name": "req.job.id",
-              "value": "={{ $json.job.id }}",
-              "type": "number"
-            },
-            {
-              "id": "req-job-type",
-              "name": "req.job.job_type",
-              "value": "={{ $json.job.job_type }}",
-              "type": "string"
-            },
-            {
-              "id": "req-job-payload",
-              "name": "req.job.payload",
-              "value": "={{ $json.job.payload }}",
-              "type": "object"
-            },
-            {
-              "id": "meta-job-run-id",
-              "name": "_meta.job_run_id",
-              "value": "={{ $json.job_run_id }}",
-              "type": "number"
-            },
-            {
-              "id": "meta-attempts",
-              "name": "_meta.attempts",
-              "value": "={{ $json.job.attempts + 1 }}",
-              "type": "number"
-            },
-            {
-              "id": "meta-max-attempts",
-              "name": "_meta.max_attempts",
-              "value": "={{ $json.job.max_attempts }}",
-              "type": "number"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "id": "d67847ed-b6d0-48bf-a7d8-9d585d534824",
-      "name": "📦 Prepare WF41 Req",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        0,
-        1040
-      ],
-      "notes": "PURPOSE: Build request for WF41 chunk/embed worker."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "={{ 'WF41' }}",
-          "mode": "name"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {}
-        },
-        "options": {
-          "waitForSubWorkflow": true
-        }
-      },
-      "id": "87f56a78-410c-4df8-a9d3-6f2410712e85",
-      "name": "▶️ Execute WF41",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        224,
+        -48,
         800
       ],
-      "onError": "continueErrorOutput",
-      "notes": "PURPOSE: Dispatch chunk_document or embed_chunks to WF41."
+      "notes": "PURPOSE: Route extract_text by payload.extract_kind.\nOUTPUTS: WF35(voice_probe), WF34(voice/audio_transcribe), WF40(doc_text/url_text), WF42(image*/video*).\nFIX: startsWith rightValue was '' → now 'image'/'video'. Added video rule."
     },
     {
       "parameters": {
@@ -1733,13 +1631,13 @@
           "dotNotation": true
         }
       },
-      "id": "42636838-f29a-48b3-9c80-0c8276cee932",
+      "id": "bfd8f13c-c12c-42f6-b4ce-e09f45d390f1",
       "name": "📦 Prepare WF50 Req",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        1184
+        256,
+        1024
       ],
       "notes": "PURPOSE: Build request for WF50 answer_query worker."
     },
@@ -1747,7 +1645,7 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "={{ 'WF50' }}",
+          "value": "WF50 — Answer Query",
           "mode": "name"
         },
         "workflowInputs": {
@@ -1758,13 +1656,13 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "31e3c772-202d-4376-92d9-42e62a091b1f",
+      "id": "4dbaabd3-c06b-4243-8ddf-e09a633ff984",
       "name": "▶️ Execute WF50",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        224,
-        960
+        480,
+        1120
       ],
       "onError": "continueErrorOutput",
       "notes": "PURPOSE: Dispatch answer_query job to WF50."
@@ -1839,13 +1737,13 @@
           "dotNotation": true
         }
       },
-      "id": "7c41ec86-3cc7-4b8b-8089-c0bd70b3feba",
+      "id": "743886d2-4b50-42b1-9615-e4d1e2962ee6",
       "name": "📦 Prepare WF92 Req",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        1344
+        272,
+        1152
       ],
       "notes": "PURPOSE: Build request for WF92 reembed worker."
     },
@@ -1853,24 +1751,28 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "={{ 'WF92' }}",
+          "value": "WF92 — Re-embed Migration",
           "mode": "name"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {}
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
         },
         "options": {
           "waitForSubWorkflow": true
         }
       },
-      "id": "c125eb18-9f1d-4513-8e3f-749711d27bb9",
+      "id": "470d4940-ef75-4392-9354-545e3de0ed3c",
       "name": "▶️ Execute WF92",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        224,
-        1120
+        480,
+        1280
       ],
       "onError": "continueErrorOutput",
       "notes": "PURPOSE: Dispatch reembed_model_migration to WF92."
@@ -1916,28 +1818,29 @@
           "dotNotation": true
         }
       },
-      "id": "ce1921ff-75fc-4f80-ac8a-3336a614058b",
+      "id": "4b243b27-6133-4f06-b92e-520769356d90",
       "name": "❓ Unknown job_type",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        1504
+        272,
+        1328
       ],
       "notes": "PURPOSE: Handle unrecognized job_type (fallback).\nINPUT: Job with unknown type.\nOUTPUT: Error object for job failure marking.\nWHY: Unknown types should fail gracefully, not crash WF90."
     },
     {
       "parameters": {
         "mode": "chooseBranch",
+        "numberInputs": 23,
         "output": "wait"
       },
-      "id": "cbc76800-254e-477d-a298-bdbf6893f6c0",
+      "id": "44343324-c2cc-4321-9fb6-e752839a29c8",
       "name": "🔗 Merge All Results",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        448,
-        512
+        1360,
+        384
       ],
       "notes": "PURPOSE: Collect results from all dispatch branches.\nINPUT: Results from all Execute Workflow nodes + error branches.\nOUTPUT: Single result item per job.\nWHY mode=chooseBranch: Takes whichever branch completes."
     },
@@ -1947,7 +1850,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "loose"
+            "typeValidation": "strict",
+            "version": 3
           },
           "conditions": [
             {
@@ -1964,13 +1868,13 @@
         },
         "options": {}
       },
-      "id": "a2efe27a-8303-470f-af81-940daffb573c",
+      "id": "5de263dd-da69-42de-b39c-d6a43aaac97e",
       "name": "🔀 Child Failed?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        672,
-        512
+        1728,
+        848
       ],
       "notes": "PURPOSE: Determine if child workflow failed.\nINPUT: Result from dispatch.\nOUTPUT TRUE: Child failed, mark job failed/retry.\nOUTPUT FALSE: Child succeeded, mark job succeeded.\nWHY: Different handling for success vs failure."
     },
@@ -2003,13 +1907,13 @@
           "dotNotation": true
         }
       },
-      "id": "b27aac07-1e14-4346-9d72-512883fdf8c0",
+      "id": "95be595e-9feb-46b2-94a3-e8aeb07f3f6e",
       "name": "✅ Prepare Success",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        880,
-        352
+        2112,
+        1280
       ],
       "notes": "PURPOSE: Prepare data for marking job as succeeded.\nINPUT: Success result from child.\nOUTPUT: final_status=succeeded + job_id."
     },
@@ -2036,13 +1940,13 @@
         },
         "options": {}
       },
-      "id": "0dffd0cd-f2c8-4dd3-97ee-a541bd2a13e2",
+      "id": "eeef06ee-b3a5-4f11-ab6e-480aca28ee37",
       "name": "🔀 Can Retry?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        880,
-        672
+        2048,
+        944
       ],
       "notes": "PURPOSE: Check if job has retries remaining.\nINPUT: Failed result with attempt count.\nOUTPUT TRUE: attempts < max_attempts, schedule retry.\nOUTPUT FALSE: Max attempts reached, mark dead.\nWHY: Implement retry backoff strategy."
     },
@@ -2087,13 +1991,13 @@
           "dotNotation": true
         }
       },
-      "id": "a8aa81d3-4be4-4eb2-a928-8917d3f1ff31",
+      "id": "cd13df2d-dc23-4665-a42c-4818693c73f5",
       "name": "🔄 Prepare Retry",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1104,
-        592
+        2368,
+        960
       ],
       "notes": "PURPOSE: Prepare data for retry scheduling.\nINPUT: Failed result with retry capacity.\nOUTPUT: final_status=queued, next_run_at with exponential backoff.\nWHY Math.pow(2, attempts): Exponential backoff (2,4,8,16 min)."
     },
@@ -2132,27 +2036,29 @@
           "dotNotation": true
         }
       },
-      "id": "5d4ce07c-f026-4bd8-b25c-840cf0a95363",
+      "id": "b5667a50-ed9d-4d3a-a3b0-07be3c34d4c9",
       "name": "💀 Prepare Dead",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1104,
-        752
+        2464,
+        1248
       ],
       "notes": "PURPOSE: Prepare data for marking job as dead.\nINPUT: Failed result with max attempts reached.\nOUTPUT: final_status=dead, error_summary.\nWHY: Job exhausted all retries, needs manual intervention."
     },
     {
-      "parameters": {},
-      "id": "f90d8c69-b8b1-4d3c-8e37-014636dc4462",
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "dfdd7b40-9573-444b-9d8f-71ab82b178a0",
       "name": "🔗 Merge Final Status",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1328,
-        512
+        2656,
+        1008
       ],
-      "notes": "PURPOSE: Combine all final status branches.\nINPUT: Success, retry, or dead branch.\nOUTPUT: Single item with final_status for job update."
+      "notes": "PURPOSE: Combine success/retry/dead branches.\nWHY numberInputs=3: Three possible paths converge here."
     },
     {
       "parameters": {
@@ -2253,13 +2159,13 @@
         },
         "options": {}
       },
-      "id": "94cbcee0-4931-46b1-ab06-e242d77344f0",
+      "id": "11aac088-58b0-4511-bf20-a0c4e0aa0798",
       "name": "📝 Update Job Final",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1536,
-        512
+        2864,
+        1056
       ],
       "credentials": {
         "postgres": {
@@ -2291,7 +2197,7 @@
             "finished_at": "={{ $now.toISO() }}",
             "status": "={{ $json.final_status === 'queued' ? 'failed' : $json.final_status }}",
             "error": "={{ $json.error_summary ? JSON.parse($json.error_summary) : null }}",
-            "id": 0
+            "id": "={{ $json.job_run_id }}"
           },
           "matchingColumns": [
             "id"
@@ -2339,13 +2245,13 @@
         },
         "options": {}
       },
-      "id": "9ef35f36-514f-466b-880f-541dbac68120",
+      "id": "7fd3fbee-7dbf-4eea-8e66-4cf5228196af",
       "name": "📝 Update job_runs",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1760,
-        512
+        3216,
+        1152
       ],
       "credentials": {
         "postgres": {
@@ -2358,19 +2264,19 @@
     },
     {
       "parameters": {},
-      "id": "d97ea9c1-2c3c-416e-91e7-73eb1f2861e9",
+      "id": "9987f74a-d5f8-4929-9b23-87875da304a9",
       "name": "↩️ Loop Back",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2304,
-        752
+        3840,
+        1760
       ],
       "notes": "PURPOSE: Complete one job iteration, loop to next.\nINPUT: Job processing complete.\nOUTPUT: Back to Split node for next job.\nWHY: Sequential processing of batch."
     },
     {
       "parameters": {},
-      "id": "6e96a1d1-2778-4b86-aa60-35bc7e3a2fbf",
+      "id": "26e9fe2e-1264-4136-b118-5b27171edde7",
       "name": "🧪 Test Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -2405,6 +2311,50 @@
               },
               "renameOutput": true,
               "outputKey": "T1_Happy"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ true }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "T2_Edge"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ true }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "T3_Fail"
             }
           ]
         },
@@ -2412,7 +2362,7 @@
           "fallbackOutput": "none"
         }
       },
-      "id": "5a228e78-a185-4b83-bb69-ab1bc23c72ba",
+      "id": "415689b2-0daa-45d1-abd6-642a4c2fcd1c",
       "name": "🧪 Test Router",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
@@ -2420,7 +2370,7 @@
         -2640,
         1104
       ],
-      "notes": "PURPOSE: Route to specific test case.\nINPUT: Test trigger.\nOUTPUT: Selected test branch.\nWHY: Can expand with T2, T3 tests."
+      "notes": "PURPOSE: Route to test case (T1/T2/T3).\nSelect one at a time via switch output.\nT1=Happy, T2=Edge(unknown type handled by test_worker), T3=Fail(retry→dead)."
     },
     {
       "parameters": {
@@ -2506,7 +2456,7 @@
         },
         "options": {}
       },
-      "id": "cffa7ab2-d473-492d-baa2-024a1c1b313e",
+      "id": "a9c1b07e-8eb2-4da5-845e-3cb911f8be18",
       "name": "🧪 T1: Insert Test Job",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -2544,7 +2494,7 @@
           "dotNotation": true
         }
       },
-      "id": "22bb237a-3252-4198-9bc6-9a29ed37109b",
+      "id": "c1020372-3953-4422-af4b-862cd2bcf2bf",
       "name": "🧪 T1 Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -2562,8 +2512,9 @@
         -1040,
         1408
       ],
-      "id": "90c40731-4ce0-4566-aca7-1cab536b3f57",
-      "name": "✅ Finish"
+      "id": "8cb7fa8b-c21b-4642-8c23-2cac95b07c27",
+      "name": "✅ Finish",
+      "notes": "PURPOSE: Clean exit when batch processing complete.\nINPUT: Split Jobs done.\nOUTPUT: None."
     },
     {
       "parameters": {
@@ -2572,7 +2523,7 @@
             {
               "id": "err-type",
               "name": "error.type",
-              "value": "WF90_DB_CLAIM_FAILED",
+              "value": "WF90_DB_UPDATE_JOB_FAILED",
               "type": "string"
             },
             {
@@ -2593,15 +2544,15 @@
           "dotNotation": true
         }
       },
-      "id": "d4136edc-0481-4af4-921a-dcd94cdece4c",
+      "id": "d1ea6e13-1932-4843-820c-d0c38146bc0c",
       "name": "❌ ErrorPipe Update Job Final",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1776,
-        1088
+        3056,
+        1440
       ],
-      "notes": "PURPOSE: Format error for WF99 when CLAIM fails.\nINPUT: Postgres error output.\nOUTPUT: Standardized error envelope.\nWHY: DB failure requires escalation."
+      "notes": "PURPOSE: Format error for WF99 when UPDATE ops.jobs fails."
     },
     {
       "parameters": {
@@ -2610,7 +2561,7 @@
             {
               "id": "err-type",
               "name": "error.type",
-              "value": "WF90_DB_CLAIM_FAILED",
+              "value": "WF90_DB_UPDATE_JOB_RUNS_FAILED",
               "type": "string"
             },
             {
@@ -2631,24 +2582,22 @@
           "dotNotation": true
         }
       },
-      "id": "35658fb6-676c-485d-afe5-f8231f4e4633",
+      "id": "6ed192cd-8464-4f4c-af96-06b43f063391",
       "name": "❌ ErrorPipe Update job_runs",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2304,
-        944
+        3488,
+        960
       ],
-      "notes": "PURPOSE: Format error for WF99 when CLAIM fails.\nINPUT: Postgres error output.\nOUTPUT: Standardized error envelope.\nWHY: DB failure requires escalation."
+      "notes": "PURPOSE: Format error for WF99 when UPDATE ops.job_runs fails."
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
+          "value": "WF99 — Global ERR Handler",
+          "mode": "name"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -2662,38 +2611,23 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "287857bd-f898-4d7e-957c-c41e4eeba25e",
+      "id": "41c12bdc-b408-4726-b699-81a8335a72e0",
       "name": "🚨 Call WF99 (Update Job)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2000,
-        1088
+        3376,
+        1472
       ],
-      "notes": "PURPOSE: Escalate claim DB error to global handler.\nINPUT: Error envelope.\nOUTPUT: WF99 response."
-    },
-    {
-      "parameters": {
-        "errorMessage": "={{ 'WF90: DB CLAIM failed - ' + $json.error.message }}"
-      },
-      "id": "c311d611-049d-41cf-93b9-f6503b5147b5",
-      "name": "🛑 StopAndError (Update Job)",
-      "type": "n8n-nodes-base.stopAndError",
-      "typeVersion": 1,
-      "position": [
-        2224,
-        1088
-      ],
-      "notes": "PURPOSE: Terminate WF90 on claim DB failure.\nINPUT: Error details.\nOUTPUT: Workflow fails."
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Escalate DB UPDATE jobs error.\nOUTPUT success→Graceful End. OUTPUT error→StopAndError."
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
+          "value": "WF99 — Global ERR Handler",
+          "mode": "name"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -2707,29 +2641,16 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "60491086-04d4-4446-910c-4a257212234f",
+      "id": "65a60397-d688-451f-921a-210104b602b0",
       "name": "🚨 Call WF99 (Update Job_runs)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2528,
-        944
+        3712,
+        1040
       ],
-      "notes": "PURPOSE: Escalate claim DB error to global handler.\nINPUT: Error envelope.\nOUTPUT: WF99 response."
-    },
-    {
-      "parameters": {
-        "errorMessage": "={{ 'WF90: DB CLAIM failed - ' + $json.error.message }}"
-      },
-      "id": "f93290f7-b1e2-418a-965b-27960706128c",
-      "name": "🛑 StopAndError (Update Job_runs)",
-      "type": "n8n-nodes-base.stopAndError",
-      "typeVersion": 1,
-      "position": [
-        2752,
-        944
-      ],
-      "notes": "PURPOSE: Terminate WF90 on claim DB failure.\nINPUT: Error details.\nOUTPUT: Workflow fails."
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Escalate DB UPDATE job_runs error.\nOUTPUT success→Graceful End. OUTPUT error→StopAndError."
     },
     {
       "parameters": {
@@ -2738,7 +2659,7 @@
             {
               "id": "err-type",
               "name": "error.type",
-              "value": "WF90_DB_CLAIM_FAILED",
+              "value": "WF90_DB_INSERT_JOB_RUNS_FAILED",
               "type": "string"
             },
             {
@@ -2759,7 +2680,7 @@
           "dotNotation": true
         }
       },
-      "id": "88f46d24-cc43-47ee-a0aa-03651ac33a12",
+      "id": "5a3b5cb9-01d3-4545-8e6f-affb98d9e865",
       "name": "❌ ErrorPipe Insert job_runs",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -2767,30 +2688,14 @@
         -400,
         1728
       ],
-      "notes": "PURPOSE: Format error for WF99 when CLAIM fails.\nINPUT: Postgres error output.\nOUTPUT: Standardized error envelope.\nWHY: DB failure requires escalation."
-    },
-    {
-      "parameters": {
-        "errorMessage": "={{ 'WF90: DB CLAIM failed - ' + $json.error.message }}"
-      },
-      "id": "5ffc557e-1490-4368-a415-710092603461",
-      "name": "🛑 StopAndError (Insert job_runs)",
-      "type": "n8n-nodes-base.stopAndError",
-      "typeVersion": 1,
-      "position": [
-        48,
-        1728
-      ],
-      "notes": "PURPOSE: Terminate WF90 on claim DB failure.\nINPUT: Error details.\nOUTPUT: Workflow fails."
+      "notes": "PURPOSE: Format error for WF99 when INSERT ops.job_runs fails."
     },
     {
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
+          "value": "WF99 — Global ERR Handler",
+          "mode": "name"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -2804,7 +2709,7 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "5d9f8949-da60-47dd-bd1f-9f36c5e474c7",
+      "id": "6d8ebefc-16f5-49ce-86d0-0681ddbba47d",
       "name": "🚨 Call WF99 (Insert job_runs)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
@@ -2812,7 +2717,1196 @@
         -176,
         1728
       ],
-      "notes": "PURPOSE: Escalate claim DB error to global handler.\nINPUT: Error envelope.\nOUTPUT: WF99 response."
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Escalate DB INSERT job_runs error.\nOUTPUT success→Graceful End. OUTPUT error→StopAndError."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WF42 — Media Describe (Vision)",
+          "mode": "name"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "c39e1be3-6c84-4e8c-9484-69f808e256a7",
+      "name": "▶️ Execute WF42",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        960
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Dispatch media describe (image/video) to WF42.\nINPUT: Request envelope.\nOUTPUT: Success/error.\nWHY: WF42 handles vision/media description."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "req-ctx-tenant",
+              "name": "req.ctx.tenant_id",
+              "value": "={{ $json.job.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-correlation",
+              "name": "req.ctx.correlation_id",
+              "value": "={{ $json.job.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-job-id",
+              "name": "req.ctx.job_id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-ctx-workflow",
+              "name": "req.ctx.workflow",
+              "value": "WF90",
+              "type": "string"
+            },
+            {
+              "id": "req-job-id",
+              "name": "req.job.id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-job-type",
+              "name": "req.job.job_type",
+              "value": "={{ $json.job.job_type }}",
+              "type": "string"
+            },
+            {
+              "id": "req-job-payload",
+              "name": "req.job.payload",
+              "value": "={{ $json.job.payload }}",
+              "type": "object"
+            },
+            {
+              "id": "meta-job-run-id",
+              "name": "_meta.job_run_id",
+              "value": "={{ $json.job_run_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-attempts",
+              "name": "_meta.attempts",
+              "value": "={{ $json.job.attempts + 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-max-attempts",
+              "name": "_meta.max_attempts",
+              "value": "={{ $json.job.max_attempts }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "a102381d-10ab-4473-a5e6-6e34290f6ff1",
+      "name": "📦 Prepare WF42 Req",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        880
+      ],
+      "notes": "PURPOSE: Build request for WF42 media describe worker.\nINPUT: Job with image/video extract_kind.\nOUTPUT: Standardized req.\nWHY: WF42 handles vision/media description."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "req-ctx-tenant",
+              "name": "req.ctx.tenant_id",
+              "value": "={{ $json.job.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-correlation",
+              "name": "req.ctx.correlation_id",
+              "value": "={{ $json.job.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-job-id",
+              "name": "req.ctx.job_id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-ctx-workflow",
+              "name": "req.ctx.workflow",
+              "value": "WF90",
+              "type": "string"
+            },
+            {
+              "id": "req-job-id",
+              "name": "req.job.id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-job-type",
+              "name": "req.job.job_type",
+              "value": "={{ $json.job.job_type }}",
+              "type": "string"
+            },
+            {
+              "id": "req-job-payload",
+              "name": "req.job.payload",
+              "value": "={{ $json.job.payload }}",
+              "type": "object"
+            },
+            {
+              "id": "meta-job-run-id",
+              "name": "_meta.job_run_id",
+              "value": "={{ $json.job_run_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-attempts",
+              "name": "_meta.attempts",
+              "value": "={{ $json.job.attempts + 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-max-attempts",
+              "name": "_meta.max_attempts",
+              "value": "={{ $json.job.max_attempts }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "07b7c969-68bf-4824-b9f0-5b140f805882",
+      "name": "📦 Prepare WF34 Req",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        496
+      ],
+      "notes": "PURPOSE: Build request for WF34 voice transcriber.\nINPUT: Job with voice_transcribe/audio_transcribe.\nOUTPUT: Standardized req for WF34."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WF34 — Voice Transcriber (Full STT)",
+          "mode": "name"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "159ea646-53ad-47f1-8449-3eba7a2fcb74",
+      "name": "▶️ Execute WF34",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        496
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Dispatch voice/audio transcription to WF34.\nINPUT: Request envelope.\nOUTPUT: Success/error from worker."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "req-ctx-tenant",
+              "name": "req.ctx.tenant_id",
+              "value": "={{ $json.job.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-correlation",
+              "name": "req.ctx.correlation_id",
+              "value": "={{ $json.job.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-job-id",
+              "name": "req.ctx.job_id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-ctx-workflow",
+              "name": "req.ctx.workflow",
+              "value": "WF90",
+              "type": "string"
+            },
+            {
+              "id": "req-job-id",
+              "name": "req.job.id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-job-type",
+              "name": "req.job.job_type",
+              "value": "={{ $json.job.job_type }}",
+              "type": "string"
+            },
+            {
+              "id": "req-job-payload",
+              "name": "req.job.payload",
+              "value": "={{ $json.job.payload }}",
+              "type": "object"
+            },
+            {
+              "id": "meta-job-run-id",
+              "name": "_meta.job_run_id",
+              "value": "={{ $json.job_run_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-attempts",
+              "name": "_meta.attempts",
+              "value": "={{ $json.job.attempts + 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-max-attempts",
+              "name": "_meta.max_attempts",
+              "value": "={{ $json.job.max_attempts }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "6e1f444b-fd4c-4dfc-8fbc-b10d4396c8d7",
+      "name": "📦 Prepare WF35 Req",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        320
+      ],
+      "notes": "PURPOSE: Build request for WF35 voice probe.\nINPUT: Job with voice_probe.\nOUTPUT: Standardized req for WF35."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WF35 — Voice Probe",
+          "mode": "name"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "367a1696-96bc-4be6-a471-050427ceac02",
+      "name": "▶️ Execute WF35",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        320
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Dispatch voice probe to WF35.\nINPUT: Request envelope.\nOUTPUT: Success/error from worker."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "req-ctx-tenant",
+              "name": "req.ctx.tenant_id",
+              "value": "={{ $json.job.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-correlation",
+              "name": "req.ctx.correlation_id",
+              "value": "={{ $json.job.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-job-id",
+              "name": "req.ctx.job_id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-ctx-workflow",
+              "name": "req.ctx.workflow",
+              "value": "WF90",
+              "type": "string"
+            },
+            {
+              "id": "req-job-id",
+              "name": "req.job.id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-job-type",
+              "name": "req.job.job_type",
+              "value": "={{ $json.job.job_type }}",
+              "type": "string"
+            },
+            {
+              "id": "req-job-payload",
+              "name": "req.job.payload",
+              "value": "={{ $json.job.payload }}",
+              "type": "object"
+            },
+            {
+              "id": "meta-job-run-id",
+              "name": "_meta.job_run_id",
+              "value": "={{ $json.job_run_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-attempts",
+              "name": "_meta.attempts",
+              "value": "={{ $json.job.attempts + 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-max-attempts",
+              "name": "_meta.max_attempts",
+              "value": "={{ $json.job.max_attempts }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "2841ad78-97e2-4cef-9929-596c7e0d9965",
+      "name": "📦 Prepare WF40 Req",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        640
+      ],
+      "notes": "PURPOSE: Build request for WF40 content extractor.\nINPUT: Job with doc_text/url_text.\nOUTPUT: Standardized req for WF40."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WF40 — Content Extractor (Text Extraction)",
+          "mode": "name"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "ab4121e7-5297-43d4-bdfc-47504682b484",
+      "name": "▶️ Execute WF40",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        656
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Dispatch text extraction to WF40.\nINPUT: Request envelope.\nOUTPUT: Success/error from worker."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "req-ctx-tenant",
+              "name": "req.ctx.tenant_id",
+              "value": "={{ $json.job.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-correlation",
+              "name": "req.ctx.correlation_id",
+              "value": "={{ $json.job.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-job-id",
+              "name": "req.ctx.job_id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-ctx-workflow",
+              "name": "req.ctx.workflow",
+              "value": "WF90",
+              "type": "string"
+            },
+            {
+              "id": "req-job-id",
+              "name": "req.job.id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-job-type",
+              "name": "req.job.job_type",
+              "value": "={{ $json.job.job_type }}",
+              "type": "string"
+            },
+            {
+              "id": "req-job-payload",
+              "name": "req.job.payload",
+              "value": "={{ $json.job.payload }}",
+              "type": "object"
+            },
+            {
+              "id": "meta-job-run-id",
+              "name": "_meta.job_run_id",
+              "value": "={{ $json.job_run_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-attempts",
+              "name": "_meta.attempts",
+              "value": "={{ $json.job.attempts + 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-max-attempts",
+              "name": "_meta.max_attempts",
+              "value": "={{ $json.job.max_attempts }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "ae215753-98e1-4426-9700-11bc31107347",
+      "name": "📦 Prepare WF41 Req",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        768
+      ],
+      "notes": "PURPOSE: Build request for WF41 chunk & embed.\nINPUT: Job with chunk_document/embed_chunks.\nOUTPUT: Standardized req for WF41."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WF41 — Chunk & Embed",
+          "mode": "name"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "840c8fd4-3795-46c2-8d58-95e232452740",
+      "name": "▶️ Execute WF41",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        816
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Dispatch chunk/embed job to WF41.\nINPUT: Request envelope.\nOUTPUT: Success/error from worker."
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.req?.job?.payload?.fail }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "fail"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "35078bbc-39ff-4baa-9aea-9cac65939b48",
+      "name": "🧪 Test Worker Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        1472
+      ],
+      "notes": "PURPOSE: Route test_job by payload.fail flag.\nINPUT: Test job request.\nOUTPUT fail: Simulate failure.\nOUTPUT extra: Simulate success.\nWHY: Allows testing both paths without external workers."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ok-status",
+              "name": "result.status",
+              "value": "ok",
+              "type": "string"
+            },
+            {
+              "id": "ok-msg",
+              "name": "result.message",
+              "value": "test_job completed successfully",
+              "type": "string"
+            },
+            {
+              "id": "meta-job-run-id",
+              "name": "_meta.job_run_id",
+              "value": "={{ $json.req?._meta?.job_run_id || $json._meta?.job_run_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-job-id",
+              "name": "_meta.job_id",
+              "value": "={{ $json.req?.ctx?.job_id || $json._meta?.job_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-attempts",
+              "name": "_meta.attempts",
+              "value": "={{ $json._meta?.attempts || 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-max-attempts",
+              "name": "_meta.max_attempts",
+              "value": "={{ $json._meta?.max_attempts || 10 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "ad401f3e-95d7-4611-b749-a19b95b62561",
+      "name": "🧪 Test Worker OK",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        1616
+      ],
+      "notes": "PURPOSE: Return success envelope for test_job.\nINPUT: Test job.\nOUTPUT: Success result.\nWHY: Dedicated test worker for T1 happy path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-type",
+              "name": "error.type",
+              "value": "TEST_FORCED_FAILURE",
+              "type": "string"
+            },
+            {
+              "id": "err-msg",
+              "name": "error.message",
+              "value": "Forced failure for test_job (payload.fail=true)",
+              "type": "string"
+            },
+            {
+              "id": "meta-job-run-id",
+              "name": "_meta.job_run_id",
+              "value": "={{ $json.req?._meta?.job_run_id || $json._meta?.job_run_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-job-id",
+              "name": "_meta.job_id",
+              "value": "={{ $json.req?.ctx?.job_id || $json._meta?.job_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-attempts",
+              "name": "_meta.attempts",
+              "value": "={{ $json._meta?.attempts || 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-max-attempts",
+              "name": "_meta.max_attempts",
+              "value": "={{ $json._meta?.max_attempts || 10 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "e1993667-2dc5-42e6-a171-13cda5248828",
+      "name": "🧪 Test Worker FAIL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        1440
+      ],
+      "notes": "PURPOSE: Return error envelope for test_job when payload.fail=true.\nINPUT: Test job with fail flag.\nOUTPUT: Error result.\nWHY: Dedicated test worker for T3 fail path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "req-ctx-tenant",
+              "name": "req.ctx.tenant_id",
+              "value": "={{ $json.job.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-correlation",
+              "name": "req.ctx.correlation_id",
+              "value": "={{ $json.job.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-ctx-job-id",
+              "name": "req.ctx.job_id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-ctx-workflow",
+              "name": "req.ctx.workflow",
+              "value": "WF90",
+              "type": "string"
+            },
+            {
+              "id": "req-job-id",
+              "name": "req.job.id",
+              "value": "={{ $json.job.id }}",
+              "type": "number"
+            },
+            {
+              "id": "req-job-type",
+              "name": "req.job.job_type",
+              "value": "={{ $json.job.job_type }}",
+              "type": "string"
+            },
+            {
+              "id": "req-job-payload",
+              "name": "req.job.payload",
+              "value": "={{ $json.job.payload }}",
+              "type": "object"
+            },
+            {
+              "id": "meta-job-run-id",
+              "name": "_meta.job_run_id",
+              "value": "={{ $json.job_run_id }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-attempts",
+              "name": "_meta.attempts",
+              "value": "={{ $json.job.attempts + 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "meta-max-attempts",
+              "name": "_meta.max_attempts",
+              "value": "={{ $json.job.max_attempts }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "b28c667a-e88a-438a-97f3-8ac091b963f1",
+      "name": "📦 Prepare Test Req",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        32,
+        1408
+      ],
+      "notes": "PURPOSE: Build request envelope for test_job worker.\nINPUT: Job data from switch.\nOUTPUT: Standardized req for test worker."
+    },
+    {
+      "parameters": {},
+      "id": "64322255-e920-4776-b51c-e61650ae9289",
+      "name": "✅ End (Select Err)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1744,
+        928
+      ],
+      "notes": "PURPOSE: Graceful end after WF99 successfully logged SELECT error.\nWHY: Prevents WF98 duplicate by NOT using StopAndError after successful WF99."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF90: WF99 call failed for SELECT error' }}"
+      },
+      "id": "7c9555af-6082-4371-adbf-c1cc8c9cd7e4",
+      "name": "🛑 StopAndError (Select WF99 Fail)",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -1744,
+        1088
+      ],
+      "notes": "PURPOSE: StopAndError ONLY when WF99 itself fails.\nWHY: WF99 failure = last resort, WF98 should catch this."
+    },
+    {
+      "parameters": {},
+      "id": "c891edd2-ef7e-4903-912c-e18ca8e869da",
+      "name": "✅ End (Claim Err)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        928
+      ],
+      "notes": "PURPOSE: Graceful end after WF99 successfully logged CLAIM error.\nWHY: Prevents WF98 duplicate by NOT using StopAndError after successful WF99."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF90: WF99 call failed for CLAIM error' }}"
+      },
+      "id": "3e604476-7451-4f4d-98a6-899a92527652",
+      "name": "🛑 StopAndError (Claim WF99 Fail)",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        1088
+      ],
+      "notes": "PURPOSE: StopAndError ONLY when WF99 itself fails.\nWHY: WF99 failure = last resort, WF98 should catch this."
+    },
+    {
+      "parameters": {},
+      "id": "20402546-ee83-4feb-a432-f68e0af7f2ad",
+      "name": "✅ End (Insert Runs Err)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        48,
+        1648
+      ],
+      "notes": "PURPOSE: Graceful end after WF99 successfully logged INSERT job_runs error.\nWHY: Prevents WF98 duplicate by NOT using StopAndError after successful WF99."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF90: WF99 call failed for INSERT job_runs error' }}"
+      },
+      "id": "7c1e86ce-d215-48de-a962-ee586c25d436",
+      "name": "🛑 StopAndError (InsertRuns WF99 Fail)",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        48,
+        1808
+      ],
+      "notes": "PURPOSE: StopAndError ONLY when WF99 itself fails.\nWHY: WF99 failure = last resort, WF98 should catch this."
+    },
+    {
+      "parameters": {},
+      "id": "7799390c-3e18-4d41-ad6d-2fc4b3c465a9",
+      "name": "✅ End (Update Job Err)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        1344
+      ],
+      "notes": "PURPOSE: Graceful end after WF99 successfully logged UPDATE Job error.\nWHY: Prevents WF98 duplicate by NOT using StopAndError after successful WF99."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF90: WF99 call failed for UPDATE Job error' }}"
+      },
+      "id": "0060eaaa-f992-4402-aef7-8433ebee527a",
+      "name": "🛑 StopAndError (UpdateJob WF99 Fail)",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3808,
+        1584
+      ],
+      "notes": "PURPOSE: StopAndError ONLY when WF99 itself fails.\nWHY: WF99 failure = last resort, WF98 should catch this."
+    },
+    {
+      "parameters": {},
+      "id": "ee069abb-c443-4456-a48b-a830708105c9",
+      "name": "✅ End (Update Runs Err)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4032,
+        928
+      ],
+      "notes": "PURPOSE: Graceful end after WF99 successfully logged UPDATE job_runs error.\nWHY: Prevents WF98 duplicate by NOT using StopAndError after successful WF99."
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'WF90: WF99 call failed for UPDATE job_runs error' }}"
+      },
+      "id": "ac64596f-0b24-4ea7-a46d-a7c6e6afb9ed",
+      "name": "🛑 StopAndError (UpdateRuns WF99 Fail)",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        4064,
+        1152
+      ],
+      "notes": "PURPOSE: StopAndError ONLY when WF99 itself fails.\nWHY: WF99 failure = last resort, WF98 should catch this."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ '00000000-0000-0000-0000-000000000000' }}",
+            "job_type": "test_job",
+            "status": "queued",
+            "priority": 100,
+            "payload": "={{ JSON.stringify({ test_case: 'T2_Edge', timestamp: $now.toISO() }) }}",
+            "next_run_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "json",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "next_run_at",
+              "displayName": "next_run_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5e54b46a-29e0-4ec5-b0d4-6e91ada0d6e2",
+      "name": "🧪 T2: Insert Edge Job",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2416,
+        1264
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "PURPOSE: T2 Edge - Insert test_job (handled by Test Worker OK path).\nVerifies test_job processing through the full pipeline."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r",
+              "name": "test.result",
+              "value": "T2_INSERTED",
+              "type": "string"
+            },
+            {
+              "id": "j",
+              "name": "test.job_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "8a279760-c3c1-4470-9392-ac272c127f4e",
+      "name": "🧪 T2 Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2208,
+        1328
+      ],
+      "notes": "PURPOSE: Record T2 result."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ '00000000-0000-0000-0000-000000000000' }}",
+            "job_type": "test_job",
+            "status": "queued",
+            "priority": 100,
+            "payload": "={{ JSON.stringify({ test_case: 'T3_Fail', fail: true, timestamp: $now.toISO() }) }}",
+            "max_attempts": 2,
+            "next_run_at": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "json",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "next_run_at",
+              "displayName": "next_run_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "07d39cbf-3fea-4221-99e0-0c280716b51d",
+      "name": "🧪 T3: Insert Fail Job",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2416,
+        1424
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "PURPOSE: T3 Fail - Insert test_job with fail=true, max_attempts=2.\nTests retry path and eventual dead marking."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r",
+              "name": "test.result",
+              "value": "T3_INSERTED",
+              "type": "string"
+            },
+            {
+              "id": "j",
+              "name": "test.job_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "99fc21f7-111e-4a46-a13c-d4549d76df0c",
+      "name": "🧪 T3 Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2208,
+        1488
+      ],
+      "notes": "PURPOSE: Record T3 result."
     }
   ],
   "pinData": {},
@@ -2872,7 +3966,14 @@
       "main": [
         [
           {
-            "node": "🛑 StopAndError (Select)",
+            "node": "✅ End (Select Err)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🛑 StopAndError (Select WF99 Fail)",
             "type": "main",
             "index": 0
           }
@@ -2964,7 +4065,14 @@
       "main": [
         [
           {
-            "node": "🛑 StopAndError (Claim)",
+            "node": "✅ End (Claim Err)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🛑 StopAndError (Claim WF99 Fail)",
             "type": "main",
             "index": 0
           }
@@ -3028,6 +4136,35 @@
         [
           {
             "node": "❌ ErrorPipe Insert job_runs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ ErrorPipe Insert job_runs": {
+      "main": [
+        [
+          {
+            "node": "🚨 Call WF99 (Insert job_runs)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🚨 Call WF99 (Insert job_runs)": {
+      "main": [
+        [
+          {
+            "node": "✅ End (Insert Runs Err)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🛑 StopAndError (InsertRuns WF99 Fail)",
             "type": "main",
             "index": 0
           }
@@ -3130,7 +4267,7 @@
         ],
         [
           {
-            "node": "❓ Unknown job_type",
+            "node": "📦 Prepare Test Req",
             "type": "main",
             "index": 0
           }
@@ -3168,7 +4305,7 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -3190,14 +4327,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 0
+            "index": 2
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 0
+            "index": 3
           }
         ]
       ]
@@ -3219,14 +4356,279 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 0
+            "index": 4
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "📦 Prepare WF34 Req": {
+      "main": [
+        [
+          {
+            "node": "▶️ Execute WF34",
+            "type": "main",
             "index": 0
+          }
+        ]
+      ]
+    },
+    "▶️ Execute WF34": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 8
+          }
+        ],
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "📦 Prepare WF35 Req": {
+      "main": [
+        [
+          {
+            "node": "▶️ Execute WF35",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▶️ Execute WF35": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 6
+          }
+        ],
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "📦 Prepare WF40 Req": {
+      "main": [
+        [
+          {
+            "node": "▶️ Execute WF40",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▶️ Execute WF40": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 10
+          }
+        ],
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 11
+          }
+        ]
+      ]
+    },
+    "📦 Prepare WF41 Req": {
+      "main": [
+        [
+          {
+            "node": "▶️ Execute WF41",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▶️ Execute WF41": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 12
+          }
+        ],
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 13
+          }
+        ]
+      ]
+    },
+    "📦 Prepare WF42 Req": {
+      "main": [
+        [
+          {
+            "node": "▶️ Execute WF42",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▶️ Execute WF42": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 14
+          }
+        ],
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 15
+          }
+        ]
+      ]
+    },
+    "📦 Prepare WF50 Req": {
+      "main": [
+        [
+          {
+            "node": "▶️ Execute WF50",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▶️ Execute WF50": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 16
+          }
+        ],
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 17
+          }
+        ]
+      ]
+    },
+    "📦 Prepare WF92 Req": {
+      "main": [
+        [
+          {
+            "node": "▶️ Execute WF92",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▶️ Execute WF92": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 18
+          }
+        ],
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 19
+          }
+        ]
+      ]
+    },
+    "❓ Unknown job_type": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 20
+          }
+        ]
+      ]
+    },
+    "📦 Prepare Test Req": {
+      "main": [
+        [
+          {
+            "node": "🧪 Test Worker Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧪 Test Worker Router": {
+      "main": [
+        [
+          {
+            "node": "🧪 Test Worker FAIL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🧪 Test Worker OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧪 Test Worker OK": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 22
+          }
+        ]
+      ]
+    },
+    "🧪 Test Worker FAIL": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge All Results",
+            "type": "main",
+            "index": 21
           }
         ]
       ]
@@ -3267,42 +4669,49 @@
       "main": [
         [
           {
-            "node": "📦 Prepare WF41 Req",
+            "node": "📦 Prepare WF35 Req",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "📦 Prepare WF41 Req",
+            "node": "📦 Prepare WF34 Req",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "📦 Prepare WF41 Req",
+            "node": "📦 Prepare WF34 Req",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "📦 Prepare WF41 Req",
+            "node": "📦 Prepare WF40 Req",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "📦 Prepare WF41 Req",
+            "node": "📦 Prepare WF40 Req",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "📦 Prepare WF41 Req",
+            "node": "📦 Prepare WF42 Req",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📦 Prepare WF42 Req",
             "type": "main",
             "index": 0
           }
@@ -3310,104 +4719,6 @@
         [
           {
             "node": "❓ Unknown job_type",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📦 Prepare WF41 Req": {
-      "main": [
-        [
-          {
-            "node": "▶️ Execute WF41",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "▶️ Execute WF41": {
-      "main": [
-        [
-          {
-            "node": "🔗 Merge All Results",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "🔗 Merge All Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📦 Prepare WF50 Req": {
-      "main": [
-        [
-          {
-            "node": "▶️ Execute WF50",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "▶️ Execute WF50": {
-      "main": [
-        [
-          {
-            "node": "🔗 Merge All Results",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "🔗 Merge All Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📦 Prepare WF92 Req": {
-      "main": [
-        [
-          {
-            "node": "▶️ Execute WF92",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "▶️ Execute WF92": {
-      "main": [
-        [
-          {
-            "node": "🔗 Merge All Results",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "🔗 Merge All Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "❓ Unknown job_type": {
-      "main": [
-        [
-          {
-            "node": "🔗 Merge All Results",
             "type": "main",
             "index": 0
           }
@@ -3449,7 +4760,7 @@
           {
             "node": "🔗 Merge Final Status",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -3489,7 +4800,7 @@
           {
             "node": "🔗 Merge Final Status",
             "type": "main",
-            "index": 0
+            "index": 2
           }
         ]
       ]
@@ -3552,6 +4863,64 @@
         ]
       ]
     },
+    "❌ ErrorPipe Update Job Final": {
+      "main": [
+        [
+          {
+            "node": "🚨 Call WF99 (Update Job)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🚨 Call WF99 (Update Job)": {
+      "main": [
+        [
+          {
+            "node": "✅ End (Update Job Err)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🛑 StopAndError (UpdateJob WF99 Fail)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ ErrorPipe Update job_runs": {
+      "main": [
+        [
+          {
+            "node": "🚨 Call WF99 (Update Job_runs)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🚨 Call WF99 (Update Job_runs)": {
+      "main": [
+        [
+          {
+            "node": "✅ End (Update Runs Err)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🛑 StopAndError (UpdateRuns WF99 Fail)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "🧪 Test Trigger": {
       "main": [
         [
@@ -3571,6 +4940,20 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "🧪 T2: Insert Edge Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🧪 T3: Insert Fail Job",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -3585,66 +4968,22 @@
         ]
       ]
     },
-    "❌ ErrorPipe Update Job Final": {
+    "🧪 T2: Insert Edge Job": {
       "main": [
         [
           {
-            "node": "🚨 Call WF99 (Update Job)",
+            "node": "🧪 T2 Result",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "❌ ErrorPipe Update job_runs": {
+    "🧪 T3: Insert Fail Job": {
       "main": [
         [
           {
-            "node": "🚨 Call WF99 (Update Job_runs)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🚨 Call WF99 (Update Job)": {
-      "main": [
-        [
-          {
-            "node": "🛑 StopAndError (Update Job)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🚨 Call WF99 (Update Job_runs)": {
-      "main": [
-        [
-          {
-            "node": "🛑 StopAndError (Update Job_runs)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "❌ ErrorPipe Insert job_runs": {
-      "main": [
-        [
-          {
-            "node": "🚨 Call WF99 (Insert job_runs)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🚨 Call WF99 (Insert job_runs)": {
-      "main": [
-        [
-          {
-            "node": "🛑 StopAndError (Insert job_runs)",
+            "node": "🧪 T3 Result",
             "type": "main",
             "index": 0
           }
@@ -3657,7 +4996,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "187e976f-187d-4c49-9647-62bd8282f42e",
+  "versionId": "64f7dbde-ae54-4021-b815-cc64f2425492",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
