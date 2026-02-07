@@ -8,10 +8,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -64,
-        688
+        -16,
+        1008
       ],
-      "id": "958fec06-f29d-40b0-b357-50f3cc9b9dd4",
+      "id": "1fb0c94f-ae6d-4547-a055-ac5e3a2a5d2f",
       "name": "IN — Execute Workflow Trigger"
     },
     {
@@ -103,11 +103,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        144,
-        688
+        192,
+        1008
       ],
-      "id": "6268503c-d34b-45a7-aa6f-4d45585d89cb",
-      "name": "Set — Carry"
+      "id": "44a45834-0ebb-4047-9dc0-f5a9666c3e1b",
+      "name": "Set — Carry",
+      "notes": "Extract and preserve context fields from input: tenant_id, bot_id, correlation_id, trace_id, visibility, chat_id, message_version_id, job_id, workflow, url, url_id_input, link_text, force_refetch. These fields are carried through the entire workflow using the _carry object."
     },
     {
       "parameters": {
@@ -175,86 +176,45 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        336,
-        688
+        384,
+        1008
       ],
-      "id": "52e95156-390f-4c26-a080-9531bc3bbc17",
-      "name": "IF — Valid Input?"
+      "id": "626cd107-8584-4c34-bcbc-8aa96422ee54",
+      "name": "IF — Valid Input?",
+      "notes": "Validate that required input fields are present: req.ctx exists, req.job exists, req.job.payload.url exists. If valid: proceed to URL handling. If invalid: route to error handler."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "d09d7821-015b-4297-995c-aeef857d000f",
-              "name": "_err.node",
-              "value": "IF — Valid Input?",
+              "id": "c7cb9766-3909-4b5b-a32b-868ae2ed43a7",
+              "name": "_error_node",
+              "value": "IN — Execute Workflow Trigger",
               "type": "string"
             },
             {
-              "id": "06351cd9-023b-4b68-a40c-8fccf0071320",
-              "name": "_err.operation",
-              "value": "validate_input",
+              "id": "b1aac2eb-f9a3-4a3d-aba2-53ace9615c00",
+              "name": "_error_operation",
+              "value": "Input validation",
               "type": "string"
             },
             {
-              "id": "6983b8e8-89d3-404c-8ecb-67cedc2829ce",
-              "name": "_err.kind",
-              "value": "validation",
+              "id": "cb382516-3444-4d3d-ae52-a92fb9bc7a05",
+              "name": "_error_kind",
+              "value": "validation_error",
               "type": "string"
             },
             {
-              "id": "0cd58237-fcc1-412d-9472-f442ad847b2c",
-              "name": "_err.http_status",
-              "value": "400",
-              "type": "number"
-            },
-            {
-              "id": "7315463a-8ddb-499b-b644-04b7fffe2033",
-              "name": "_err.retryable",
-              "value": "false",
+              "id": "e30d69ec-f612-4460-bca0-07d69f8db1ce",
+              "name": "_error_retryable",
+              "value": "=false",
               "type": "boolean"
             },
             {
-              "id": "89508706-c730-478b-9187-11f3a198530a",
-              "name": "_err.message",
-              "value": "Missing required fields: tenant_id, bot_id, correlation_id, job_id, or url",
-              "type": "string"
-            },
-            {
-              "id": "572a3765-e4a5-405e-8c5b-f21e5af28312",
-              "name": "ctx.tenant_id",
-              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "28e901dd-835f-434a-af2c-a35c2a14a6d4",
-              "name": "ctx.bot_id",
-              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
-              "type": "string"
-            },
-            {
-              "id": "b69ed2c6-3aed-4e50-b414-fcab469c9885",
-              "name": "ctx.correlation_id",
-              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "ed10a530-735a-4d86-9145-3dd22fde7330",
-              "name": "ctx.trace_id",
-              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
-              "type": "string"
-            },
-            {
-              "id": "3648f199-aaaf-4fef-8659-e517b448a396",
-              "name": "ctx.workflow",
-              "value": "WF31",
-              "type": "string"
-            },
-            {
-              "id": "9462e7fb-72b9-4c41-a3b0-b7ed773c3332",
-              "name": "ctx.job_id",
-              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
+              "id": "a897ac33-9452-4ca7-adac-939c36a2a247",
+              "name": "errorMessage",
+              "value": "Missing required input fields: req.ctx, req.job, or req.job.payload.url",
               "type": "string"
             }
           ]
@@ -264,11 +224,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        544,
-        992
+        608,
+        1680
       ],
-      "id": "11e212af-a2cc-4954-a9c3-4a8bf6c6b060",
-      "name": "Set — ERR Input Validation"
+      "id": "61faf8bf-dcbb-4a36-82f5-8ce5692cab83",
+      "name": "Set — ERR Input Validation",
+      "notes": "Tag input validation error with metadata for ErrorPipe v1. Sets _error_node, _error_operation, _error_kind=validation_error, _error_retryable=false."
     },
     {
       "parameters": {
@@ -297,11 +258,12 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        544,
-        688
+        592,
+        1008
       ],
-      "id": "fb2316cc-3869-48a3-8b66-ee4cf0ee9188",
-      "name": "IF — url_id Provided?"
+      "id": "df3eeed3-b477-426f-bd28-0b61acfb9442",
+      "name": "IF — url_id Provided?",
+      "notes": "Check if url_id was provided in input (payload.url_id). If yes: reuse existing url_id, skip URL upsert. If no: perform URL upsert to get/create url_id."
     },
     {
       "parameters": {
@@ -320,11 +282,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        736,
-        592
+        1056,
+        848
       ],
-      "id": "0910b5f9-658f-42e0-b602-fee2bee2adf2",
-      "name": "Set — Use Existing url_id"
+      "id": "80b5d854-a1be-4848-9aef-5f29853f4800",
+      "name": "Set — Use Existing url_id",
+      "notes": "Use url_id from input payload. Preserves carry context. Avoids unnecessary URL upsert when url_id is already known."
     },
     {
       "parameters": {
@@ -339,8 +302,8 @@
             {
               "id": "5085b2dd-5837-470b-b571-341003e60d60",
               "name": "meta",
-              "value": "{}",
-              "type": "string"
+              "value": {},
+              "type": "object"
             }
           ]
         },
@@ -349,10 +312,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        736,
-        800
+        784,
+        1120
       ],
-      "id": "a0ba80a2-832f-46e8-9207-bbfe9fd1c99d",
+      "id": "dbff921e-9d7d-46f2-8288-067155993648",
       "name": "Set — Prep URL Upsert"
     },
     {
@@ -454,10 +417,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        944,
-        800
+        1088,
+        1216
       ],
-      "id": "597d91ec-cf4b-4b91-a86d-5becec4a12e2",
+      "id": "9441ca06-e419-4275-a008-dad678c5de0c",
       "name": "PG — Upsert content.urls",
       "credentials": {
         "postgres": {
@@ -465,97 +428,8 @@
           "name": "Postgres DF Assistant"
         }
       },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "f6c1761e-e605-43d9-9881-15b5db01246c",
-              "name": "_err.node",
-              "value": "PG — Upsert content.urls",
-              "type": "string"
-            },
-            {
-              "id": "2f81a057-b485-4153-aeae-a3e7bd8bbc5a",
-              "name": "_err.operation",
-              "value": "upsert",
-              "type": "string"
-            },
-            {
-              "id": "2a225ccd-a9ee-45c9-bdd2-3c11f8f4c394",
-              "name": "_err.table",
-              "value": "content.urls",
-              "type": "string"
-            },
-            {
-              "id": "e12d2c6e-2177-4e8d-b6b6-dc0cfda45d91",
-              "name": "_err.kind",
-              "value": "pg",
-              "type": "string"
-            },
-            {
-              "id": "f666c51b-eb9e-4d87-a5e0-d7e1d28f41e4",
-              "name": "_err.http_status",
-              "value": "500",
-              "type": "number"
-            },
-            {
-              "id": "34eb1bfc-1da3-48f1-b230-be675b4e0ad7",
-              "name": "_err.retryable",
-              "value": "true",
-              "type": "boolean"
-            },
-            {
-              "id": "caf10adb-e7ee-48d5-ab60-7902a74fb258",
-              "name": "ctx.tenant_id",
-              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "722495d6-bfcb-499d-a8e4-681653084d71",
-              "name": "ctx.bot_id",
-              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
-              "type": "string"
-            },
-            {
-              "id": "c3b31bd8-5ba8-4f94-86cd-6cf101fff3f8",
-              "name": "ctx.correlation_id",
-              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "6f330399-88c5-4899-b7a2-2980ca48953b",
-              "name": "ctx.trace_id",
-              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
-              "type": "string"
-            },
-            {
-              "id": "508e7fca-54c4-4547-9fee-334af6ecfbf0",
-              "name": "ctx.workflow",
-              "value": "WF31",
-              "type": "string"
-            },
-            {
-              "id": "df5f83c4-58a6-4e5c-b2a2-9c3ffa535df2",
-              "name": "ctx.job_id",
-              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1120,
-        1056
-      ],
-      "id": "d43babd4-8707-4e5b-825d-b2dea3383ae3",
-      "name": "ERR — Source PG Upsert URLs"
+      "onError": "continueErrorOutput",
+      "notes": "Upsert URL into content.urls table. normalized_url is unique constraint. Returns existing or newly created url_id. Updates last_seen_at. Uses OnConflict to handle duplicates. onError=continueErrorOutput for error handling."
     },
     {
       "parameters": {
@@ -574,11 +448,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1120,
-        752
+        1696,
+        1040
       ],
-      "id": "57cadf7a-fe8f-4948-b1c8-9ba18191ffd0",
-      "name": "Set — Capture url_id"
+      "id": "4da9b4a9-cf79-4b9f-8bd8-e802376039ce",
+      "name": "Set — Capture url_id",
+      "notes": "Capture url_id returned from URL upsert. Combines with carry context for downstream nodes."
     },
     {
       "parameters": {
@@ -621,17 +496,18 @@
             "http_status",
             "content_type",
             "storage_url",
-            "meta"
+            "meta",
+            "status"
           ]
         }
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1344,
-        688
+        2240,
+        864
       ],
-      "id": "6867e63c-d1bd-4bb1-897d-8016f7b0df11",
+      "id": "e93476f5-2a32-4e57-b63f-57a1d698545e",
       "name": "PG — Select Latest Fetch",
       "alwaysOutputData": true,
       "credentials": {
@@ -640,136 +516,29 @@
           "name": "Postgres DF Assistant"
         }
       },
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "Select most recent url_fetch for this url_id with status=succeeded. Used to check if we can reuse existing fetch data. Returns NULL if no successful fetch exists. onError=continueErrorOutput."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "4709ec35-741f-4d4d-945b-d1aadd8db529",
-              "name": "_err.node",
-              "value": "PG — Select Latest Fetch",
-              "type": "string"
-            },
-            {
-              "id": "f7e2c37a-f295-4b15-ade6-da891ca733a9",
-              "name": "_err.operation",
-              "value": "select",
-              "type": "string"
-            },
-            {
-              "id": "5665fccc-725d-4175-99ca-ed3812b8d9a1",
-              "name": "_err.table",
-              "value": "content.url_fetches",
-              "type": "string"
-            },
-            {
-              "id": "f9036ada-4798-474d-91ac-d51dff5c4c59",
-              "name": "_err.kind",
-              "value": "pg",
-              "type": "string"
-            },
-            {
-              "id": "c9da3a1c-0fe9-4968-90ec-e163cb154fd6",
-              "name": "_err.http_status",
-              "value": "500",
-              "type": "number"
-            },
-            {
-              "id": "ce20a9e7-e693-47f8-84e1-928c892ee902",
-              "name": "_err.retryable",
-              "value": "true",
-              "type": "boolean"
-            },
-            {
-              "id": "db8be78d-b532-4cfa-bc91-eb89d800bf82",
-              "name": "ctx.tenant_id",
-              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "1454b7ce-6673-4ca7-ad08-3c8b501811a9",
-              "name": "ctx.bot_id",
-              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
-              "type": "string"
-            },
-            {
-              "id": "86d20aa7-cb09-4c1a-9b04-510ce971600c",
-              "name": "ctx.correlation_id",
-              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "fa16c7ad-89a9-4091-9fb3-f5581e03ad58",
-              "name": "ctx.trace_id",
-              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
-              "type": "string"
-            },
-            {
-              "id": "71fbf3f3-045b-4f2e-8bce-b3c35169ecbd",
-              "name": "ctx.workflow",
-              "value": "WF31",
-              "type": "string"
-            },
-            {
-              "id": "9bd17a7d-7589-41cf-8690-8c33fe039e85",
-              "name": "ctx.job_id",
-              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1344,
-        1088
-      ],
-      "id": "95710365-4a1a-4fc6-b118-3461a2ba5a78",
-      "name": "ERR — Source PG Select Fetch"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "32fa914f-2525-40a1-a23f-fadb2aa29fd8",
+              "id": "8d667b0e-4021-4b12-9b73-401e3215ec70",
               "name": "_url_id",
-              "value": "={{ $('Merge — URL id chosen').item.json._url_id }}",
+              "value": "={{ $json._url_id }}",
               "type": "string"
             },
             {
-              "id": "459122f7-c810-4480-9008-1e9268bdcb27",
-              "name": "_existing_fetch_id",
-              "value": "={{ $json.id }}",
-              "type": "string"
+              "id": "3988e3b1-bac7-4042-864b-70a58c71fba6",
+              "name": "_existing_fetch",
+              "value": "={{ $json._existing_fetch ?? ($json.id ? $json : null) }}",
+              "type": "object"
             },
             {
-              "id": "ac619ed5-afbd-45cc-b9ed-3567cd539ca1",
-              "name": "_existing_http_status",
-              "value": "={{ $json.http_status }}",
-              "type": "string"
-            },
-            {
-              "id": "01dc184b-bdbf-4c37-b168-d141c407f4f6",
-              "name": "_existing_content_type",
-              "value": "={{ $json.content_type }}",
-              "type": "string"
-            },
-            {
-              "id": "dde3232f-1a56-4af1-92bf-16adc5df53c0",
-              "name": "_existing_storage_url",
-              "value": "={{ $json.storage_url }}",
-              "type": "string"
-            },
-            {
-              "id": "c4258dc6-0cee-4be9-81d3-45eb4a0847c3",
-              "name": "_existing_meta",
-              "value": "={{ $json.meta }}",
+              "id": "36827a5b-6833-4ab5-9654-b8c9d5827be5",
+              "name": "_carry",
+              "value": "={{ $('Set — Carry').item.json._carry }}",
               "type": "object"
             }
           ]
@@ -779,110 +548,126 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1536,
-        688
+        3056,
+        976
       ],
-      "id": "a17c0d9e-8bb9-4773-8f4f-40afb04e6679",
-      "name": "Set — After Fetch Check"
+      "id": "a866832c-480b-417b-822d-a84bac0c0b24",
+      "name": "Set — After Fetch Check",
+      "notes": "Capture result from Merge Fetch Result. If SELECT returned row, $json.id exists so use $json as _existing_fetch. If no row (default), _existing_fetch is null. Preserves _url_id and _carry for downstream."
     },
     {
       "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
-            "leftValue": ""
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
           },
           "conditions": [
             {
-              "id": "eaad93ea-d956-4e88-9aff-3cb6045e4706",
-              "leftValue": "={{ $('Set — Carry').item.json._carry.force_refetch }}",
-              "rightValue": "false",
+              "id": "4fa7ef2c-5717-464b-83b7-324e36403085",
+              "leftValue": "={{ $json._existing_fetch }}",
+              "rightValue": "",
               "operator": {
-                "type": "boolean",
-                "operation": "false"
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
               }
             },
             {
-              "id": "e480be86-d95a-436d-aa27-4c4a3fe3ef64",
-              "leftValue": "={{ $json._existing_fetch_id }}",
+              "id": "5f4d1030-9358-401a-8b5b-6414b8b38f35",
+              "leftValue": "={{ $json._existing_fetch?.status }}",
+              "rightValue": "succeeded",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ff315bfb-329d-4cef-8412-60f340369ab8",
+              "leftValue": "={{ $json._existing_fetch?.storage_url }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
-                "operation": "notEmpty"
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "da322e57-a391-4d6a-b858-377c50fbdae1",
+              "leftValue": "={{ $('Set — Carry').item.json._carry.force_refetch }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
               }
             }
           ],
           "combinator": "and"
         },
-        "looseTypeValidation": true,
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1744,
-        688
+        3312,
+        992
       ],
-      "id": "aeca4de0-3e62-4ea6-85e7-9cd91481d4d0",
-      "name": "IF — Reuse Fetch?"
+      "id": "e176cfdc-12df-4060-bc40-8cdacbf8d57a",
+      "name": "IF — Reuse Fetch?",
+      "notes": "Decide if we can reuse existing fetch. Conditions: _existing_fetch exists AND status=succeeded AND storage_url not empty AND force_refetch=false. TRUE: reuse (skip HTTP/S3). FALSE: perform fresh fetch."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "30b71f5e-f665-4a7c-be2e-e9156e2904c7",
-              "name": "_url_id",
-              "value": "={{ $json._url_id }}",
-              "type": "string"
-            },
-            {
-              "id": "2028ba2a-b200-474b-8cbe-ede0ec07110f",
+              "id": "90048501-21d5-48a8-847e-0895efe57716",
               "name": "_url_fetch_id",
-              "value": "={{ $json._existing_fetch_id }}",
+              "value": "={{ $('Set — After Fetch Check').item.json._existing_fetch.id }}",
               "type": "string"
             },
             {
-              "id": "27c174c5-41c6-412c-b9c8-9e1614a4641b",
-              "name": "_http_status",
-              "value": "={{ $json._existing_http_status }}",
-              "type": "number"
+              "id": "ce728f3d-6884-479c-9f9b-6fb747702c4b",
+              "name": "_storage_url",
+              "value": "={{ $('Set — After Fetch Check').item.json._existing_fetch.storage_url }}",
+              "type": "string"
             },
             {
-              "id": "166d31ad-ad3f-4167-9864-e08e03f7b9a1",
+              "id": "b696c3ed-c9c3-4240-b399-bb59b5ecdb9b",
               "name": "_content_type",
-              "value": "={{ $json._existing_content_type }}",
+              "value": "={{ $('Set — After Fetch Check').item.json._existing_fetch.content_type }}",
               "type": "string"
             },
             {
-              "id": "037681c7-6606-45f5-b444-04df6ac4c365",
-              "name": "_final_url",
-              "value": "={{ $('Set — Carry').item.json._carry.url }}",
+              "id": "0ef6e7ee-c7cb-4da4-8c5e-18b80f853d72",
+              "name": "_body_sha256_hex",
+              "value": "={{ $('Set — After Fetch Check').item.json._existing_fetch.meta?.storage?.sha256_hex || null }}",
               "type": "string"
             },
             {
-              "id": "d59c1c3f-b90b-4f81-989b-944740899983",
+              "id": "86ec07cd-178b-4245-863b-9e9bcb1ec216",
               "name": "_size_bytes",
-              "value": "={{ $json._existing_meta?.size_bytes }}",
+              "value": "={{ $('Set — After Fetch Check').item.json._existing_fetch.meta?.storage?.size_bytes || 0 }}",
               "type": "number"
             },
             {
-              "id": "ee6f80ed-b6be-4f0d-975b-4ee012157a20",
-              "name": "_body_sha256_hex",
-              "value": "={{ $json._existing_meta?.body_sha256_hex }}",
+              "id": "00d7c225-305b-48db-a31d-69947287bffd",
+              "name": "_final_url",
+              "value": "={{ $('Set — After Fetch Check').item.json._existing_fetch.meta?.final_url || null }}",
               "type": "string"
             },
             {
-              "id": "457ffc3e-9250-40c9-b591-bf877c6761c4",
-              "name": "_blob_object_id",
-              "value": "={{ null }}",
+              "id": "2f015635-f530-4ed8-b6ab-a6591530efc2",
+              "name": "_url_id",
+              "value": "={{ $('Set — After Fetch Check').item.json._url_id }}",
               "type": "string"
             },
             {
-              "id": "e6e6baa0-0aaf-49dd-a260-eb181dca6af5",
-              "name": "_fetched_new",
-              "value": "false",
-              "type": "boolean"
+              "id": "37362b4e-6178-405a-b455-42f6e690bef3",
+              "name": "_carry",
+              "value": "={{ $('Set — Carry').item.json._carry }}",
+              "type": "object"
             }
           ]
         },
@@ -891,11 +676,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1936,
-        592
+        5424,
+        896
       ],
-      "id": "5a4570fa-2c17-43e3-972c-b93a5813b237",
-      "name": "Set — Reuse Fetch Data"
+      "id": "d8e7f492-a25a-4b58-a960-e4961658c475",
+      "name": "Set — Reuse Fetch Data",
+      "notes": "Reuse existing fetch data when storage_url exists. Extracts url_fetch_id, storage_url, content_type, body_sha256_hex, size_bytes, final_url from existing fetch. Preserves carry context. This path skips HTTP/S3 operations."
     },
     {
       "parameters": {
@@ -918,7 +704,7 @@
           "response": {
             "response": {
               "fullResponse": true,
-              "responseFormat": "text"
+              "responseFormat": "file"
             }
           },
           "timeout": 30000
@@ -927,10 +713,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1936,
-        800
+        3664,
+        1120
       ],
-      "id": "6706ba9d-a57d-4a55-ab74-002e8791d9ff",
+      "id": "11e05c97-7e29-4c6d-b98c-bd0333353641",
       "name": "HTTP — Fetch URL",
       "notesInFlow": true,
       "onError": "continueErrorOutput",
@@ -938,213 +724,176 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "02a3ec85-85d4-4b2e-91a4-80f8a491b98b",
-              "name": "_err.node",
-              "value": "HTTP — Fetch URL",
-              "type": "string"
-            },
-            {
-              "id": "c0b695ad-7bf3-4035-9e68-e6f4a266071c",
-              "name": "_err.operation",
-              "value": "http_get",
-              "type": "string"
-            },
-            {
-              "id": "2978a4ff-52bc-4bd6-a0d5-19abee6b85e4",
-              "name": "_err.http.url",
-              "value": "={{ $('Set — Carry').item.json._carry.url }}",
-              "type": "string"
-            },
-            {
-              "id": "96768288-6d66-4167-8402-042b70902a15",
-              "name": "_err.kind",
-              "value": "http",
-              "type": "string"
-            },
-            {
-              "id": "230db58e-10f3-4609-8484-343d4a32fc56",
-              "name": "_err.http_status",
-              "value": "502",
-              "type": "number"
-            },
-            {
-              "id": "ca977f59-2293-4841-bf41-7fb2e93add07",
-              "name": "_err.retryable",
-              "value": "true",
-              "type": "boolean"
-            },
-            {
-              "id": "f80ca67d-9ef1-42ff-9e60-486819d478fb",
-              "name": "ctx.tenant_id",
-              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "c9b9a2e3-80bd-4a40-80cf-21be8f6db6bb",
-              "name": "ctx.bot_id",
-              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
-              "type": "string"
-            },
-            {
-              "id": "a432a6b2-4463-4341-8436-4a84f9d95cb8",
-              "name": "ctx.correlation_id",
-              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "27e23e56-811e-49fb-b417-87e8732e7841",
-              "name": "ctx.trace_id",
-              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
-              "type": "string"
-            },
-            {
-              "id": "a6d8a048-db77-43da-8bea-bfaeda13ab3f",
-              "name": "ctx.workflow",
-              "value": "WF31",
-              "type": "string"
-            },
-            {
-              "id": "4d8d0a76-467c-4d1a-9e65-b242362408b5",
-              "name": "ctx.job_id",
-              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1936,
-        1088
-      ],
-      "id": "41faf297-00dd-4133-8b5c-1a288894a459",
-      "name": "ERR — Source HTTP Fetch"
-    },
-    {
-      "parameters": {
-        "type": "SHA256",
-        "value": "={{ $json.body || '' }}",
-        "dataPropertyName": "body_sha256_hex"
+        "value": "binary"
       },
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        2144,
-        800
+        5360,
+        1152
       ],
-      "id": "3933ed4e-f6fe-486f-a563-ff14d492e996",
-      "name": "Crypto — SHA256 Body"
+      "id": "88593cb7-7efa-4319-a441-d35696cca96d",
+      "name": "Crypto — SHA256 Body",
+      "notes": "Compute SHA256 hash of HTTP response body (binary data). Uses hex encoding. Hash stored as body_sha256_hex."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "999528f1-a4ad-42bf-b1df-f838dd508874",
+              "id": "cfbe56c8-8c9d-412e-ac95-325dc1ba3a3d",
               "name": "url_id",
               "value": "={{ $('Set — After Fetch Check').item.json._url_id }}",
               "type": "string"
             },
             {
-              "id": "cc0a3fed-dedc-464a-b9a1-714f4512e1b8",
+              "id": "c474a89f-63ca-4876-bcd8-eeb941c2a243",
               "name": "status",
               "value": "succeeded",
               "type": "string"
             },
             {
-              "id": "cdcf8c11-9187-43a7-8b26-7009354641e4",
+              "id": "397ecb11-e952-4324-b4ba-bc55690f38b2",
               "name": "http_status",
-              "value": "={{ $('Crypto — SHA256 Body').item.json.statusCode }}",
+              "value": "={{ $('Set — Restore After S3').item.json.statusCode }}",
               "type": "number"
             },
             {
-              "id": "47bf11de-b035-4616-af5b-bf78e915a131",
+              "id": "88664f7a-42b9-4f88-931a-844f96a1ab0e",
               "name": "content_type",
-              "value": "={{ $('Crypto — SHA256 Body').item.json.headers?.['content-type'] || null }}",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.['content-type'] || null }}",
               "type": "string"
             },
             {
-              "id": "72f456d0-c3e3-4ff3-ad2a-9a64753ae734",
-              "name": "meta.body_sha256_hex",
-              "value": "={{ $json.body_sha256_hex }}",
+              "id": "205a3b1a-b81e-481f-a46e-a24d5097cb4c",
+              "name": "etag",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.etag || null }}",
               "type": "string"
             },
             {
-              "id": "7dd4a2a2-566a-4aad-8ee6-a25e018cb3d3",
-              "name": "meta.size_bytes",
-              "value": "={{ ($('Crypto — SHA256 Body').item.json.body || '').length }}",
+              "id": "a928d808-1055-417e-b76e-a57e3bd46609",
+              "name": "last_modified",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.['last-modified'] || null }}",
+              "type": "string"
+            },
+            {
+              "id": "d9713f7f-8178-44ba-9bd1-f65fc46480c4",
+              "name": "body_sha256",
+              "value": "={{ '\\\\x' + $('Crypto — SHA256 Body').item.json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "37805290-880c-4370-acd0-f014eea3a227",
+              "name": "storage_url",
+              "value": "={{ 's3://' + $('Set — Restore After S3').item.json._s3.bucket + '/' + $('Set — Restore After S3').item.json._s3.key }}",
+              "type": "string"
+            },
+            {
+              "id": "e3fb05fa-4be4-4b46-8c63-d1cb8c0fdcfd",
+              "name": "meta.storage.provider",
+              "value": "s3",
+              "type": "string"
+            },
+            {
+              "id": "1022c864-0d27-49a9-8efd-98cada6d1b68",
+              "name": "meta.storage.bucket",
+              "value": "={{ $('Set — Restore After S3').item.json._s3.bucket }}",
+              "type": "string"
+            },
+            {
+              "id": "3cce0dc8-fd97-41ce-a3da-c3ed0726a5b8",
+              "name": "meta.storage.key",
+              "value": "={{ $('Set — Restore After S3').item.json._s3.key }}",
+              "type": "string"
+            },
+            {
+              "id": "98649f2b-20ae-4c4e-b90c-a56dfd018cf8",
+              "name": "meta.storage.kind",
+              "value": "raw_http_body",
+              "type": "string"
+            },
+            {
+              "id": "16c88c3a-19df-451f-888b-db9354be8119",
+              "name": "meta.storage.is_binary",
+              "value": "=true",
+              "type": "boolean"
+            },
+            {
+              "id": "601de943-5656-4a5d-8204-d15f4bd7bdce",
+              "name": "meta.storage.size_bytes",
+              "value": "={{ $('Set — Restore After S3').item.binary?.data?.fileSize || 0 }}",
               "type": "number"
             },
             {
-              "id": "3c8f076f-3fc8-47b1-a5f5-71731f01e270",
+              "id": "2fe6c04a-33ce-4199-8e66-87a96f3a599f",
+              "name": "meta.storage.sha256_hex",
+              "value": "={{ $('Crypto — SHA256 Body').item.json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "60e87c44-e86e-4745-913e-39b25bdc2805",
               "name": "meta.requested_url",
               "value": "={{ $('Set — Carry').item.json._carry.url }}",
               "type": "string"
             },
             {
-              "id": "b790d8d2-53c8-4c2a-b1e3-a9c90569327e",
+              "id": "ae637efb-f0b9-45c7-9dca-279b2b0b2bc4",
               "name": "meta.final_url",
-              "value": "={{ $('Set — Carry').item.json._carry.url }}",
+              "value": "={{ $('HTTP — Fetch URL').first().json.url || $('Set — Carry').item.json._carry.url }}",
               "type": "string"
             },
             {
-              "id": "6cb4d8fa-4f30-43fa-aa4a-96d811ee6873",
+              "id": "95fe7cfc-46a9-47d2-8ca4-bda57e14f444",
               "name": "meta.user_agent",
               "value": "TelegramKnowledgeBot/1.0 (+fetch)",
               "type": "string"
             },
             {
-              "id": "85e862ce-b92b-4039-97e9-494783ce1384",
-              "name": "body_sha256",
-              "value": "={{ '\\\\x' + $json.body_sha256_hex }}",
-              "type": "string"
-            },
-            {
-              "id": "6da3e935-88bc-4d7b-b942-aaabd12fca64",
-              "name": "etag",
-              "value": "={{ $('HTTP — Fetch URL').item.json.headers?.etag || null }}",
-              "type": "string"
-            },
-            {
-              "id": "ddb72f7f-538e-47b4-992a-ccc0efa708c7",
-              "name": "last_modified",
-              "value": "={{ $('HTTP — Fetch URL').item.json.headers?.['last-modified'] || null }}",
-              "type": "string"
-            },
-            {
-              "id": "e06a343d-f7f0-4c91-9e39-e27b72d518d5",
+              "id": "5c1e4d8d-acaa-43a6-b4f7-75d5e3d621cc",
               "name": "meta.response_headers.content_type",
-              "value": "={{ $('HTTP — Fetch URL').item.json.headers?.['content-type'] || null }}",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.['content-type'] || null }}",
               "type": "string"
             },
             {
-              "id": "7a7c87ea-9ffb-486c-967c-cc44f7a6e332",
+              "id": "598d5eb9-d1ae-4dbd-9d9a-e0efa88a639e",
+              "name": "meta.response_headers.content_length",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.['content-length'] || null }}",
+              "type": "string"
+            },
+            {
+              "id": "847b274e-acee-462c-99b9-46c593aab385",
               "name": "meta.response_headers.etag",
-              "value": "={{ $('HTTP — Fetch URL').item.json.headers?.etag || null }}",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.etag || null }}",
               "type": "string"
             },
             {
-              "id": "d2aef155-27ce-4d39-a951-ab875e6fb8cb",
+              "id": "1f93e6d6-7445-49c3-a238-5b05412326fd",
               "name": "meta.response_headers.last_modified",
-              "value": "={{ $('HTTP — Fetch URL').item.json.headers?.['last-modified'] || null }}",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.['last-modified'] || null }}",
               "type": "string"
             },
             {
-              "id": "cb20cdbb-cf50-4b73-b3df-7efe2cda2a75",
+              "id": "a33bec8c-3110-4d88-bf52-f2f5f578ebec",
               "name": "meta.response_headers.cache_control",
-              "value": "={{ $('HTTP — Fetch URL').item.json.headers?.['cache-control'] || null }}",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.['cache-control'] || null }}",
               "type": "string"
             },
             {
-              "id": "6c232265-eed1-498a-a8ec-60046735cdd3",
+              "id": "516fb2c5-4639-4c04-8cac-f624d407de85",
+              "name": "meta.response_headers.content_encoding",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.['content-encoding'] || null }}",
+              "type": "string"
+            },
+            {
+              "id": "9d220002-b4f9-44df-9d8a-d62f3e99d8e0",
+              "name": "meta.response_headers.location",
+              "value": "={{ $('Set — Restore After S3').item.json.headers?.location || null }}",
+              "type": "string"
+            },
+            {
+              "id": "31be7f0d-3ce3-469c-beb4-144266b78b10",
               "name": "meta.status_message",
-              "value": "={{ $('HTTP — Fetch URL').item.json.statusMessage || null }}",
+              "value": "={{ $('Set — Restore After S3').item.json.statusMessage || null }}",
               "type": "string"
             }
           ]
@@ -1154,11 +903,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2336,
-        800
+        5552,
+        1168
       ],
-      "id": "ebf5b7f5-2ba4-4d52-b170-8011f7d22542",
-      "name": "Set — Prep Fetch Insert"
+      "id": "87141845-9e60-4f88-82d0-292610c8aafd",
+      "name": "Set — Prep Fetch Insert",
+      "notes": "Prepare url_fetches INSERT with storage_url (s3:// pointer), body_sha256 (bytea), http_status, content_type, etag, last_modified. meta includes storage.* fields (provider, bucket, key, kind, is_binary, size_bytes, sha256_hex), requested_url, final_url (actual from HTTP), user_agent, safe response headers. FIX: final_url now uses actual HTTP final URL not requested_url. FIX: meta is OBJECT not STRING."
     },
     {
       "parameters": {
@@ -1276,10 +1026,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2544,
-        800
+        5776,
+        1280
       ],
-      "id": "4c576030-c0e4-4d76-8a4d-da3752406ea7",
+      "id": "fc1249df-1c38-42cc-b09b-47a6cef289bf",
       "name": "PG — Insert url_fetches",
       "credentials": {
         "postgres": {
@@ -1288,96 +1038,6 @@
         }
       },
       "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "39d5e131-278d-4b8a-9aef-f79bf0814b0b",
-              "name": "_err.node",
-              "value": "PG — Insert url_fetches",
-              "type": "string"
-            },
-            {
-              "id": "8e5be8f8-7035-4c68-a15d-5d592721d259",
-              "name": "_err.operation",
-              "value": "insert",
-              "type": "string"
-            },
-            {
-              "id": "954b83b0-7bc3-4e18-b649-306fe987e1ec",
-              "name": "_err.table",
-              "value": "content.url_fetches",
-              "type": "string"
-            },
-            {
-              "id": "9052ce0a-cad7-4dd6-9b78-2cef513951b3",
-              "name": "_err.kind",
-              "value": "pg",
-              "type": "string"
-            },
-            {
-              "id": "dad5e577-b975-434a-93da-53058a9de8e9",
-              "name": "_err.http_status",
-              "value": "500",
-              "type": "number"
-            },
-            {
-              "id": "bd5d0ae8-f7c9-4145-8306-a07a52c47394",
-              "name": "_err.retryable",
-              "value": "true",
-              "type": "boolean"
-            },
-            {
-              "id": "5fb2a9ea-4839-4950-b8b2-2ac3f7864ce4",
-              "name": "ctx.tenant_id",
-              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "888ca517-5636-4df4-b925-e1b71c689fa1",
-              "name": "ctx.bot_id",
-              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
-              "type": "string"
-            },
-            {
-              "id": "b42f0aad-6f59-4d3c-8e0e-da9a050f34c6",
-              "name": "ctx.correlation_id",
-              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "ba93922d-b3dd-4b6e-932f-9c783241d0ca",
-              "name": "ctx.trace_id",
-              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
-              "type": "string"
-            },
-            {
-              "id": "3eebc4b9-ee78-44f8-aeb7-8ecc7548e3da",
-              "name": "ctx.workflow",
-              "value": "WF31",
-              "type": "string"
-            },
-            {
-              "id": "7a9919a3-1ae6-4b4c-9885-8f640d2cdbd7",
-              "name": "ctx.job_id",
-              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2544,
-        1088
-      ],
-      "id": "c7b5fca6-d47a-425c-b2a0-50e285c2d9a7",
-      "name": "ERR — Source PG Insert Fetch"
     },
     {
       "parameters": {
@@ -1416,13 +1076,13 @@
             {
               "id": "daf8f6fe-1872-4c9d-af19-affcf80018f9",
               "name": "_size_bytes",
-              "value": "={{ $json.meta?.size_bytes }}",
+              "value": "={{ $json.meta?.storage.size_bytes }}",
               "type": "number"
             },
             {
               "id": "830ed212-a08a-4cf1-a9e7-57a66059e1ec",
               "name": "_body_sha256_hex",
-              "value": "={{ $json.meta?.body_sha256_hex }}",
+              "value": "={{ $json.meta?.storage.sha256_hex }}",
               "type": "string"
             },
             {
@@ -1444,10 +1104,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2688,
-        736
+        6192,
+        1360
       ],
-      "id": "0c3420e0-e158-4b52-a49b-2424590fc1aa",
+      "id": "5692eaa0-453d-41a6-baae-e2c73f1bf061",
       "name": "Set — After Fetch Insert"
     },
     {
@@ -1493,17 +1153,18 @@
             "id",
             "tenant_id",
             "url_id",
-            "status"
+            "status",
+            "doc_type"
           ]
         }
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2976,
-        688
+        6608,
+        1344
       ],
-      "id": "cf59daf0-7b02-4557-8095-3731612c80b1",
+      "id": "c4f5b489-9a46-4778-ae06-dcc942ac4be0",
       "name": "PG — Select Existing Doc",
       "alwaysOutputData": true,
       "credentials": {
@@ -1512,155 +1173,42 @@
           "name": "Postgres DF Assistant"
         }
       },
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "notes": "Check if document already exists for this url_id. Uses LIMIT 1 to get most recent. Returns NULL if no document exists. onError=continueErrorOutput."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "dffc6083-eb81-4fb2-9f74-2627c9c75795",
-              "name": "_err.node",
-              "value": "PG — Select Existing Doc",
-              "type": "string"
+              "id": "417e5e21-d00f-494f-998b-d470fe75be4f",
+              "name": "_existing_doc",
+              "value": "={{ $json._existing_doc ?? ($json.id ? $json : null) }}",
+              "type": "object"
             },
             {
-              "id": "ddd1e28e-d371-4db0-91ba-ce6a752d05b5",
-              "name": "_err.operation",
-              "value": "select",
-              "type": "string"
-            },
-            {
-              "id": "c9817129-7e85-4a0c-b518-00c02aebd8be",
-              "name": "_err.table",
-              "value": "content.documents",
-              "type": "string"
-            },
-            {
-              "id": "92d00fd8-9c05-4724-adef-44bb605b8b9c",
-              "name": "_err.kind",
-              "value": "pg",
-              "type": "string"
-            },
-            {
-              "id": "761e2519-c262-411a-8cce-9b9299d04f1a",
-              "name": "_err.http_status",
-              "value": "500",
-              "type": "number"
-            },
-            {
-              "id": "3c661576-6e00-49fe-80ad-48cce592f377",
-              "name": "_err.retryable",
-              "value": "true",
-              "type": "boolean"
-            },
-            {
-              "id": "58fbf323-b859-4728-9e72-dd866fa1876f",
-              "name": "ctx.tenant_id",
-              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "f165ea8d-eaae-45a5-a2f0-fe6b0c049efc",
-              "name": "ctx.bot_id",
-              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
-              "type": "string"
-            },
-            {
-              "id": "f3457fae-1ebf-48d3-a2f8-6d7eefafaf47",
-              "name": "ctx.correlation_id",
-              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "8b73b028-1929-45ae-8f29-e991b7f7b7a5",
-              "name": "ctx.trace_id",
-              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
-              "type": "string"
-            },
-            {
-              "id": "571c4a30-266a-4d0d-8782-fbc12c6f37e3",
-              "name": "ctx.workflow",
-              "value": "WF31",
-              "type": "string"
-            },
-            {
-              "id": "4a39338c-10d2-4e72-b281-de81d29ad732",
-              "name": "ctx.job_id",
-              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2944,
-        1088
-      ],
-      "id": "9a33551e-31c2-4e9b-a431-d29a7951209b",
-      "name": "ERR — Source PG Select Doc"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "dc2db67e-7b69-4bf9-8d4b-6f3a80f7fa1a",
+              "id": "cbd66c6c-4d7b-4735-a5d2-84cf42f268fa",
               "name": "_url_id",
-              "value": "={{ $('Merge — Fetch chosen').item.json._url_id }}",
+              "value": "={{ $json._url_id }}",
               "type": "string"
             },
             {
-              "id": "1300afc6-c926-4dbd-be9f-648b18bed0b3",
+              "id": "a2801d13-1e12-46eb-bf30-5a16bdb31372",
               "name": "_url_fetch_id",
-              "value": "={{ $('Merge — Fetch chosen').item.json._url_fetch_id }}",
+              "value": "={{ $json._url_fetch_id }}",
               "type": "string"
             },
             {
-              "id": "aed2dc82-932f-467c-9ee8-302450e2c5d6",
-              "name": "_http_status",
-              "value": "={{ $('Merge — Fetch chosen').item.json._http_status }}",
-              "type": "number"
-            },
-            {
-              "id": "4cdca77f-4387-449c-9610-8925cabe81d5",
-              "name": "_content_type",
-              "value": "={{ $('Merge — Fetch chosen').item.json._content_type }}",
+              "id": "fe912fd5-3456-4cc7-9cd5-944019a12fb0",
+              "name": "_storage_url",
+              "value": "={{ $json._storage_url }}",
               "type": "string"
             },
             {
-              "id": "5b068e83-817b-4f8c-8044-95430e1f91a8",
-              "name": "_final_url",
-              "value": "={{ $('Merge — Fetch chosen').item.json._final_url }}",
-              "type": "string"
-            },
-            {
-              "id": "0cc0eb51-ec45-4225-933e-f407f4da96fc",
-              "name": "_size_bytes",
-              "value": "={{ $('Merge — Fetch chosen').item.json._size_bytes }}",
-              "type": "number"
-            },
-            {
-              "id": "0f65c117-42c0-4f27-ac7d-72dd77cebc06",
-              "name": "_body_sha256_hex",
-              "value": "={{ $('Merge — Fetch chosen').item.json._body_sha256_hex }}",
-              "type": "string"
-            },
-            {
-              "id": "45917ed6-e0e4-4ad7-a163-118c2a845add",
-              "name": "_blob_object_id",
-              "value": "={{ null }}",
-              "type": "string"
-            },
-            {
-              "id": "466097d9-1b3d-4f04-8cba-37ae8ef4d19e",
-              "name": "_existing_doc_id",
-              "value": "={{ $json.id }}",
-              "type": "string"
+              "id": "c46bf55c-6e3d-4c93-9198-7f337c9a2e3f",
+              "name": "_carry",
+              "value": "={{ $('Set — Carry').item.json._carry }}",
+              "type": "object"
             }
           ]
         },
@@ -1669,66 +1217,95 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3136,
-        688
+        7280,
+        1152
       ],
-      "id": "486c396c-c73f-4589-ba02-c735eb8040e1",
-      "name": "Set — After Doc Check"
+      "id": "ecfb2baa-818f-4c21-ba79-fd7b6a306ee7",
+      "name": "Set — After Doc Check",
+      "notes": "Capture result from Merge Doc Result. If SELECT returned row, $json.id exists so use $json as _existing_doc. If no row (default), _existing_doc is null. Preserves _url_id, _url_fetch_id, _storage_url, _carry."
     },
     {
       "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
-            "leftValue": ""
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
           },
           "conditions": [
             {
-              "id": "7bb0bd46-23bb-4f87-ae85-1ce758e3376d",
-              "leftValue": "={{ $json._existing_doc_id }}",
+              "id": "9c21ce93-fdf9-4421-8c23-8205662a2044",
+              "leftValue": "={{ $json._existing_doc }}",
               "rightValue": "",
               "operator": {
-                "type": "string",
-                "operation": "notEmpty"
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
               }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3344,
-        688
+        7536,
+        1264
       ],
-      "id": "0bac75da-ee18-4bcd-bfda-8d0a90d1fe14",
-      "name": "IF — Doc Exists?"
+      "id": "96595122-0e99-46ea-aef0-682debc9c79c",
+      "name": "IF — Doc Exists?",
+      "notes": "Check if document already exists. If _existing_doc is not null: reuse document_id, skip insert. If null: insert new document."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "73f26b67-00f8-442f-a65e-51e5c6d98d35",
-              "name": "_doc_id",
-              "value": "={{ $json._existing_doc_id }}",
+              "id": "63f65f4f-5593-4d24-b195-5a744eb4519c",
+              "name": "_document_id",
+              "value": "={{ $json._existing_doc.id }}",
               "type": "string"
+            },
+            {
+              "id": "00e36941-8451-4b82-a8c0-51d37697fb81",
+              "name": "_url_id",
+              "value": "={{ $json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f27c53dc-bc8a-4496-bab4-c8610ed7a359",
+              "name": "_url_fetch_id",
+              "value": "={{ $json._url_fetch_id }}",
+              "type": "string"
+            },
+            {
+              "id": "02f8dd93-8ad5-4931-a826-e3d4594c93b3",
+              "name": "_storage_url",
+              "value": "={{ $json._storage_url }}",
+              "type": "string"
+            },
+            {
+              "id": "83896202-0cd1-4d83-8ae5-e14c68f4c33d",
+              "name": "_carry",
+              "value": "={{ $('Set — Carry').item.json._carry }}",
+              "type": "object"
             }
           ]
         },
-        "includeOtherFields": true,
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3536,
-        592
+        7952,
+        1136
       ],
-      "id": "77e216ac-96b4-4baf-be37-082cfe9cc205",
-      "name": "Set — Existing Doc ID"
+      "id": "2d195cb6-a282-4b38-a734-f063229a700b",
+      "name": "Set — Existing Doc ID",
+      "notes": "Use existing document_id from _existing_doc. Preserves context for job creation."
     },
     {
       "parameters": {
@@ -1795,10 +1372,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3536,
-        800
+        7712,
+        1360
       ],
-      "id": "92d27b09-e583-4087-916f-47fd6eadeaba",
+      "id": "4a8452b1-cecd-4fc3-99cf-9ae1ed44b049",
       "name": "Set — Prep Doc Insert"
     },
     {
@@ -1922,10 +1499,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3744,
-        800
+        7888,
+        1424
       ],
-      "id": "3640f96d-3516-4a02-a0e1-2f520c97b0f3",
+      "id": "bf2c3aa4-bed8-4949-853a-35102109fec3",
       "name": "PG — Insert content.documents",
       "credentials": {
         "postgres": {
@@ -1933,97 +1510,8 @@
           "name": "Postgres DF Assistant"
         }
       },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c269807d-0be4-497e-9924-fba2306cd5a6",
-              "name": "_err.node",
-              "value": "PG — Insert content.documents",
-              "type": "string"
-            },
-            {
-              "id": "72286fe1-305e-478b-b887-b9959275a29e",
-              "name": "_err.operation",
-              "value": "insert",
-              "type": "string"
-            },
-            {
-              "id": "7e499f17-a914-4516-9bea-123b73eaf754",
-              "name": "_err.table",
-              "value": "content.documents",
-              "type": "string"
-            },
-            {
-              "id": "a6f5aa3d-e9b2-4768-b53d-b9c86b3957da",
-              "name": "_err.kind",
-              "value": "pg",
-              "type": "string"
-            },
-            {
-              "id": "bcdeb61f-6d1f-4e2f-89fc-b9a2bc93ca78",
-              "name": "_err.http_status",
-              "value": "500",
-              "type": "number"
-            },
-            {
-              "id": "844705d9-5a5f-4e21-ab02-77d4e19dd3f2",
-              "name": "_err.retryable",
-              "value": "true",
-              "type": "boolean"
-            },
-            {
-              "id": "00b18afb-3a5a-441e-8542-4bd20fa29adf",
-              "name": "ctx.tenant_id",
-              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "131d7f47-9b43-4c2f-953e-0eaca9428a2a",
-              "name": "ctx.bot_id",
-              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
-              "type": "string"
-            },
-            {
-              "id": "97f4a52a-cdba-4fa2-8082-734bd1ad7170",
-              "name": "ctx.correlation_id",
-              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "7a2cda61-c3df-437f-882c-83dcc40e4608",
-              "name": "ctx.trace_id",
-              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
-              "type": "string"
-            },
-            {
-              "id": "f63cc4d8-76da-4844-8e07-543321d193ea",
-              "name": "ctx.workflow",
-              "value": "WF31",
-              "type": "string"
-            },
-            {
-              "id": "bc7e2543-7dc4-4cf5-b361-83b2ef98580f",
-              "name": "ctx.job_id",
-              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        3744,
-        1088
-      ],
-      "id": "000ee34a-be8b-4395-8bb1-8add62e0eb69",
-      "name": "ERR — Source PG Insert Doc"
+      "onError": "continueErrorOutput",
+      "notes": "Insert new document row. doc_type, visibility, url_id, tenant_id required. status=pending (will be updated by extract_text job). onError=continueErrorOutput for error handling."
     },
     {
       "parameters": {
@@ -2082,6 +1570,12 @@
               "name": "_blob_object_id",
               "value": "={{ null }}",
               "type": "string"
+            },
+            {
+              "id": "c8c0f8ee-d2c5-46fd-8ccc-9fb51555830a",
+              "name": "_storage_url",
+              "value": "={{ $('Merge — Fetch chosen').item.json._storage_url || $('Set — Prep Fetch Insert').first()?.json.storage_url }}",
+              "type": "string"
             }
           ]
         },
@@ -2090,170 +1584,129 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3904,
-        784
+        8240,
+        1360
       ],
-      "id": "711608bc-08c7-4b2a-935c-fad4f599dffd",
-      "name": "Set — After Doc Insert"
+      "id": "d83fe3a2-be2e-4c6d-86a0-7278d806e17f",
+      "name": "Set — After Doc Insert",
+      "notes": "Capture document_id after document insert/check. Preserves url_id, url_fetch_id, storage_url, content_type, body_sha256_hex, size_bytes, final_url from either reuse or new fetch path. Uses carry for context."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "9b64cbfd-ee58-478f-b7ae-9bc7f6ec7fad",
+              "id": "7d73fa77-baf7-4dd7-a720-9c280be312ef",
+              "name": "type",
+              "value": "extract_text",
+              "type": "string"
+            },
+            {
+              "id": "16db3aec-ea08-4b7f-9684-da59de23e825",
+              "name": "priority",
+              "value": "=20",
+              "type": "number"
+            },
+            {
+              "id": "436f1093-7d4a-4fa7-bb25-ff3e59f3226f",
+              "name": "status",
+              "value": "pending",
+              "type": "string"
+            },
+            {
+              "id": "9ed7a7e3-86c0-465f-aeb8-f28fae5ca180",
               "name": "tenant_id",
               "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
               "type": "string"
             },
             {
-              "id": "173a5d55-1fc0-43ce-badd-d7f935613181",
-              "name": "job_type",
-              "value": "extract_text",
-              "type": "string"
-            },
-            {
-              "id": "fd4c4fb6-ad65-428e-a6c9-09e142200db4",
-              "name": "status",
-              "value": "queued",
-              "type": "string"
-            },
-            {
-              "id": "3c45c62c-4416-4103-a6c7-27a0937b0d9e",
-              "name": "priority",
-              "value": "100",
-              "type": "number"
-            },
-            {
-              "id": "f3800dd0-ed0d-4932-a4c1-adfa8fb6689d",
-              "name": "correlation_id",
-              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "c35aa8d7-5bd7-43b3-888c-4116741f8c38",
-              "name": "payload.tenant_id",
+              "id": "2b2b2950-7691-4de2-be47-b0774f727930",
+              "name": "ctx.tenant_id",
               "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
               "type": "string"
             },
             {
-              "id": "f792dc4d-d5e3-434b-b95f-2cbcac0aa6d4",
-              "name": "payload.bot_id",
+              "id": "2cb4fa30-0570-4668-ad16-1a95f08f17c9",
+              "name": "ctx.bot_id",
               "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
               "type": "string"
             },
             {
-              "id": "e7966875-858d-4148-ac2c-10fa24852387",
-              "name": "payload.trace_id",
+              "id": "86d623c5-b2d8-4234-860f-efde045a899f",
+              "name": "ctx.trace_id",
               "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
               "type": "string"
             },
             {
-              "id": "06143e2a-b1ce-4a51-8583-4eae3df6fc1a",
-              "name": "payload.correlation_id",
+              "id": "7da9457f-96cd-4b5b-bdbb-d79c93cb023b",
+              "name": "ctx.correlation_id",
               "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
               "type": "string"
             },
             {
-              "id": "d3a03a20-873a-4e8a-9eea-fb5b32103a73",
-              "name": "payload.visibility",
+              "id": "889e1a44-5bad-4845-a277-12c3c1fda493",
+              "name": "ctx.visibility",
               "value": "={{ $('Set — Carry').item.json._carry.visibility }}",
               "type": "string"
             },
             {
-              "id": "d2b28b52-2bf1-4ea8-a6bb-cdf68057c50e",
-              "name": "payload.chat_id",
+              "id": "63cdeb6d-bbca-41c3-a386-e2a7790c3359",
+              "name": "ctx.chat_id",
               "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
               "type": "string"
             },
             {
-              "id": "e2a30e99-14eb-4487-9338-bf60e52515b8",
-              "name": "payload.message_version_id",
+              "id": "5f1cc806-b86f-4c19-a822-1d9cd93ed468",
+              "name": "ctx.message_version_id",
               "value": "={{ $('Set — Carry').item.json._carry.message_version_id }}",
               "type": "string"
             },
             {
-              "id": "ca24b223-250a-48c5-8385-4023b3234603",
-              "name": "payload.extract_kind",
-              "value": "url_text",
-              "type": "string"
-            },
-            {
-              "id": "0d3adf93-bae4-45b5-8745-336f2f0f41d0",
+              "id": "9d6cd319-92a7-4230-9ae1-fbcc89c4b4a8",
               "name": "payload.url_id",
               "value": "={{ $json._url_id }}",
               "type": "string"
             },
             {
-              "id": "bfe26e56-e6c9-4bc5-a791-3775167bcf11",
+              "id": "c35770f3-0952-4123-b86d-391880296568",
               "name": "payload.url_fetch_id",
-              "value": "={{ $json._url_fetch_id }}",
+              "value": "={{ $json._url_fetch_id || $('PG — Insert url_fetches').first()?.json.id }}",
               "type": "string"
             },
             {
-              "id": "f1b8ca56-e1e3-4261-a602-5dd94687dafe",
-              "name": "payload.final_url",
-              "value": "={{ $json._final_url }}",
-              "type": "string"
-            },
-            {
-              "id": "3ae0aa11-f616-45d9-82f1-08e7b489aad8",
+              "id": "27dae373-cad8-49a6-9d44-7b24a61f30f2",
               "name": "payload.document_id",
-              "value": "={{ $json._doc_id }}",
+              "value": "={{ $json._document_id }}",
               "type": "string"
             },
             {
-              "id": "5176d1e3-b5a9-48f3-a142-185da45c2da2",
-              "name": "_url_id",
-              "value": "={{ $json._url_id }}",
+              "id": "a99a3137-7425-4388-8b14-6b8855e3d6f1",
+              "name": "payload.storage_url",
+              "value": "={{ $json._storage_url || $('Set — Prep Fetch Insert').first()?.json.storage_url }}",
               "type": "string"
             },
             {
-              "id": "7036f464-422b-440f-af85-783b5f9417a5",
-              "name": "_url_fetch_id",
-              "value": "={{ $json._url_fetch_id }}",
+              "id": "33954da2-2510-4479-a311-cbec707ab5a0",
+              "name": "payload.content_type",
+              "value": "={{ $json._content_type || $('Set — Prep Fetch Insert').first()?.json.content_type }}",
               "type": "string"
             },
             {
-              "id": "3887c220-fdf8-4844-a3bf-03a42df735b3",
-              "name": "_http_status",
-              "value": "={{ $json._http_status }}",
+              "id": "bc06a780-d2f6-4ab7-9251-96dbbc943c02",
+              "name": "payload.size_bytes",
+              "value": "={{ $json._size_bytes || $('Set — Prep Fetch Insert').first()?.json.meta.storage.size_bytes || 0 }}",
               "type": "number"
             },
             {
-              "id": "89e5bb8d-1530-4636-b77f-b36bb759e1c0",
-              "name": "_content_type",
-              "value": "={{ $json._content_type }}",
+              "id": "1c6c6c90-1120-42aa-8a7c-f912f499f329",
+              "name": "payload.body_sha256_hex",
+              "value": "={{ $json._body_sha256_hex || $('Set — Prep Fetch Insert').first()?.json.meta.storage.sha256_hex }}",
               "type": "string"
             },
             {
-              "id": "e2861ada-48c8-47cf-9b43-9576fb358173",
-              "name": "_final_url",
-              "value": "={{ $json._final_url }}",
-              "type": "string"
-            },
-            {
-              "id": "38ee8470-a935-4c5d-9b05-da73f4979bd6",
-              "name": "_size_bytes",
-              "value": "={{ $json._size_bytes }}",
-              "type": "number"
-            },
-            {
-              "id": "09761144-b878-43ce-8822-1fb304a2ee49",
-              "name": "_body_sha256_hex",
-              "value": "={{ $json._body_sha256_hex }}",
-              "type": "string"
-            },
-            {
-              "id": "8a47493e-0ef0-4bf0-b7cc-455643d6cc46",
-              "name": "_blob_object_id",
-              "value": "={{ null }}",
-              "type": "string"
-            },
-            {
-              "id": "e10be597-41a1-4db9-9267-d14deb717c89",
-              "name": "_doc_id",
-              "value": "={{ $json._doc_id }}",
+              "id": "853c4e3e-b8e3-4bea-9437-a2b4201bf09b",
+              "name": "payload.final_url",
+              "value": "={{ $json._final_url || $('Set — Prep Fetch Insert').first()?.json.meta.final_url }}",
               "type": "string"
             }
           ]
@@ -2263,11 +1716,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4192,
-        688
+        8560,
+        1280
       ],
-      "id": "afda6e25-7b75-445e-bf52-a60e6752df1f",
-      "name": "Set — Prep Extract Job"
+      "id": "bebb4f93-85c7-4a02-bf21-1ef3e9239800",
+      "name": "Set — Prep Extract Job",
+      "notes": "Prepare ops.jobs INSERT for extract_text job. Includes ctx fields (tenant_id, bot_id, trace_id, correlation_id, visibility, chat_id, message_version_id) and payload with storage_url, content_type, size_bytes, body_sha256_hex, final_url, url_id, url_fetch_id, document_id. Uses dotNotation to build nested objects. NEW: storage_url and related fields required for WF40 to fetch body from S3."
     },
     {
       "parameters": {
@@ -2360,10 +1814,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        4336,
-        688
+        8736,
+        1312
       ],
-      "id": "537a65a3-880e-41e1-a9be-86ca85c47d77",
+      "id": "40a2be75-8c71-4750-9cec-2dd1a2003611",
       "name": "PG — Insert ops.jobs extract_text",
       "credentials": {
         "postgres": {
@@ -2371,97 +1825,8 @@
           "name": "Postgres DF Assistant"
         }
       },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "95a4e1dc-4c6e-461b-8a25-43786728c9f2",
-              "name": "_err.node",
-              "value": "PG — Insert ops.jobs extract_text",
-              "type": "string"
-            },
-            {
-              "id": "a79c4e7d-18e8-4bb0-8f48-20614bb1c856",
-              "name": "_err.operation",
-              "value": "insert",
-              "type": "string"
-            },
-            {
-              "id": "77346b22-5573-4c76-9261-356f5556c8d9",
-              "name": "_err.table",
-              "value": "ops.jobs",
-              "type": "string"
-            },
-            {
-              "id": "05eb9f39-36d3-43c6-b1d2-91eb36985b6a",
-              "name": "_err.kind",
-              "value": "pg",
-              "type": "string"
-            },
-            {
-              "id": "f9090fe9-a02d-48eb-a0b8-ab89901ea05a",
-              "name": "_err.http_status",
-              "value": "500",
-              "type": "number"
-            },
-            {
-              "id": "19169c85-1c82-4896-ac52-bf95e942f434",
-              "name": "_err.retryable",
-              "value": "true",
-              "type": "boolean"
-            },
-            {
-              "id": "94bf1725-0034-483a-9319-d468dd86576f",
-              "name": "ctx.tenant_id",
-              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "ce34f3fd-a828-41ad-95ba-cddcbb34f366",
-              "name": "ctx.bot_id",
-              "value": "={{ $('Set — Carry').item.json._carry.bot_id }}",
-              "type": "string"
-            },
-            {
-              "id": "dba12916-996b-42bd-a577-d780135ebd63",
-              "name": "ctx.correlation_id",
-              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "0c8fb2a6-10aa-47e3-b8b9-829759104419",
-              "name": "ctx.trace_id",
-              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
-              "type": "string"
-            },
-            {
-              "id": "dcbfbe21-ecdd-46af-8503-555d1f95ab57",
-              "name": "ctx.workflow",
-              "value": "WF31",
-              "type": "string"
-            },
-            {
-              "id": "6a8f1edc-10b9-45d3-97c1-87ce42a2f78d",
-              "name": "ctx.job_id",
-              "value": "={{ $('Set — Carry').item.json._carry.job_id }}",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        4336,
-        1088
-      ],
-      "id": "a45cffc1-30fd-42c3-8f92-1bc953e9651e",
-      "name": "ERR — Source PG Insert Job"
+      "onError": "continueErrorOutput",
+      "notes": "Insert extract_text job for document processing. Includes ctx (tenant_id, bot_id, trace_id, correlation_id, visibility, chat_id, message_version_id) and payload (storage_url, content_type, size_bytes, body_sha256_hex, final_url, url_id, url_fetch_id, document_id). Job will be picked up by WF40. onError=continueErrorOutput."
     },
     {
       "parameters": {
@@ -2528,169 +1893,99 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4544,
-        688
+        9232,
+        1280
       ],
-      "id": "4cae4c54-a922-469f-8296-662a3fd4aa28",
-      "name": "Set — After Job Insert"
+      "id": "3378ce67-a68e-4814-b786-ca9ef9083e6a",
+      "name": "Set — After Job Insert",
+      "notes": "Capture job_id and prepare success envelope. Final step before returning success response."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "980bcabf-e4fb-4e3f-bc93-bb26e6bd2b11",
+              "id": "7802e388-9cb9-447c-a047-debaf9cb6fc4",
+              "name": "ok",
+              "value": "=true",
+              "type": "boolean"
+            },
+            {
+              "id": "d5222071-5663-4d26-9800-554b5a2950a5",
+              "name": "status_code",
+              "value": "=200",
+              "type": "number"
+            },
+            {
+              "id": "dcb8bd8a-ca0f-4dd7-932e-733eef2c8314",
+              "name": "data.document_id",
+              "value": "={{ $json._document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c7ddb73a-1278-4bb6-b779-8956838021af",
               "name": "data.url_id",
               "value": "={{ $json._url_id }}",
               "type": "string"
             },
             {
-              "id": "3d396b28-f915-4a12-87ca-24888517ed99",
+              "id": "f81c5f43-8338-4481-ba82-d5b30b45bd18",
               "name": "data.url_fetch_id",
               "value": "={{ $json._url_fetch_id }}",
               "type": "string"
             },
             {
-              "id": "d335f0db-9df0-4ffb-b35a-dc80bfafcd5c",
-              "name": "data.final_url",
-              "value": "={{ $json._final_url }}",
+              "id": "22c789ea-ee3d-466f-b8aa-006b6084ed5a",
+              "name": "data.storage_url",
+              "value": "={{ $json._storage_url }}",
               "type": "string"
             },
             {
-              "id": "693272eb-6864-44e7-957a-ad1a43e3e161",
-              "name": "data.http_status",
-              "value": "={{ $json._http_status }}",
-              "type": "number"
-            },
-            {
-              "id": "839776ca-4079-4827-8b9b-234d0a1330e3",
-              "name": "data.content_type",
-              "value": "={{ $json._content_type }}",
-              "type": "string"
-            },
-            {
-              "id": "e152150c-9971-40b6-b67e-2d9a980b3f37",
-              "name": "data.size_bytes",
-              "value": "={{ $json._size_bytes }}",
-              "type": "number"
-            },
-            {
-              "id": "91cde3e9-1311-4f25-9952-8bdd2d0dbd7f",
-              "name": "data.body_sha256",
-              "value": "={{ $json._body_sha256_hex }}",
-              "type": "string"
-            },
-            {
-              "id": "2ff328e2-d784-4cf5-8133-d885328cc313",
-              "name": "data.blob_object_id",
-              "value": "={{ null }}",
-              "type": "string"
-            },
-            {
-              "id": "96878e4d-8ae5-4f88-8634-8d0b452e9ceb",
+              "id": "4254cc2e-130f-48c2-b031-7c2e397d53d0",
               "name": "data.enqueued_extract_text_job_id",
-              "value": "={{ $json._extract_text_job_id }}",
+              "value": "={{ $json._job_id }}",
               "type": "string"
             },
             {
-              "id": "0c9097b8-3f16-4823-8107-ceddb823101a",
-              "name": "data.enqueued_build_document_job_id",
-              "value": "={{ null }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        4736,
-        688
-      ],
-      "id": "075fcabe-73ca-49c9-b222-19a4ff9dc8b7",
-      "name": "Set — SuccessEnvelope"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "a9f1027c-fe3c-4435-bb14-167dd98f1c40",
-              "name": "ctx.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
+              "id": "1e8e748b-fe89-437c-81cb-b22ee3acf198",
+              "name": "error",
+              "value": "=null",
+              "type": "object"
             },
             {
-              "id": "9c83703e-622c-46e0-887a-c3946b916e92",
-              "name": "ctx.bot_id",
-              "value": "={{ $json.ctx?.bot_id }}",
-              "type": "string"
-            },
-            {
-              "id": "ea6a2731-0733-46ae-bc68-302fde707ec0",
-              "name": "ctx.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "ad398841-7c53-462c-ae12-143005fff543",
-              "name": "ctx.trace_id",
-              "value": "={{ $json.ctx?.trace_id }}",
-              "type": "string"
-            },
-            {
-              "id": "3c60f6d8-bc74-4ccc-8d79-c6869409eb8e",
-              "name": "ctx.workflow",
+              "id": "499e2ef6-365b-439c-bb5c-4cb1100dc51c",
+              "name": "meta.source",
               "value": "WF31",
               "type": "string"
             },
             {
-              "id": "331cb683-fa53-489a-a541-c47de754e718",
-              "name": "ctx.job_id",
-              "value": "={{ $json.ctx?.job_id }}",
+              "id": "d8868496-c471-437f-9e82-117be3f2dae3",
+              "name": "meta.ts",
+              "value": "={{ new Date().toISOString() }}",
               "type": "string"
             },
             {
-              "id": "6df55145-2799-41b2-8969-daf0daf2ee41",
-              "name": "error_context.kind",
-              "value": "={{ $json._err?.kind || 'unknown' }}",
+              "id": "7e4a6a8e-515e-4bfe-906c-b3a254103e57",
+              "name": "meta.correlation.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry.correlation_id }}",
               "type": "string"
             },
             {
-              "id": "55737cec-854c-4928-8b78-4ad6cd72490d",
-              "name": "error_context.http_status",
-              "value": "={{ $json._err?.http_status || 500 }}",
-              "type": "number"
-            },
-            {
-              "id": "deaf74d7-bb09-4979-b3c7-a7fad8ce1842",
-              "name": "error_context.retryable",
-              "value": "={{ $json._err?.retryable ?? true }}",
-              "type": "boolean"
-            },
-            {
-              "id": "02c12c88-b2c6-4f23-9493-ecb43884da57",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node || 'unknown' }}",
+              "id": "c7c7c1ef-5932-42be-b118-27617065aa1a",
+              "name": "meta.correlation.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry.trace_id }}",
               "type": "string"
             },
             {
-              "id": "8a1ddbbd-f63b-475e-8bf3-9252b5db9405",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation || 'unknown' }}",
+              "id": "e3134f7f-d484-47c2-bcf7-e8989f64617e",
+              "name": "meta.correlation.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
               "type": "string"
             },
             {
-              "id": "2b105886-d3fe-4a03-a3ca-b91d3f9c3ebe",
-              "name": "error_context.table",
-              "value": "={{ $json._err?.table }}",
-              "type": "string"
-            },
-            {
-              "id": "974999b2-1510-464c-ad71-f51dae702af3",
-              "name": "error_context.message",
-              "value": "={{ $json._err?.message || $json.message || 'WF31 error' }}",
+              "id": "937535e6-85e3-450f-9aaa-82fe0c535a89",
+              "name": "meta.correlation.chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry.chat_id }}",
               "type": "string"
             }
           ]
@@ -2700,62 +1995,22 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4608,
-        2048
+        9456,
+        1280
       ],
-      "id": "78b1757c-0730-48f5-b56a-f4bb4025b089",
-      "name": "ERR — Prepare ErrorPipe v1"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        4816,
-        2048
-      ],
-      "id": "99132bf2-6881-4ec3-86f3-c6d86b57ae98",
-      "name": "Execute Workflow — WF99"
-    },
-    {
-      "parameters": {
-        "errorMessage": "=WF31 failed: {{ $json.error_context?.message || 'unknown error' }} (node={{ $json.error_context?.node }}, kind={{ $json.error_context?.kind }})"
-      },
-      "type": "n8n-nodes-base.stopAndError",
-      "typeVersion": 1,
-      "position": [
-        5008,
-        2048
-      ],
-      "id": "f957e008-ba1e-491f-bd8b-5df2d1aeb050",
-      "name": "StopAndError"
+      "id": "29eec01e-c611-43c0-a1ae-0ca4f101c7a8",
+      "name": "OUT — SuccessEnvelope",
+      "notes": "Build SuccessEnvelope v1. ok=true, status_code=200, data contains document_id/url_id/url_fetch_id/storage_url/enqueued_extract_text_job_id, error=null, meta includes source/ts/correlation. Aligned with WF20 output contract."
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -64,
-        -112
+        -16,
+        208
       ],
-      "id": "cc57eb67-7fe9-4ba7-bd48-10ceee5c1960",
+      "id": "544e1ce6-d96b-4e5e-ba14-696d71bb3461",
       "name": "Manual Trigger — Tests"
     },
     {
@@ -2801,7 +2056,7 @@
             {
               "id": "e24f9fda-c3ce-425b-a9e4-283e10af776f",
               "name": "req.ctx.message_version_id",
-              "value": "=-999",
+              "value": "=5",
               "type": "number"
             },
             {
@@ -2901,10 +2156,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        144,
-        -112
+        192,
+        208
       ],
-      "id": "59f0c619-a68d-4438-9353-f58463a376ef",
+      "id": "8a6eac03-40f8-480e-9554-e7d18627ab3c",
       "name": "T1 — Build Input"
     },
     {
@@ -2943,17 +2198,18 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        544,
-        -112
+        592,
+        208
       ],
-      "id": "d0fb0723-f768-4cc7-abc0-3af52d539583",
+      "id": "57afe5e9-95b5-4424-a103-7ea4dfebf68c",
       "name": "T1 — Verify url_fetches",
       "credentials": {
         "postgres": {
           "id": "yckAFBLpmdhsPaDZ",
           "name": "Postgres DF Assistant"
         }
-      }
+      },
+      "notes": "TEST: Verify url_fetches row was inserted with status=succeeded, storage_url not null, meta.storage.key set. Part of T1 Happy path test."
     },
     {
       "parameters": {
@@ -2994,17 +2250,18 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        736,
-        -112
+        784,
+        208
       ],
-      "id": "68916242-7500-476e-b211-ac24ed480b3d",
+      "id": "51aa96b3-729c-464c-9419-809e6d7f6ed3",
       "name": "T1 — Verify extract_text job",
       "credentials": {
         "postgres": {
           "id": "yckAFBLpmdhsPaDZ",
           "name": "Postgres DF Assistant"
         }
-      }
+      },
+      "notes": "TEST: Verify extract_text job was inserted with payload.storage_url set. Part of T1 Happy path test."
     },
     {
       "parameters": {
@@ -3033,10 +2290,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        944,
-        -112
+        992,
+        208
       ],
-      "id": "5415377e-db7b-4ff9-b8c1-f10972083c9d",
+      "id": "d4e4462e-966c-45cf-97be-c02447982609",
       "name": "T1 — Cleanup jobs",
       "credentials": {
         "postgres": {
@@ -3080,10 +2337,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1136,
-        -112
+        1184,
+        208
       ],
-      "id": "c819f454-cb5e-4d0c-8480-abe2345dab64",
+      "id": "31579440-a490-4482-b6b4-d5ba470605e1",
       "name": "T1 — Cleanup documents",
       "credentials": {
         "postgres": {
@@ -3119,10 +2376,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1488,
-        -112
+        1536,
+        208
       ],
-      "id": "6647113d-9c6a-4aa3-b6ee-98ba3fc0c377",
+      "id": "0ce9d475-74e7-4a1a-b728-4467ee82a641",
       "name": "T1 — Cleanup url_fetches",
       "credentials": {
         "postgres": {
@@ -3158,10 +2415,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1696,
-        -112
+        1744,
+        208
       ],
-      "id": "699be0ec-f629-4e24-80be-0eb1d8fd11bb",
+      "id": "82d6ab6a-e537-4d63-87f3-78c86e4ee9b2",
       "name": "T1 — Cleanup urls",
       "credentials": {
         "postgres": {
@@ -3174,34 +2431,37 @@
       "parameters": {},
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "id": "2c591c46-6c5c-4a80-b500-a657d495c584",
+      "id": "e4d8fbe1-0022-41a1-85c0-4650623b2904",
       "name": "Merge — URL id chosen",
       "position": [
-        1312,
-        480
-      ]
+        1904,
+        880
+      ],
+      "notes": "Merge paths: (0) from URL upsert, (1) from existing url_id. Both paths provide url_id needed for fetch check."
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "id": "3e0a8e8d-6290-4b0c-8ddb-e053150e2c40",
+      "id": "85042ce8-eb13-47b7-9859-a35eab0eb775",
       "name": "Merge — Fetch chosen",
       "position": [
-        2832,
-        576
-      ]
+        6400,
+        1168
+      ],
+      "notes": "Merge paths: (0) from reused fetch, (1) from new fetch. Provides url_fetch_id, storage_url, and metadata for document handling."
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "id": "e6855bd6-01e2-482b-99ce-ce9ff819e490",
+      "id": "cac675ba-4365-4ffe-af32-8b5d61914293",
       "name": "Merge — Doc chosen",
       "position": [
-        4048,
-        688
-      ]
+        8400,
+        1264
+      ],
+      "notes": "Merge paths: (0) from existing document, (1) from new document insert. Provides document_id for job creation."
     },
     {
       "parameters": {
@@ -3231,13 +2491,13 @@
           ]
         }
       },
-      "id": "d68ec933-6565-4dd1-b77b-211eba999fa1",
+      "id": "73e5145e-88aa-4ab5-a5ab-c22c1868fbd6",
       "name": "T1 — Lookup url_id",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1296,
-        -112
+        1344,
+        208
       ],
       "credentials": {
         "postgres": {
@@ -3245,6 +2505,1099 @@
           "name": "Postgres DF Assistant"
         }
       }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "43a57e9d-aa5f-42b9-a0cd-329e712ebfe7",
+              "name": "_s3.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d654a74e-aeb2-4512-90e6-108aab9cf0d9",
+              "name": "_s3.url_id",
+              "value": "={{ $('Set — After Fetch Check').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a30180d7-8005-4376-87a0-98f01a5c50f9",
+              "name": "_s3.fetched_at_utc",
+              "value": "={{ new Date().toISOString().replace(/:/g, '-').replace(/\\..+/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "3714110e-c60c-4dca-9ebf-d9992f3f5785",
+              "name": "_s3.content_type",
+              "value": "={{ $json.headers?.['content-type']?.split(';')[0]?.trim() || 'application/octet-stream' }}",
+              "type": "string"
+            },
+            {
+              "id": "cce88884-cd2a-48e3-88e1-40fedbd23de1",
+              "name": "_s3.ext",
+              "value": "={{ (() => { const ct = $json.headers?.['content-type']?.toLowerCase() || ''; if (ct.includes('html')) return 'html'; if (ct.includes('json')) return 'json'; if (ct.includes('pdf')) return 'pdf'; if (ct.includes('xml')) return 'xml'; if (ct.includes('text')) return 'txt'; return 'bin'; })() }}",
+              "type": "string"
+            },
+            {
+              "id": "d6556eb8-8689-4ba4-9a24-3e65e2c2a7b0",
+              "name": "_s3.key",
+              "value": "={{ 'url_fetches/' + $('Set — Carry').item.json._carry.tenant_id + '/' + $('Set — After Fetch Check').item.json._url_id + '/' + new Date().toISOString().replace(/:/g, '-').replace(/\\..+/, '') + '/body.' + (() => { const ct = $json.headers?.['content-type']?.toLowerCase() || ''; if (ct.includes('html')) return 'html'; if (ct.includes('json')) return 'json'; if (ct.includes('pdf')) return 'pdf'; if (ct.includes('xml')) return 'xml'; if (ct.includes('text')) return 'txt'; return 'bin'; })() }}",
+              "type": "string"
+            },
+            {
+              "id": "a8bc30de-834a-442b-8526-ed38c3657eba",
+              "name": "_s3.bucket",
+              "value": "dfassistant",
+              "type": "string"
+            },
+            {
+              "id": "f7cbf85d-ff0d-42a1-8417-a3f1b8c19459",
+              "name": "_s3.file_name",
+              "value": "={{ 'url_fetches/' + $('Set — Carry').item.json._carry.tenant_id + '/' + $('Set — After Fetch Check').item.json._url_id + '/' + new Date().toISOString().replace(/:/g, '-').replace(/\\..+/, '') + '/body.' + (() => { const ct = $json.headers?.['content-type']?.toLowerCase() || ''; if (ct.includes('html')) return 'html'; if (ct.includes('json')) return 'json'; if (ct.includes('pdf')) return 'pdf'; if (ct.includes('xml')) return 'xml'; if (ct.includes('text')) return 'txt'; return 'bin'; })() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4416,
+        1264
+      ],
+      "id": "26f5af72-7fde-450f-8952-47c1af49118b",
+      "name": "Set — Build S3 Key",
+      "notes": "Build S3 storage key using pattern: url_fetches/<tenant_id>/<url_id>/<fetched_at_utc>/body.<ext>. Extension derived from content-type. Preserves HTTP response data using includeOtherFields."
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "={{ $json._s3.bucket }}",
+        "fileName": "={{ $json._s3.file_name }}",
+        "additionalFields": {
+          "grantRead": true
+        }
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        4720,
+        1168
+      ],
+      "id": "c70655c4-4ace-4622-b651-a34dd822afc2",
+      "name": "S3 — Upload Body",
+      "retryOnFail": true,
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Upload HTTP response body (binary) to S3 bucket dfassistant. Uses binaryData=true to upload binary content. grantRead=true for public access. Retry on fail enabled."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1216716f-8dce-4778-b15a-6a90f69566b9",
+              "name": "statusCode",
+              "value": "={{ $('HTTP — Fetch URL').item.json.statusCode }}",
+              "type": "number"
+            },
+            {
+              "id": "4b2c4d57-56bd-49b0-b8e5-eff4fc9a7aad",
+              "name": "statusMessage",
+              "value": "={{ $('HTTP — Fetch URL').item.json.statusMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "8e9866f3-4eb5-4eca-882a-21e361fef773",
+              "name": "headers",
+              "value": "={{ $('HTTP — Fetch URL').item.json.headers }}",
+              "type": "object"
+            },
+            {
+              "id": "e3b1297c-658a-46b1-8ff8-418cb60ef16a",
+              "name": "_s3",
+              "value": "={{ $('Set — Build S3 Key').item.json._s3 }}",
+              "type": "object"
+            },
+            {
+              "id": "852a8e4d-43f9-4f9b-8951-f4925b02bd68",
+              "name": "_carry",
+              "value": "={{ $('Set — Carry').item.json._carry }}",
+              "type": "object"
+            },
+            {
+              "id": "edcf62f9-4984-4694-b6a1-7484a765bb63",
+              "name": "_url_id",
+              "value": "={{ $('Set — After Fetch Check').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e98cacad-d6e4-4283-9339-86089ce0be6e",
+              "name": "binary",
+              "value": "={{ $('HTTP — Fetch URL').item.binary }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5184,
+        1168
+      ],
+      "id": "9421c62e-f008-4478-ab3b-b9ec16eb5d8c",
+      "name": "Set — Restore After S3",
+      "notes": "Restore HTTP response metadata (statusCode, headers) and carry fields after S3 upload. Preserves binary data reference. Needed because S3 upload changes data structure."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1c798d80-171b-47b4-8b70-d3b0efb837a4",
+              "name": "errorpipe.ctx.workflow",
+              "value": "WF31",
+              "type": "string"
+            },
+            {
+              "id": "90f29e3e-5835-497b-8d74-5c90d973dcef",
+              "name": "errorpipe.ctx.tenant_id",
+              "value": "={{ $('Set — Carry').item.json._carry?.tenant_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "25ac4522-0d17-4d3e-97df-1e15c87c74ab",
+              "name": "errorpipe.ctx.bot_id",
+              "value": "={{ $('Set — Carry').item.json._carry?.bot_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "4791ee2d-de74-46b2-bab7-27d8a011b30e",
+              "name": "errorpipe.ctx.correlation_id",
+              "value": "={{ $('Set — Carry').item.json._carry?.correlation_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "ab898827-6d49-4b86-b051-fa4e201a609b",
+              "name": "errorpipe.ctx.trace_id",
+              "value": "={{ $('Set — Carry').item.json._carry?.trace_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "5a4bdb05-6cae-4421-829a-644f7d7d5a38",
+              "name": "errorpipe.ctx.job_id",
+              "value": "={{ $('Set — Carry').item.json._carry?.job_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "f9dba06b-56b9-4101-8141-51b39b3d5083",
+              "name": "errorpipe.ctx.chat_id",
+              "value": "={{ $('Set — Carry').item.json._carry?.chat_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "755a8267-b1d8-4233-b612-7a05d8926c78",
+              "name": "errorpipe.error_context.node",
+              "value": "={{ $json._error_node || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "478650ee-0fc8-444c-be8b-e84703943d7e",
+              "name": "errorpipe.error_context.operation",
+              "value": "={{ $json._error_operation || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "764c7ae2-3641-4727-a71c-95a5600d553f",
+              "name": "errorpipe.error_context.kind",
+              "value": "={{ $json._error_kind || 'runtime_error' }}",
+              "type": "string"
+            },
+            {
+              "id": "e62154e7-c487-4272-afc7-362e6890dd9c",
+              "name": "errorpipe.error_context.message",
+              "value": "={{ $json.errorMessage || $json.errorDescription || $json.message || $json.error?.message || $json.error?.description || 'Unknown error' }}",
+              "type": "string"
+            },
+            {
+              "id": "25673765-f81f-4fb9-88d9-bc6fc96b4134",
+              "name": "errorpipe.error_context.retryable",
+              "value": "={{ $json._error_retryable ?? false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "be09fdf7-4557-4b84-a8d7-3e0d1ac23999",
+              "name": "errorpipe.error_context.details",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        9744,
+        2576
+      ],
+      "id": "5cab01c2-8bd3-457d-aa4c-cc2bfabcaba6",
+      "name": "Build ErrorPipe v1",
+      "notes": "Unified error handler. Builds ErrorPipe v1 contract with ctx (workflow, tenant_id, bot_id, correlation_id, trace_id, job_id, chat_id) and error_context (node, operation, kind, message, retryable, details). Used by ALL error paths in WF31. Input must provide _error_node, _error_operation, _error_kind, and _error_retryable fields."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "errorpipe": "={{ $json.errorpipe }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        9936,
+        2576
+      ],
+      "id": "3024e7f5-5771-4652-9192-2ce377f41c51",
+      "name": "Execute WF99",
+      "notes": "Call WF99 — Global ERR Handler with ErrorPipe v1. WF99 logs error to ops.errors and returns ErrorEnvelope v1. This is the ONLY error handler in WF31 - all error paths converge here. Do NOT use StopAndError after this - return WF99 output as normal workflow output."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6ce935bb-84b8-40ae-8cdc-fc2da6f3e992",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "ae0ef8bf-c525-4b18-a90d-32b4d9ef7647",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4080,
+        1152
+      ],
+      "id": "8c7a9e96-0801-4c58-af58-7dc24f03e2dd",
+      "name": "Guard IF — HTTP — Fetch URL Error?",
+      "notes": "Guard for HTTP — Fetch URL. Checks if error occurred by testing errorMessage/errorDescription/n8nDetails/message/error fields. TRUE: route to error handler. FALSE: continue normal path. BOTH I/O outputs wire into this node."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "84d4d2da-577c-460c-9200-0b78758d07bb",
+              "name": "_error_node",
+              "value": "HTTP — Fetch URL",
+              "type": "string"
+            },
+            {
+              "id": "8e45cb26-c50a-4f7f-a419-7ebe1cc2f2ba",
+              "name": "_error_operation",
+              "value": "HTTP fetch",
+              "type": "string"
+            },
+            {
+              "id": "0e682d60-312a-462c-85ea-94de9f11e3ad",
+              "name": "_error_kind",
+              "value": "io_error",
+              "type": "string"
+            },
+            {
+              "id": "4f5aa6b8-3ff0-48d9-abf5-f40b91ee0e35",
+              "name": "_error_retryable",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5504,
+        1600
+      ],
+      "id": "cb2c1f20-9d9b-4bf4-ac87-b96d17d7dc13",
+      "name": "Set — Tag http_fetch Error",
+      "notes": "Tag error from HTTP — Fetch URL with metadata for ErrorPipe v1. Sets _error_node, _error_operation, _error_kind, _error_retryable. Preserves original error data with includeOtherFields."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae414363-0af6-403b-9d99-712b6fdecd30",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "33027370-481c-41f7-8096-545f7261cfba",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5008,
+        1248
+      ],
+      "id": "719827e9-284a-4d92-aebb-c7801dd90680",
+      "name": "Guard IF — S3 — Upload Body Error?",
+      "notes": "Guard for S3 — Upload Body. Checks if error occurred by testing errorMessage/errorDescription/n8nDetails/message/error fields. TRUE: route to error handler. FALSE: continue normal path. BOTH I/O outputs wire into this node."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ab654122-ebef-4522-99b9-cfcdc1b8d4cb",
+              "name": "_error_node",
+              "value": "S3 — Upload Body",
+              "type": "string"
+            },
+            {
+              "id": "66ad7610-9e74-4273-a33b-22e7b9c251b4",
+              "name": "_error_operation",
+              "value": "S3 upload",
+              "type": "string"
+            },
+            {
+              "id": "22ba2827-43de-4e05-9b25-786a3593d0d8",
+              "name": "_error_kind",
+              "value": "io_error",
+              "type": "string"
+            },
+            {
+              "id": "079abec5-63cc-4d06-a7ad-00851b7579c4",
+              "name": "_error_retryable",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5616,
+        2288
+      ],
+      "id": "f535ee48-625c-4df5-bf06-03cee02afa15",
+      "name": "Set — Tag s3_upload Error",
+      "notes": "Tag error from S3 — Upload Body with metadata for ErrorPipe v1. Sets _error_node, _error_operation, _error_kind, _error_retryable. Preserves original error data with includeOtherFields."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "669e4743-7cfa-424d-8db1-db887e1387b1",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "376a9585-7c48-46ef-bd43-d63e984944a0",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        1104
+      ],
+      "id": "2385bc15-8684-464e-b492-c9e5a7bff88a",
+      "name": "Guard IF — PG — Upsert content.urls Error?",
+      "notes": "Guard for PG — Upsert content.urls. Checks if error occurred by testing errorMessage/errorDescription/n8nDetails/message/error fields. TRUE: route to error handler. FALSE: continue normal path. BOTH I/O outputs wire into this node."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1415df44-d9b3-4b23-88fe-195893cb77c6",
+              "name": "_error_node",
+              "value": "PG — Upsert content.urls",
+              "type": "string"
+            },
+            {
+              "id": "22bd1938-27db-4135-9970-d5ceb2cf2779",
+              "name": "_error_operation",
+              "value": "Upsert URLs",
+              "type": "string"
+            },
+            {
+              "id": "221995fa-b790-403b-ad2e-2b8aed481816",
+              "name": "_error_kind",
+              "value": "io_error",
+              "type": "string"
+            },
+            {
+              "id": "ca0ccd3d-cce8-4c7c-a751-d9b0a02adf44",
+              "name": "_error_retryable",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1920,
+        1296
+      ],
+      "id": "18174820-c5dd-4bd7-8268-4b341d3d2409",
+      "name": "Set — Tag pg_upsert_urls Error",
+      "notes": "Tag error from PG — Upsert content.urls with metadata for ErrorPipe v1. Sets _error_node, _error_operation, _error_kind, _error_retryable. Preserves original error data with includeOtherFields."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "51d66c9b-8299-4999-bc6f-b2eac7105d7c",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "03d2de27-cb24-41c2-9e16-a43dab2b7b0f",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2544,
+        864
+      ],
+      "id": "c810b2c6-d8c5-4c87-8118-b177a09d6d82",
+      "name": "Guard IF — PG — Select Latest Fetch Error?",
+      "notes": "Guard for PG — Select Latest Fetch. Checks if error occurred by testing errorMessage/errorDescription/n8nDetails/message/error fields. TRUE: route to error handler. FALSE: continue normal path. BOTH I/O outputs wire into this node."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "709f6a87-7d37-4cd5-9d79-75d4e270cca2",
+              "name": "_error_node",
+              "value": "PG — Select Latest Fetch",
+              "type": "string"
+            },
+            {
+              "id": "374dcc44-4a0c-4199-b3c3-6aa82ed779a3",
+              "name": "_error_operation",
+              "value": "Select latest fetch",
+              "type": "string"
+            },
+            {
+              "id": "35784a12-b3f7-4fa0-ba24-6e68419b7182",
+              "name": "_error_kind",
+              "value": "io_error",
+              "type": "string"
+            },
+            {
+              "id": "f54d362d-763f-4429-8022-25f04a3fde22",
+              "name": "_error_retryable",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2880,
+        1264
+      ],
+      "id": "107cd3fa-e292-4369-859d-96b5ec3cae2a",
+      "name": "Set — Tag pg_select_fetch Error",
+      "notes": "Tag error from PG — Select Latest Fetch with metadata for ErrorPipe v1. Sets _error_node, _error_operation, _error_kind, _error_retryable. Preserves original error data with includeOtherFields."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9d6a6d35-ec3a-4e94-8292-64da78e14bb4",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "e08a4d22-8954-451f-9564-b2691b5c52f5",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5984,
+        1264
+      ],
+      "id": "a6777912-d4a4-4211-aec8-cd2024ce2ddf",
+      "name": "Guard IF — PG — Insert url_fetches Error?",
+      "notes": "Guard for PG — Insert url_fetches. Checks if error occurred by testing errorMessage/errorDescription/n8nDetails/message/error fields. TRUE: route to error handler. FALSE: continue normal path. BOTH I/O outputs wire into this node."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26f53364-c8db-48b4-8d55-8106b761dd68",
+              "name": "_error_node",
+              "value": "PG — Insert url_fetches",
+              "type": "string"
+            },
+            {
+              "id": "13ed33e9-c2ee-4a14-81d4-8ad96d8b4024",
+              "name": "_error_operation",
+              "value": "Insert url_fetch",
+              "type": "string"
+            },
+            {
+              "id": "8fa589e6-68ed-4593-aa3f-b1efdb9f8c6d",
+              "name": "_error_kind",
+              "value": "io_error",
+              "type": "string"
+            },
+            {
+              "id": "f4a9bed7-dbb3-403a-8233-7882e4a85993",
+              "name": "_error_retryable",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7408,
+        2448
+      ],
+      "id": "c05bd486-06a4-4403-b32c-71f23e664f1a",
+      "name": "Set — Tag pg_insert_fetch Error",
+      "notes": "Tag error from PG — Insert url_fetches with metadata for ErrorPipe v1. Sets _error_node, _error_operation, _error_kind, _error_retryable. Preserves original error data with includeOtherFields."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "01b3687c-1989-4ed9-a4d0-0ec11df1212a",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "efcc1751-feb7-43c2-8142-29b24ce3f603",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6848,
+        1360
+      ],
+      "id": "c561bab8-039a-4159-84f0-1b0cb10440e4",
+      "name": "Guard IF — PG — Select Existing Doc Error?",
+      "notes": "Guard for PG — Select Existing Doc. Checks if error occurred by testing errorMessage/errorDescription/n8nDetails/message/error fields. TRUE: route to error handler. FALSE: continue normal path. BOTH I/O outputs wire into this node."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2885a249-0586-4596-80ce-7dd80d94d351",
+              "name": "_error_node",
+              "value": "PG — Select Existing Doc",
+              "type": "string"
+            },
+            {
+              "id": "9f04d2a5-e169-4254-aac9-dbee1fa5ac82",
+              "name": "_error_operation",
+              "value": "Select existing doc",
+              "type": "string"
+            },
+            {
+              "id": "e88e9667-37e5-43de-b141-8d99acb6168d",
+              "name": "_error_kind",
+              "value": "io_error",
+              "type": "string"
+            },
+            {
+              "id": "f7603c21-3007-4912-b97b-f36a90300743",
+              "name": "_error_retryable",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7984,
+        1840
+      ],
+      "id": "acc474eb-d5ce-48dc-ab48-cc994f2540d3",
+      "name": "Set — Tag pg_select_doc Error",
+      "notes": "Tag error from PG — Select Existing Doc with metadata for ErrorPipe v1. Sets _error_node, _error_operation, _error_kind, _error_retryable. Preserves original error data with includeOtherFields."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "23b03c84-1982-4512-b47b-0e7f9b92031b",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "98190a2c-aa21-4972-8305-313581d6d254",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        8080,
+        1424
+      ],
+      "id": "5fcc3b7e-ee12-4716-84fd-cf2924b109b5",
+      "name": "Guard IF — PG — Insert content.documents Error?",
+      "notes": "Guard for PG — Insert content.documents. Checks if error occurred by testing errorMessage/errorDescription/n8nDetails/message/error fields. TRUE: route to error handler. FALSE: continue normal path. BOTH I/O outputs wire into this node."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9884c3d6-331c-4014-b24d-9b20250387d5",
+              "name": "_error_node",
+              "value": "PG — Insert content.documents",
+              "type": "string"
+            },
+            {
+              "id": "2a05161c-a533-4a07-b5a0-02174751bf5a",
+              "name": "_error_operation",
+              "value": "Insert document",
+              "type": "string"
+            },
+            {
+              "id": "5a225372-6739-42a8-8457-a0efda309a87",
+              "name": "_error_kind",
+              "value": "io_error",
+              "type": "string"
+            },
+            {
+              "id": "90d3f1a8-1752-438a-95be-ed1f8d097e4e",
+              "name": "_error_retryable",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8752,
+        1840
+      ],
+      "id": "6bde38a0-d0e6-451d-a4cf-e69149e58786",
+      "name": "Set — Tag pg_insert_doc Error",
+      "notes": "Tag error from PG — Insert content.documents with metadata for ErrorPipe v1. Sets _error_node, _error_operation, _error_kind, _error_retryable. Preserves original error data with includeOtherFields."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "853ac1e1-d213-4238-9f30-842ef6bdce02",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "d7a15b88-d197-4f58-b256-fbf873fe71e3",
+              "leftValue": "={{ $json.errorMessage || $json.errorDescription || $json.n8nDetails || $json.message || $json.error?.message || $json.error?.description || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        8944,
+        1296
+      ],
+      "id": "b73e2034-5b1d-40dc-bff1-0412389ea408",
+      "name": "Guard IF — PG — Insert ops.jobs extract_text Error?",
+      "notes": "Guard for PG — Insert ops.jobs extract_text. Checks if error occurred by testing errorMessage/errorDescription/n8nDetails/message/error fields. TRUE: route to error handler. FALSE: continue normal path. BOTH I/O outputs wire into this node."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4c76130a-6f61-4c61-b264-ea37359dea10",
+              "name": "_error_node",
+              "value": "PG — Insert ops.jobs extract_text",
+              "type": "string"
+            },
+            {
+              "id": "efad72e4-c7b4-4f82-be88-c16602bb0344",
+              "name": "_error_operation",
+              "value": "Insert extract_text job",
+              "type": "string"
+            },
+            {
+              "id": "972334b1-3f38-4baa-b60e-292f14482913",
+              "name": "_error_kind",
+              "value": "io_error",
+              "type": "string"
+            },
+            {
+              "id": "39206dfa-fc38-4212-9770-b9164a651945",
+              "name": "_error_retryable",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        9248,
+        1984
+      ],
+      "id": "255db286-ea8d-4491-b8d8-5aea7639dbb2",
+      "name": "Set — Tag pg_insert_job Error",
+      "notes": "Tag error from PG — Insert ops.jobs extract_text with metadata for ErrorPipe v1. Sets _error_node, _error_operation, _error_kind, _error_retryable. Preserves original error data with includeOtherFields."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c3152473-b098-491c-8613-e801b2a5ae6f",
+              "name": "_existing_fetch",
+              "value": "=null",
+              "type": "object"
+            },
+            {
+              "id": "cec5eb9b-5ff2-4040-8068-412910f96f13",
+              "name": "_url_id",
+              "value": "={{ $('Merge — URL id chosen').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "03163757-6e44-46d4-b859-8f1b1fd0a709",
+              "name": "_carry",
+              "value": "={{ $('Set — Carry').item.json._carry }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2272,
+        640
+      ],
+      "id": "6ab40c7e-9de2-4aff-a2c8-1ac800b0379d",
+      "name": "Set — Default No Fetch",
+      "notes": "Default item for when SELECT Latest Fetch returns 0 rows. Sets _existing_fetch=null, preserves _url_id and _carry. This merges with SELECT result to ensure exactly 1 item continues even if no rows found."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2848,
+        768
+      ],
+      "id": "049677d2-8952-485d-a746-f52d9f30fd7f",
+      "name": "Merge — Fetch Result",
+      "notes": "Merge default (no fetch) with SELECT result. If SELECT returns 0 rows, default continues. If SELECT returns rows, use SELECT data. Output always has exactly 1 item."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "10fd372e-726a-4df2-88f2-e3319c78b401",
+              "name": "_existing_doc",
+              "value": "=null",
+              "type": "object"
+            },
+            {
+              "id": "862e7143-67d4-4dda-9fca-dd37e155112e",
+              "name": "_url_id",
+              "value": "={{ $('Merge — Fetch chosen').item.json._url_id }}",
+              "type": "string"
+            },
+            {
+              "id": "691bf939-aa8f-4789-8996-ea633ee5fb85",
+              "name": "_url_fetch_id",
+              "value": "={{ $('Merge — Fetch chosen').item.json._url_fetch_id }}",
+              "type": "string"
+            },
+            {
+              "id": "27a4cc94-4714-4a00-9ee3-67450db7a7c3",
+              "name": "_storage_url",
+              "value": "={{ $('Merge — Fetch chosen').item.json._storage_url }}",
+              "type": "string"
+            },
+            {
+              "id": "881501cc-2e50-4f19-b767-d84a3c88e269",
+              "name": "_carry",
+              "value": "={{ $('Set — Carry').item.json._carry }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6816,
+        1120
+      ],
+      "id": "771ccc6e-2ecd-4d3b-8db9-0e5ec0ba22c8",
+      "name": "Set — Default No Doc",
+      "notes": "Default item for when SELECT Existing Doc returns 0 rows. Sets _existing_doc=null, preserves _url_id, _url_fetch_id, _storage_url, _carry. Merges with SELECT result to ensure exactly 1 item continues."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        7088,
+        1120
+      ],
+      "id": "aceb8d2e-4448-4ec1-9692-faed58a5f37f",
+      "name": "Merge — Doc Result",
+      "notes": "Merge default (no doc) with SELECT result. If SELECT returns 0 rows, default continues. If SELECT returns rows, use SELECT data. Output always has exactly 1 item."
     }
   ],
   "pinData": {},
@@ -3322,14 +3675,14 @@
       "main": [
         [
           {
-            "node": "Set — Capture url_id",
+            "node": "Guard IF — PG — Upsert content.urls Error?",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source PG Upsert URLs",
+            "node": "Guard IF — PG — Upsert content.urls Error?",
             "type": "main",
             "index": 0
           }
@@ -3362,14 +3715,14 @@
       "main": [
         [
           {
-            "node": "Set — After Fetch Check",
+            "node": "Guard IF — PG — Select Latest Fetch Error?",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source PG Select Fetch",
+            "node": "Guard IF — PG — Select Latest Fetch Error?",
             "type": "main",
             "index": 0
           }
@@ -3409,14 +3762,14 @@
       "main": [
         [
           {
-            "node": "Crypto — SHA256 Body",
+            "node": "Guard IF — HTTP — Fetch URL Error?",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source HTTP Fetch",
+            "node": "Guard IF — HTTP — Fetch URL Error?",
             "type": "main",
             "index": 0
           }
@@ -3449,14 +3802,14 @@
       "main": [
         [
           {
-            "node": "Set — After Fetch Insert",
+            "node": "Guard IF — PG — Insert url_fetches Error?",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source PG Insert Fetch",
+            "node": "Guard IF — PG — Insert url_fetches Error?",
             "type": "main",
             "index": 0
           }
@@ -3489,14 +3842,14 @@
       "main": [
         [
           {
-            "node": "Set — After Doc Check",
+            "node": "Guard IF — PG — Select Existing Doc Error?",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source PG Select Doc",
+            "node": "Guard IF — PG — Select Existing Doc Error?",
             "type": "main",
             "index": 0
           }
@@ -3547,14 +3900,14 @@
       "main": [
         [
           {
-            "node": "Set — After Doc Insert",
+            "node": "Guard IF — PG — Insert content.documents Error?",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source PG Insert Doc",
+            "node": "Guard IF — PG — Insert content.documents Error?",
             "type": "main",
             "index": 0
           }
@@ -3598,25 +3951,14 @@
       "main": [
         [
           {
-            "node": "Set — After Job Insert",
+            "node": "Guard IF — PG — Insert ops.jobs extract_text Error?",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source PG Insert Job",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set — After Job Insert": {
-      "main": [
-        [
-          {
-            "node": "Set — SuccessEnvelope",
+            "node": "Guard IF — PG — Insert ops.jobs extract_text Error?",
             "type": "main",
             "index": 0
           }
@@ -3627,106 +3969,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe v1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Source PG Upsert URLs": {
-      "main": [
-        [
-          {
-            "node": "ERR — Prepare ErrorPipe v1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Source PG Select Fetch": {
-      "main": [
-        [
-          {
-            "node": "ERR — Prepare ErrorPipe v1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Source HTTP Fetch": {
-      "main": [
-        [
-          {
-            "node": "ERR — Prepare ErrorPipe v1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Source PG Insert Fetch": {
-      "main": [
-        [
-          {
-            "node": "ERR — Prepare ErrorPipe v1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Source PG Select Doc": {
-      "main": [
-        [
-          {
-            "node": "ERR — Prepare ErrorPipe v1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Source PG Insert Doc": {
-      "main": [
-        [
-          {
-            "node": "ERR — Prepare ErrorPipe v1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Source PG Insert Job": {
-      "main": [
-        [
-          {
-            "node": "ERR — Prepare ErrorPipe v1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe v1": {
-      "main": [
-        [
-          {
-            "node": "Execute Workflow — WF99",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Execute Workflow — WF99": {
-      "main": [
-        [
-          {
-            "node": "StopAndError",
+            "node": "Build ErrorPipe v1",
             "type": "main",
             "index": 0
           }
@@ -3801,7 +4044,13 @@
     },
     "T1 — Build Input": {
       "main": [
-        []
+        [
+          {
+            "node": "Set — Carry",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Merge — URL id chosen": {
@@ -3809,6 +4058,11 @@
         [
           {
             "node": "PG — Select Latest Fetch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set — Default No Fetch",
             "type": "main",
             "index": 0
           }
@@ -3820,6 +4074,11 @@
         [
           {
             "node": "PG — Select Existing Doc",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set — Default No Doc",
             "type": "main",
             "index": 0
           }
@@ -3848,9 +4107,342 @@
         ]
       ]
     },
-    "Set — SuccessEnvelope": {
+    "Set — Build S3 Key": {
       "main": [
-        []
+        [
+          {
+            "node": "S3 — Upload Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S3 — Upload Body": {
+      "main": [
+        [
+          {
+            "node": "Guard IF — S3 — Upload Body Error?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Guard IF — S3 — Upload Body Error?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Restore After S3": {
+      "main": [
+        [
+          {
+            "node": "Crypto — SHA256 Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build ErrorPipe v1": {
+      "main": [
+        [
+          {
+            "node": "Execute WF99",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard IF — HTTP — Fetch URL Error?": {
+      "main": [
+        [
+          {
+            "node": "Set — Tag http_fetch Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Build S3 Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Tag http_fetch Error": {
+      "main": [
+        [
+          {
+            "node": "Build ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard IF — S3 — Upload Body Error?": {
+      "main": [
+        [
+          {
+            "node": "Set — Tag s3_upload Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Restore After S3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Tag s3_upload Error": {
+      "main": [
+        [
+          {
+            "node": "Build ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard IF — PG — Upsert content.urls Error?": {
+      "main": [
+        [
+          {
+            "node": "Set — Tag pg_upsert_urls Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Capture url_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Tag pg_upsert_urls Error": {
+      "main": [
+        [
+          {
+            "node": "Build ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard IF — PG — Select Latest Fetch Error?": {
+      "main": [
+        [
+          {
+            "node": "Set — Tag pg_select_fetch Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge — Fetch Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set — Tag pg_select_fetch Error": {
+      "main": [
+        [
+          {
+            "node": "Build ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard IF — PG — Insert url_fetches Error?": {
+      "main": [
+        [
+          {
+            "node": "Set — Tag pg_insert_fetch Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — After Fetch Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Tag pg_insert_fetch Error": {
+      "main": [
+        [
+          {
+            "node": "Build ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard IF — PG — Select Existing Doc Error?": {
+      "main": [
+        [
+          {
+            "node": "Set — Tag pg_select_doc Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge — Doc Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set — Tag pg_select_doc Error": {
+      "main": [
+        [
+          {
+            "node": "Build ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard IF — PG — Insert content.documents Error?": {
+      "main": [
+        [
+          {
+            "node": "Set — Tag pg_insert_doc Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — After Doc Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Tag pg_insert_doc Error": {
+      "main": [
+        [
+          {
+            "node": "Build ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard IF — PG — Insert ops.jobs extract_text Error?": {
+      "main": [
+        [
+          {
+            "node": "Set — Tag pg_insert_job Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — After Job Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Tag pg_insert_job Error": {
+      "main": [
+        [
+          {
+            "node": "Build ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Default No Fetch": {
+      "main": [
+        [
+          {
+            "node": "Merge — Fetch Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Fetch Result": {
+      "main": [
+        [
+          {
+            "node": "Set — After Fetch Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Default No Doc": {
+      "main": [
+        [
+          {
+            "node": "Merge — Doc Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Doc Result": {
+      "main": [
+        [
+          {
+            "node": "Set — After Doc Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — After Job Insert": {
+      "main": [
+        [
+          {
+            "node": "OUT — SuccessEnvelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
@@ -3863,7 +4455,7 @@
     "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "57096806-71bb-4cd2-96b8-792725dd6448",
+  "versionId": "aca6b9f6-97ae-4016-823c-310edb2b84aa",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },

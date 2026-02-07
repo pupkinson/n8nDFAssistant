@@ -7,7 +7,7 @@
           "interval": [
             {
               "field": "seconds",
-              "secondsInterval": 10
+              "secondsInterval": 59
             }
           ]
         }
@@ -29,7 +29,7 @@
             {
               "id": "cfg-batch-size",
               "name": "cfg.batch_size",
-              "value": 5,
+              "value": 50,
               "type": "number"
             },
             {
@@ -59,65 +59,6 @@
         512
       ],
       "notes": "PURPOSE: Set runtime configuration.\nINPUT: Trigger item.\nOUTPUT: Config object with batch_size, runner_id, workflow name.\nWHY: Centralize config for easy adjustment."
-    },
-    {
-      "parameters": {
-        "operation": "select",
-        "schema": {
-          "__rl": true,
-          "value": "ops",
-          "mode": "list",
-          "cachedResultName": "ops"
-        },
-        "table": {
-          "__rl": true,
-          "value": "jobs",
-          "mode": "list",
-          "cachedResultName": "jobs"
-        },
-        "limit": "={{ $json.cfg.batch_size }}",
-        "where": {
-          "values": [
-            {
-              "column": "status",
-              "value": "queued"
-            },
-            {
-              "column": "next_run_at",
-              "condition": "lte",
-              "value": "={{ $now.toISO() }}"
-            }
-          ]
-        },
-        "sort": {
-          "values": [
-            {
-              "column": "priority",
-              "direction": "DESC"
-            },
-            {
-              "column": "created_at"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "e52ee8e0-11f2-4bdf-92b6-39ff4b07bc7c",
-      "name": "📥 Select Pending Jobs",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -2416,
-        512
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "yckAFBLpmdhsPaDZ",
-          "name": "Postgres DF Assistant"
-        }
-      },
-      "onError": "continueErrorOutput",
-      "notes": "PURPOSE: Fetch up to batch_size jobs that are queued and ready.\nINPUT: Config with batch_size.\nOUTPUT: Array of job rows (id, tenant_id, job_type, payload, etc.).\nWHY status=queued AND next_run_at<=now: Only pick ready jobs.\nWHY priority DESC, created_at ASC: High priority first, then FIFO.\nWHY alwaysOutputData: Continue even if no jobs (empty array)."
     },
     {
       "parameters": {
@@ -167,8 +108,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "WF99 — Global ERR Handler",
-          "mode": "name"
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -422,7 +365,9 @@
           "convertFieldsToString": false
         },
         "options": {
-          "outputColumns": "={{ \"updateCount\" }}"
+          "outputColumns": [
+            "id"
+          ]
         }
       },
       "id": "8d61c3ee-cac4-4e62-9330-c4f77d4b51eb",
@@ -433,6 +378,7 @@
         -1584,
         304
       ],
+      "retryOnFail": true,
       "credentials": {
         "postgres": {
           "id": "yckAFBLpmdhsPaDZ",
@@ -485,7 +431,8 @@
         "workflowId": {
           "__rl": true,
           "value": "WF99 — Global ERR Handler",
-          "mode": "name"
+          "mode": "list",
+          "cachedResultUrl": "/workflow/WF99%20%E2%80%94%20Global%20ERR%20Handler"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -532,12 +479,13 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "loose",
+            "version": 3
           },
           "conditions": [
             {
               "id": "claim-success",
-              "leftValue": "={{ $json.updateCount }}",
+              "leftValue": "={{ $json.id }}",
               "rightValue": 0,
               "operator": {
                 "type": "number",
@@ -547,6 +495,7 @@
           ],
           "combinator": "and"
         },
+        "looseTypeValidation": true,
         "options": {}
       },
       "id": "debb83c6-82d3-495a-bcfc-ff166894e033",
@@ -633,7 +582,11 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "outputColumns": [
+            "*"
+          ]
+        }
       },
       "id": "d2830053-82ca-48f8-a6a3-32019f7ef01c",
       "name": "📝 Insert job_runs",
@@ -663,8 +616,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -560,
-        448
+        -592,
+        512
       ],
       "notes": "PURPOSE: Restore job data after job_runs INSERT.\nINPUT 1: Insert result (job_run.id).\nINPUT 2: Job snapshot from before insert.\nOUTPUT: Combined data for dispatch.\nWHY: Keep job_run.id for later UPDATE."
     },
@@ -704,7 +657,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -713,7 +667,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "7d8e2684-974a-4760-a5c6-2835e8013844"
                   }
                 ],
                 "combinator": "and"
@@ -726,7 +681,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -735,7 +691,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "965e54a7-3654-40c1-b165-f8f6e32b638d"
                   }
                 ],
                 "combinator": "and"
@@ -748,7 +705,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -757,7 +715,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "bdb23011-548b-4331-ba8b-163cc5c4cf36"
                   }
                 ],
                 "combinator": "and"
@@ -770,7 +729,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -779,7 +739,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "5c66fd27-4381-4c4f-90c0-412879893b64"
                   }
                 ],
                 "combinator": "and"
@@ -792,7 +753,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -801,7 +763,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "72b925cc-9e3f-497f-b8e6-7c4a5a62e0f7"
                   }
                 ],
                 "combinator": "and"
@@ -814,7 +777,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -823,7 +787,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "cb00f6ba-4d17-446f-89ec-4976d20df3f3"
                   }
                 ],
                 "combinator": "and"
@@ -836,7 +801,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -845,7 +811,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "be7c7f6f-0ffc-4c91-8099-5af3354cda9a"
                   }
                 ],
                 "combinator": "and"
@@ -858,7 +825,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -867,7 +835,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "77184d3a-bf8e-4f80-8a8c-3e760da2a985"
                   }
                 ],
                 "combinator": "and"
@@ -880,7 +849,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -889,7 +859,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "ec4043cc-480b-408e-b75c-846a446828cd"
                   }
                 ],
                 "combinator": "and"
@@ -902,7 +873,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -911,7 +883,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "770db169-dbf0-4480-90c2-873a56eaf3c2"
                   }
                 ],
                 "combinator": "and"
@@ -924,7 +897,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -933,7 +907,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "d2b034f3-d229-4671-b723-0f4560049b32"
                   }
                 ],
                 "combinator": "and"
@@ -1053,8 +1028,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "WF20 — Update Processor (Normalize & Persist)",
-          "mode": "name"
+          "value": "-0hFbxSj-HB7MD1sbkWF0",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/-0hFbxSj-HB7MD1sbkWF0",
+          "cachedResultName": "WF20 — Update Processor (Normalize & Persist)"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -1164,7 +1141,8 @@
         "workflowId": {
           "__rl": true,
           "value": "WF30 — File Fetcher",
-          "mode": "name"
+          "mode": "list",
+          "cachedResultUrl": "/workflow/WF30%20%E2%80%94%20File%20Fetcher"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -1273,8 +1251,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "WF31 — Link Fetcher",
-          "mode": "name"
+          "value": "nfjIRSFfDpPQQ8NW4UF9c",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/nfjIRSFfDpPQQ8NW4UF9c",
+          "cachedResultName": "WF31 — Link Fetcher"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -1394,7 +1374,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -1403,7 +1384,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "33a17af0-4d3c-4e17-8225-05b51bc07934"
                   }
                 ],
                 "combinator": "and"
@@ -1416,7 +1398,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -1425,7 +1408,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "6ea7bead-60bf-45a8-9e2a-c28e55a225af"
                   }
                 ],
                 "combinator": "and"
@@ -1438,7 +1422,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -1447,7 +1432,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "addf8185-2ac8-4c50-a8dd-754690b995ac"
                   }
                 ],
                 "combinator": "and"
@@ -1460,7 +1446,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -1469,7 +1456,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "308263b2-44f5-4acf-a768-cf9c83f63a9e"
                   }
                 ],
                 "combinator": "and"
@@ -1482,7 +1470,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -1491,7 +1480,8 @@
                     "operator": {
                       "type": "string",
                       "operation": "equals"
-                    }
+                    },
+                    "id": "8cc26204-4304-42fd-8af0-6c4a7ede5bb9"
                   }
                 ],
                 "combinator": "and"
@@ -1504,7 +1494,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -1514,7 +1505,8 @@
                       "type": "string",
                       "operation": "startsWith",
                       "singleValue": true
-                    }
+                    },
+                    "id": "fb427281-d6e0-4a6b-bc58-f7ce7f48f1ee"
                   }
                 ],
                 "combinator": "and"
@@ -1527,7 +1519,8 @@
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "loose"
+                  "typeValidation": "strict",
+                  "version": 3
                 },
                 "conditions": [
                   {
@@ -1537,7 +1530,8 @@
                       "type": "string",
                       "operation": "startsWith",
                       "singleValue": true
-                    }
+                    },
+                    "id": "78ce7220-67f0-4c8f-bd66-c24aec154c6c"
                   }
                 ],
                 "combinator": "and"
@@ -1823,16 +1817,14 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        272,
-        1328
+        464,
+        1440
       ],
       "notes": "PURPOSE: Handle unrecognized job_type (fallback).\nINPUT: Job with unknown type.\nOUTPUT: Error object for job failure marking.\nWHY: Unknown types should fail gracefully, not crash WF90."
     },
     {
       "parameters": {
-        "mode": "chooseBranch",
-        "numberInputs": 23,
-        "output": "wait"
+        "numberInputs": 10
       },
       "id": "44343324-c2cc-4321-9fb6-e752839a29c8",
       "name": "🔗 Merge All Results",
@@ -1859,8 +1851,9 @@
               "leftValue": "={{ $json.error || $json.message }}",
               "rightValue": "",
               "operator": {
-                "type": "string",
-                "operation": "exists"
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
               }
             }
           ],
@@ -2078,26 +2071,167 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
+            "id": "={{ $json.job_id }}",
             "status": "={{ $json.final_status }}",
             "next_run_at": "={{ $json.next_run_at || null }}",
             "locked_at": "={{ null }}",
             "locked_by": "={{ null }}",
             "last_error": "={{ $json.error_summary ? JSON.parse($json.error_summary) : null }}",
-            "updated_at": "={{ $now.toISO() }}",
-            "id": "={{ $json.job_id }}"
+            "updated_at": "={{ $now.toISO() }}"
           },
           "matchingColumns": [
             "id"
           ],
           "schema": [
             {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "job_type",
+              "displayName": "job_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "telegram_update",
+                  "value": "telegram_update"
+                },
+                {
+                  "name": "test_job",
+                  "value": "test_job"
+                },
+                {
+                  "name": "reembed_model_migration",
+                  "value": "reembed_model_migration"
+                },
+                {
+                  "name": "answer_query",
+                  "value": "answer_query"
+                },
+                {
+                  "name": "embed_chunks",
+                  "value": "embed_chunks"
+                },
+                {
+                  "name": "chunk_document",
+                  "value": "chunk_document"
+                },
+                {
+                  "name": "build_document",
+                  "value": "build_document"
+                },
+                {
+                  "name": "extract_text",
+                  "value": "extract_text"
+                },
+                {
+                  "name": "fetch_url",
+                  "value": "fetch_url"
+                },
+                {
+                  "name": "fetch_tg_file",
+                  "value": "fetch_tg_file"
+                },
+                {
+                  "name": "upsert_membership",
+                  "value": "upsert_membership"
+                },
+                {
+                  "name": "normalize_update",
+                  "value": "normalize_update"
+                }
+              ],
+              "removed": true
+            },
+            {
               "id": "status",
               "displayName": "status",
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "dead",
+                  "value": "dead"
+                },
+                {
+                  "name": "failed",
+                  "value": "failed"
+                },
+                {
+                  "name": "succeeded",
+                  "value": "succeeded"
+                },
+                {
+                  "name": "running",
+                  "value": "running"
+                },
+                {
+                  "name": "queued",
+                  "value": "queued"
+                }
+              ]
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
             },
             {
               "id": "next_run_at",
@@ -2106,7 +2240,7 @@
               "defaultMatch": false,
               "display": true,
               "type": "dateTime",
-              "canBeUsedToMatch": false
+              "canBeUsedToMatch": true
             },
             {
               "id": "locked_at",
@@ -2115,7 +2249,7 @@
               "defaultMatch": false,
               "display": true,
               "type": "dateTime",
-              "canBeUsedToMatch": false
+              "canBeUsedToMatch": true
             },
             {
               "id": "locked_by",
@@ -2124,7 +2258,17 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": false
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "correlation_id",
+              "displayName": "correlation_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
             },
             {
               "id": "last_error",
@@ -2132,8 +2276,18 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "json",
-              "canBeUsedToMatch": false
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
             },
             {
               "id": "updated_at",
@@ -2142,15 +2296,6 @@
               "defaultMatch": false,
               "display": true,
               "type": "dateTime",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "id",
-              "displayName": "id",
-              "required": true,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
               "canBeUsedToMatch": true
             }
           ],
@@ -2164,8 +2309,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2864,
-        1056
+        2880,
+        1232
       ],
       "credentials": {
         "postgres": {
@@ -2204,22 +2349,83 @@
           ],
           "schema": [
             {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
               "id": "finished_at",
               "displayName": "finished_at",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "dateTime",
-              "canBeUsedToMatch": false
+              "canBeUsedToMatch": true
             },
             {
               "id": "status",
               "displayName": "status",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "dead",
+                  "value": "dead"
+                },
+                {
+                  "name": "failed",
+                  "value": "failed"
+                },
+                {
+                  "name": "succeeded",
+                  "value": "succeeded"
+                },
+                {
+                  "name": "running",
+                  "value": "running"
+                },
+                {
+                  "name": "queued",
+                  "value": "queued"
+                }
+              ]
+            },
+            {
+              "id": "metrics",
+              "displayName": "metrics",
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
             },
             {
               "id": "error",
@@ -2227,16 +2433,7 @@
               "required": false,
               "defaultMatch": false,
               "display": true,
-              "type": "json",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "id",
-              "displayName": "id",
-              "required": true,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
+              "type": "object",
               "canBeUsedToMatch": true
             }
           ],
@@ -2250,8 +2447,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3216,
-        1152
+        3072,
+        1072
       ],
       "credentials": {
         "postgres": {
@@ -2549,8 +2746,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3056,
-        1440
+        3088,
+        1376
       ],
       "notes": "PURPOSE: Format error for WF99 when UPDATE ops.jobs fails."
     },
@@ -2597,7 +2794,8 @@
         "workflowId": {
           "__rl": true,
           "value": "WF99 — Global ERR Handler",
-          "mode": "name"
+          "mode": "list",
+          "cachedResultUrl": "/workflow/WF99%20%E2%80%94%20Global%20ERR%20Handler"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -2627,7 +2825,8 @@
         "workflowId": {
           "__rl": true,
           "value": "WF99 — Global ERR Handler",
-          "mode": "name"
+          "mode": "list",
+          "cachedResultUrl": "/workflow/WF99%20%E2%80%94%20Global%20ERR%20Handler"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -2695,7 +2894,8 @@
         "workflowId": {
           "__rl": true,
           "value": "WF99 — Global ERR Handler",
-          "mode": "name"
+          "mode": "list",
+          "cachedResultUrl": "/workflow/WF99%20%E2%80%94%20Global%20ERR%20Handler"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -2914,8 +3114,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "WF34 — Voice Transcriber (Full STT)",
-          "mode": "name"
+          "value": "BVoncVIaUvz0wqgC0yc2y",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/BVoncVIaUvz0wqgC0yc2y",
+          "cachedResultName": "WF34 — Voice Transcriber (Full STT)"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -3024,8 +3226,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "WF35 — Voice Probe",
-          "mode": "name"
+          "value": "KbQJKDHMQ_S11UtY2rgO_",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/KbQJKDHMQ_S11UtY2rgO_",
+          "cachedResultName": "WF35 — Voice Probe"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -3134,8 +3338,10 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "WF40 — Content Extractor (Text Extraction)",
-          "mode": "name"
+          "value": "r61sEB6snYIQ2XaPg804W",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/r61sEB6snYIQ2XaPg804W",
+          "cachedResultName": "WF40 — Document Builder"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -3245,7 +3451,8 @@
         "workflowId": {
           "__rl": true,
           "value": "WF41 — Chunk & Embed",
-          "mode": "name"
+          "mode": "list",
+          "cachedResultUrl": "/workflow/WF41%20%E2%80%94%20Chunk%20&%20Embed"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -3308,7 +3515,7 @@
       "typeVersion": 3.4,
       "position": [
         272,
-        1472
+        1664
       ],
       "notes": "PURPOSE: Route test_job by payload.fail flag.\nINPUT: Test job request.\nOUTPUT fail: Simulate failure.\nOUTPUT extra: Simulate success.\nWHY: Allows testing both paths without external workers."
     },
@@ -3364,7 +3571,7 @@
       "typeVersion": 3.4,
       "position": [
         480,
-        1616
+        1744
       ],
       "notes": "PURPOSE: Return success envelope for test_job.\nINPUT: Test job.\nOUTPUT: Success result.\nWHY: Dedicated test worker for T1 happy path."
     },
@@ -3419,8 +3626,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        480,
-        1440
+        496,
+        1600
       ],
       "notes": "PURPOSE: Return error envelope for test_job when payload.fail=true.\nINPUT: Test job with fail flag.\nOUTPUT: Error result.\nWHY: Dedicated test worker for T3 fail path."
     },
@@ -3907,6 +4114,75 @@
         1488
       ],
       "notes": "PURPOSE: Record T3 result."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "limit": "={{ $json.cfg.batch_size }}",
+        "where": {
+          "values": [
+            {
+              "column": "status",
+              "value": "queued"
+            },
+            {
+              "column": "next_run_at",
+              "condition": "IS NOT NULL"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "priority",
+              "direction": "DESC"
+            },
+            {
+              "column": "created_at"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e52ee8e0-11f2-4bdf-92b6-39ff4b07bc7c",
+      "name": "📥 Select Pending Jobs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2416,
+        512
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Fetch up to batch_size jobs that are queued and ready.\nINPUT: Config with batch_size.\nOUTPUT: Array of job rows (id, tenant_id, job_type, payload, etc.).\nWHY status=queued AND next_run_at<=now: Only pick ready jobs.\nWHY priority DESC, created_at ASC: High priority first, then FIFO.\nWHY alwaysOutputData: Continue even if no jobs (empty array)."
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3376,
+        1248
+      ],
+      "id": "de094675-d613-474d-8d6e-0a173f458687",
+      "name": "Merge"
     }
   ],
   "pinData": {},
@@ -3927,24 +4203,6 @@
         [
           {
             "node": "📥 Select Pending Jobs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📥 Select Pending Jobs": {
-      "main": [
-        [
-          {
-            "node": "🔀 Has Jobs?",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "❌ ErrorPipe v1 (Select)",
             "type": "main",
             "index": 0
           }
@@ -4305,7 +4563,7 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ]
       ]
@@ -4327,14 +4585,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 2
+            "index": 1
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 3
+            "index": 1
           }
         ]
       ]
@@ -4356,14 +4614,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 4
+            "index": 2
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 5
+            "index": 2
           }
         ]
       ]
@@ -4385,14 +4643,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 8
+            "index": 4
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 9
+            "index": 4
           }
         ]
       ]
@@ -4414,14 +4672,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 6
+            "index": 3
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 7
+            "index": 3
           }
         ]
       ]
@@ -4443,14 +4701,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 10
+            "index": 5
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 11
+            "index": 5
           }
         ]
       ]
@@ -4472,14 +4730,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 12
+            "index": 6
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 13
+            "index": 6
           }
         ]
       ]
@@ -4501,14 +4759,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 14
+            "index": 7
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 15
+            "index": 6
           }
         ]
       ]
@@ -4530,14 +4788,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 16
+            "index": 8
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 17
+            "index": 7
           }
         ]
       ]
@@ -4559,14 +4817,14 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 18
+            "index": 9
           }
         ],
         [
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 19
+            "index": 8
           }
         ]
       ]
@@ -4577,7 +4835,7 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 20
+            "index": 9
           }
         ]
       ]
@@ -4617,7 +4875,7 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 22
+            "index": 9
           }
         ]
       ]
@@ -4628,7 +4886,7 @@
           {
             "node": "🔗 Merge All Results",
             "type": "main",
-            "index": 21
+            "index": 9
           }
         ]
       ]
@@ -4812,6 +5070,11 @@
             "node": "📝 Update Job Final",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "📝 Update job_runs",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -4820,9 +5083,9 @@
       "main": [
         [
           {
-            "node": "📝 Update job_runs",
+            "node": "Merge",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ],
         [
@@ -4838,7 +5101,7 @@
       "main": [
         [
           {
-            "node": "↩️ Loop Back",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -4989,6 +5252,35 @@
           }
         ]
       ]
+    },
+    "📥 Select Pending Jobs": {
+      "main": [
+        [
+          {
+            "node": "🔀 Has Jobs?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ ErrorPipe v1 (Select)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "↩️ Loop Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -4996,7 +5288,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "64f7dbde-ae54-4021-b815-cc64f2425492",
+  "versionId": "cdb0dd22-7de4-4dc3-af26-a37a7f2c8519",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
