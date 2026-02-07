@@ -1,0 +1,2636 @@
+{
+  "name": "EXAMPLES",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "fieldName1"
+            },
+            {
+              "name": "fieldMane2",
+              "type": "number"
+            },
+            {
+              "name": "fieldName3",
+              "type": "boolean"
+            },
+            {
+              "name": "fieldName4",
+              "type": "array"
+            },
+            {
+              "name": "fieldName5",
+              "type": "object"
+            },
+            {
+              "name": "fieldName6",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        -64
+      ],
+      "id": "619fea77-6f93-4fdb-8842-78cd28341e4e",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1b5b3e5d-13e5-4551-86b7-7e372cf08a81",
+              "leftValue": "={{ $json.etl.op === 'start' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a644376e-9610-4b60-90a8-81d6053fe43d",
+              "leftValue": "={{ $json.etl.s2 }}",
+              "rightValue": "start",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "b2045179-3800-4a29-b400-008f6f62c93f",
+              "leftValue": "={{ $json.etl.t1 }}",
+              "rightValue": "2026-02-02T00:00:00",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            },
+            {
+              "id": "9d4b262e-adb1-4fc7-a743-b58f6a5519d5",
+              "leftValue": "={{ $json.etl.a1 }}",
+              "rightValue": "value2",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            },
+            {
+              "id": "b4aed5ec-58d7-44da-b1b1-ee9686a328e2",
+              "leftValue": "={{ $json.etl.o1 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d15fe930-92e8-4880-8458-748770b65fa8",
+              "leftValue": "={{ $json.etl.n1 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -80,
+        -176
+      ],
+      "id": "8c0807af-4dfd-4b07-86ff-d3c89b2da66c",
+      "name": "If",
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f6be7a07-8ae0-4c0d-af15-4f6a6ba6f626",
+              "leftValue": "{{ json.value1 }}",
+              "rightValue": "{{ json.value2 }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "ba30f51c-7593-48ce-af3a-caf3e2bd0b4a",
+              "leftValue": "={{ json.value1 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "898c40f3-32bf-4072-95ed-0e608a1a97fe",
+              "leftValue": "={{ json.value1 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        -384
+      ],
+      "id": "bfe9c21a-eb42-49cf-8b53-00fe736558f8",
+      "name": "Filter",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "batchSize": "={{ json.value1 }}",
+        "options": {
+          "reset": true
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        160,
+        304
+      ],
+      "id": "307408fd-9fe0-43b7-8d0a-5ccee23a3209",
+      "name": "Loop Over Items",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferInput1",
+              "overrideEmpty": true
+            }
+          },
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        544,
+        304
+      ],
+      "id": "78da64fb-0896-4e8f-bde9-79bcf01bcd9a",
+      "name": "Merge",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        112
+      ],
+      "id": "9212869c-71eb-4ef6-99d0-7bc8a06ae007",
+      "name": "Wait",
+      "webhookId": "5c397b47-6c2a-497c-b785-f39444ef9dcf",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "duplicateItem": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a86808ad-b169-4d17-be5d-5dbe45cc79dd",
+              "name": "value1",
+              "value": "={{$json._request.headers.apikey}}",
+              "type": "string"
+            },
+            {
+              "id": "a0d19e0a-64e1-45cf-a6bc-39ccce2f764c",
+              "name": "value2",
+              "value": 0,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "fieldToInclude1, fieldToInclude2",
+        "options": {
+          "stripBinary": true,
+          "ignoreConversionErrors": true,
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        96
+      ],
+      "id": "623b11da-cb5e-4a18-9109-3bdb53bef806",
+      "name": "Edit Fields",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "={{$json._request.headers.apikey}}",
+        "include": "allOtherFields",
+        "options": {
+          "disableDotNotation": true,
+          "destinationFieldName": "=apikeynew",
+          "includeBinary": true
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        208
+      ],
+      "id": "d4470789-1e95-47fa-8437-a58d189a2358",
+      "name": "Split Out",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        496
+      ],
+      "id": "590ad0c6-df84-4d1a-b57f-c6592e0722ee",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "8af93758-35ad-47a6-a8a8-8aa9224101f5",
+        "options": {
+          "binaryPropertyName": "data",
+          "ipWhitelist": "127.0.0.1",
+          "rawBody": true,
+          "responseData": "success"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -288,
+        352
+      ],
+      "id": "70d56947-662e-4766-8237-b174338687cc",
+      "name": "Webhook",
+      "webhookId": "8af93758-35ad-47a6-a8a8-8aa9224101f5",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "path": "61b35b3c-e22b-42fb-b890-76c52ff3e7d1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        752,
+        -272
+      ],
+      "id": "997c86e7-4684-45ec-a3d2-32292388acb7",
+      "name": "Webhook1",
+      "webhookId": "61b35b3c-e22b-42fb-b890-76c52ff3e7d1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -208
+      ],
+      "id": "b420f0fc-061e-415e-aae0-088c5bf4b23f",
+      "name": "Remove Duplicates",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "dedupeValue": "ID",
+        "options": {
+          "scope": "node",
+          "historySize": 10000
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        -208
+      ],
+      "id": "e42fcde5-cb9f-45e1-8fc0-a07eaac0c5de",
+      "name": "Remove Duplicates1",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "operation": "clearDeduplicationHistory",
+        "options": {
+          "scope": "node"
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        -96
+      ],
+      "id": "ee6bec59-5db5-4382-8b15-c459523cf1a1",
+      "name": "Remove Duplicates2",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "inputText": "Sentiment scores are LLM-generated estimates, not statistically rigorous measurements. They may be inconsistent across runs and should be used as rough indicators only.\n",
+        "options": {
+          "categories": "Positive, Neutral, Negative",
+          "systemPromptTemplate": "You are highly intelligent and accurate sentiment analyzer. Analyze the sentiment of the provided text. Categorize it into one of the following: {categories}. Use the provided formatting instructions. Only output the JSON.",
+          "includeDetailedResults": true,
+          "enableAutoFixing": true,
+          "batching": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.sentimentAnalysis",
+      "typeVersion": 1.1,
+      "position": [
+        1696,
+        -80
+      ],
+      "id": "f01cd509-8bdf-41e7-9931-c4da4809ee8b",
+      "name": "Sentiment Analysis"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        240
+      ],
+      "id": "eb2a3824-d2f7-4890-ba51-ef632f5e9a87",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "RfwHFtdLzucnVOZj",
+          "mode": "list",
+          "cachedResultName": "CFG",
+          "cachedResultUrl": "/projects/6SZ7ZbtyjdrC5bqo/datatables/RfwHFtdLzucnVOZj"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2128,
+        -336
+      ],
+      "id": "ed5ac837-8899-4771-8ce9-1f27ef9e10cc",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "dataToSave": {
+          "values": [
+            {
+              "key": "myKey",
+              "value": "muValue"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executionData",
+      "typeVersion": 1.1,
+      "position": [
+        2320,
+        128
+      ],
+      "id": "b46988e6-6bbb-42d6-bd9a-fadf81fcfd86",
+      "name": "Execution Data"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.timeSaved",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        -32
+      ],
+      "id": "06233e30-92ee-48ba-bdb7-9cde6abb86fc",
+      "name": "Time Saved"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-flash-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Hello, how can you help me?"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {
+          "googleSearch": true,
+          "googleMaps": {
+            "latitude": 0,
+            "longitude": 0
+          },
+          "urlContext": true,
+          "fileSearch": {
+            "fileSearchStoreNames": "[]"
+          },
+          "codeExecution": true
+        },
+        "options": {
+          "includeMergedResponse": true,
+          "systemMessage": "",
+          "frequencyPenalty": 0,
+          "maxOutputTokens": 16,
+          "candidateCount": 1,
+          "presencePenalty": 0,
+          "temperature": 1,
+          "topP": 1,
+          "topK": 1,
+          "thinkingBudget": {},
+          "maxToolsIterations": 15
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2528,
+        128
+      ],
+      "id": "b29d6b00-601b-4795-b90c-97d6d84bc907",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -48
+      ],
+      "id": "da91675a-72da-4272-b382-d1d7a133412e",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "countUnique",
+              "field": "cost",
+              "includeEmpty": true
+            },
+            {
+              "aggregation": "max",
+              "field": "price"
+            }
+          ]
+        },
+        "fieldsToSplitBy": "city",
+        "options": {
+          "disableDotNotation": true,
+          "outputFormat": "separateItems",
+          "skipEmptySplitFields": true
+        }
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        3248,
+        160
+      ],
+      "id": "5c644324-7823-4d81-8014-e448b3153c62",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "id",
+              "field2": "id"
+            }
+          ]
+        },
+        "fuzzyCompare": true,
+        "options": {
+          "skipFields": "updated_at",
+          "disableDotNotation": true,
+          "multipleMatches": "first"
+        }
+      },
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        3520,
+        368
+      ],
+      "id": "e1fb6e53-f8ef-44d0-be0f-507dd7ed9fa9",
+      "name": "Compare Datasets"
+    },
+    {
+      "parameters": {
+        "errorMessage": "An erro occured!"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3888,
+        176
+      ],
+      "id": "c54c85d4-9d07-4bf9-8256-74cf1c6bc2b4",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "$value1",
+                    "rightValue": "$value2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "5334e8a2-44aa-4b00-9b21-a2becd7f2f14"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "OutputRename"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "33997ccd-29b3-4e89-90c0-4d6980731a4e",
+                    "leftValue": "={{ $value1 }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra",
+          "ignoreCase": true,
+          "renameFallbackOutput": "Fallback",
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3968,
+        1344
+      ],
+      "id": "5351d335-a958-4350-a4e1-15acabf7f5d0",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "keys": {
+          "key": [
+            {
+              "currentKey": "currentKey",
+              "newKey": "newKey"
+            }
+          ]
+        },
+        "additionalOptions": {
+          "regexReplacement": {
+            "replacements": [
+              {
+                "searchRegex": "[N-n]name",
+                "replaceRegex": "replacedName",
+                "options": {
+                  "caseInsensitive": true,
+                  "depth": -1
+                }
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.renameKeys",
+      "typeVersion": 1,
+      "position": [
+        3632,
+        560
+      ],
+      "id": "605319fe-ff61-4fcf-ba8c-dcb618015030",
+      "name": "Rename Keys"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "id"
+            }
+          ]
+        },
+        "options": {
+          "disableDotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        3984,
+        656
+      ],
+      "id": "4ecd091f-3104-4d2e-84ac-a10363ac03df",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        3856,
+        -112
+      ],
+      "id": "14dd5fac-0f13-432b-9fde-05cd999183f9",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "binaryData": true,
+        "binaryPropertyName": "data_binary"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        -384
+      ],
+      "id": "34a28e29-83ce-4d02-a566-f818f9865515",
+      "name": "Crypto"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "id",
+                "value": "1111"
+              }
+            ]
+          },
+          "enableStreaming": true
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3184,
+        -352
+      ],
+      "id": "a9b9319d-d92d-41a0-9260-4b53bcc8c22c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtMinute": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        3408,
+        -64
+      ],
+      "id": "d83edb1a-8cf0-403f-8b70-392bcd2dbaef",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "formTitle": "TEST",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Test JSON"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        4000,
+        352
+      ],
+      "id": "358961ee-2b26-4b6a-90d9-d312d5653c27",
+      "name": "On form submission",
+      "webhookId": "df367449-f573-458f-b580-e8e830795352"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "company_name",
+              "description": "company name",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value.",
+          "batching": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        4432,
+        608
+      ],
+      "id": "6c444d43-4f7f-4f63-bd3f-ec6ff0a648b4",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        864
+      ],
+      "id": "7902f679-882c-4b27-af74-6f8c51cc2643",
+      "name": "Code in JavaScript",
+      "retryOnFail": true,
+      "alwaysOutputData": true,
+      "notesInFlow": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Loop over input items and add a new field called 'my_new_field' to the JSON of each one\nfor item in _items:\n  item[\"json\"][\"my_new_field\"] = 1\nreturn _items"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        1392
+      ],
+      "id": "19e9aef5-3373-4aed-b44b-01fb578d7d45",
+      "name": "Code in Python",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "notesInFlow": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.value1 }}",
+                    "rightValue": "{{ $json.value2 }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ad74e6c1-df7b-469c-9cd7-693657f9c6bd"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b56df6b2-7368-4b11-93be-db9493079c10",
+                    "leftValue": "={{ $json.$number1 }}",
+                    "rightValue": "={{ $json.$number2 }}",
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "adbf7867-5f83-4ed5-99ca-c013a290e8f5",
+                    "leftValue": "={{ $json.isok }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "output_name"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra",
+          "ignoreCase": true,
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        144,
+        -272
+      ],
+      "id": "384b8fc4-6141-49b8-988b-583390ef3705",
+      "name": "Switch1",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "jqD-uZqbfaDQ24ypavoK9",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/jqD-uZqbfaDQ24ypavoK9",
+          "cachedResultName": "WF20 — RAW Importer (Universal)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2160,
+        1248
+      ],
+      "id": "b36893a6-d87c-43f4-9063-eed125fc90f2",
+      "name": "Call 'WF00b — Ozon.Performance.Call'1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        752,
+        464
+      ],
+      "id": "11ac818a-3771-46ba-a4e1-3c787ab3cac9",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1168,
+        784
+      ],
+      "id": "f4089226-ef41-4235-9938-63f86a30c31f",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql",
+        "numberInputs": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2928,
+        864
+      ],
+      "id": "aba6f461-35fd-4c09-a050-17207924689c",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "action": "generate"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        -384
+      ],
+      "id": "4631f691-1f7f-448e-b66c-2cf57b3389df",
+      "name": "Crypto1"
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "value": "value",
+        "secret": "secret"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        2736,
+        -384
+      ],
+      "id": "060c2f4d-485c-4cd1-9585-b122f2d67c0a",
+      "name": "Crypto2"
+    },
+    {
+      "parameters": {
+        "action": "sign",
+        "value": "value",
+        "algorithm": "RSA-SHA256",
+        "privateKey": "privatekey"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        2944,
+        -384
+      ],
+      "id": "66f7ed6a-cecb-4a36-98d7-7ac42cbefcc2",
+      "name": "Crypto3"
+    },
+    {
+      "parameters": {
+        "dataToSave": {
+          "values": [
+            {
+              "key": "mrKry",
+              "value": "muValue"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executionData",
+      "typeVersion": 1.1,
+      "position": [
+        -256,
+        96
+      ],
+      "id": "a6ab0ca3-54f1-47b6-9956-d0e5ee28e964",
+      "name": "Execution Data1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "lyTx2T4G_Tb7aZ7nWNQPP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lyTx2T4G_Tb7aZ7nWNQPP",
+          "cachedResultName": "WF00c — Context Loader"
+        },
+        "fields": {
+          "values": [
+            {
+              "name": "fieldName",
+              "stringValue": "fieldValue"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.retrieverWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        4368,
+        1376
+      ],
+      "id": "be37bd89-5e36-4f2e-b99f-efcd01accaf0",
+      "name": "Workflow Retriever"
+    },
+    {
+      "parameters": {
+        "options": {
+          "queryCount": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.retrieverMultiQuery",
+      "typeVersion": 1,
+      "position": [
+        4128,
+        1168
+      ],
+      "id": "e0d9ef1c-eb16-4159-857a-864c748819cf",
+      "name": "MultiQuery Retriever"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4080,
+        1376
+      ],
+      "id": "d8bb3ec0-0871-4acd-aa17-44066e09ad65",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "LB6ntiMR8lDYKSy4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "typeVersion": 1.7,
+      "position": [
+        4400,
+        912
+      ],
+      "id": "90647a85-92e2-43be-b101-089fa3f667c3",
+      "name": "Question and Answer Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4704,
+        1200
+      ],
+      "id": "2b12aa2d-d8ec-4336-ab40-5664734c05ce",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4448,
+        864
+      ],
+      "id": "685bf730-4d09-40a4-aff0-390cc8d38ef6",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "LB6ntiMR8lDYKSy4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1b5b3e5d-13e5-4551-86b7-7e372cf08a81",
+              "leftValue": "={{ $json.etl.op === 'start' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a644376e-9610-4b60-90a8-81d6053fe43d",
+              "leftValue": "={{ $json.etl.s2 }}",
+              "rightValue": "start",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "b2045179-3800-4a29-b400-008f6f62c93f",
+              "leftValue": "={{ $json.etl.t1 }}",
+              "rightValue": "2026-02-02T00:00:00",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            },
+            {
+              "id": "9d4b262e-adb1-4fc7-a743-b58f6a5519d5",
+              "leftValue": "={{ $json.etl.a1 }}",
+              "rightValue": "value2",
+              "operator": {
+                "type": "array",
+                "operation": "contains",
+                "rightType": "any"
+              }
+            },
+            {
+              "id": "b4aed5ec-58d7-44da-b1b1-ee9686a328e2",
+              "leftValue": "={{ $json.etl.o1 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d15fe930-92e8-4880-8458-748770b65fa8",
+              "leftValue": "={{ $json.etl.n1 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1744,
+        224
+      ],
+      "id": "d4bbd3f0-8896-49ec-9d07-898e8dcd1282",
+      "name": "If1",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "errorMessage": "An error message!"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        592
+      ],
+      "id": "fe588d51-771a-4910-ad71-947abbb31aa7",
+      "name": "Stop and Error1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "RfwHFtdLzucnVOZj",
+          "mode": "list",
+          "cachedResultName": "CFG",
+          "cachedResultUrl": "/projects/6SZ7ZbtyjdrC5bqo/datatables/RfwHFtdLzucnVOZj"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "DEFAULT_RETRIES": 0,
+            "DEFAULT_BACKOFF_BASE_MS": 0,
+            "DEFAULT_BACKOFF_CAP_MS": 0,
+            "DEFAULT_TIMEOUT_MS": 0,
+            "PRODUCT_LIST_LIMIT": 0,
+            "PRODUCT_LIST_MAX_PAGES": 0,
+            "PRODUCT_INFO_BATCH_SIZE": 0,
+            "DATABASE_UPSERT_BATCH_SIZE": 0
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "DEFAULT_RETRIES",
+              "displayName": "DEFAULT_RETRIES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "DEFAULT_BACKOFF_BASE_MS",
+              "displayName": "DEFAULT_BACKOFF_BASE_MS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "DEFAULT_BACKOFF_CAP_MS",
+              "displayName": "DEFAULT_BACKOFF_CAP_MS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "DEFAULT_TIMEOUT_MS",
+              "displayName": "DEFAULT_TIMEOUT_MS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "SELLER_BASE_URL",
+              "displayName": "SELLER_BASE_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "PERFOMANCE_BASE_URL",
+              "displayName": "PERFOMANCE_BASE_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "PRODUCT_LIST_LIMIT",
+              "displayName": "PRODUCT_LIST_LIMIT",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "PRODUCT_LIST_MAX_PAGES",
+              "displayName": "PRODUCT_LIST_MAX_PAGES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "PRODUCT_INFO_BATCH_SIZE",
+              "displayName": "PRODUCT_INFO_BATCH_SIZE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "DATABASE_UPSERT_BATCH_SIZE",
+              "displayName": "DATABASE_UPSERT_BATCH_SIZE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2208,
+        400
+      ],
+      "id": "0495d605-5de1-4479-8011-ea552afcde0e",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        1232
+      ],
+      "id": "e005f505-1d98-493a-a0cf-6007d7190e32",
+      "name": "Call 'WF99 — Global ERR Handler'",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "KbQJKDHMQ_S11UtY2rgO_",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/KbQJKDHMQ_S11UtY2rgO_",
+          "cachedResultName": "WF35 — Voice Probe"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2048,
+        992
+      ],
+      "id": "fb4791e5-ef62-41fd-94e7-a09afe74cc3e",
+      "name": "Call 'WF35 — Voice Probe'",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "lyTx2T4G_Tb7aZ7nWNQPP",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lyTx2T4G_Tb7aZ7nWNQPP",
+          "cachedResultName": "WF00c — Context Loader"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1712,
+        1024
+      ],
+      "id": "8596a120-d193-4aff-a32b-24cb10c88849",
+      "name": "Call 'WF00c — Context Loader'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "XJqXbtrz5JaEZ_bx0kITi",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/XJqXbtrz5JaEZ_bx0kITi",
+          "cachedResultName": "WF00s — Sync State Updater"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        -112
+      ],
+      "id": "bfdc0324-d4dd-4735-b412-03e2ecb06ec7",
+      "name": "Call 'WF00s — Sync State Updater'",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferInput1",
+              "overrideEmpty": true
+            }
+          },
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1728,
+        400
+      ],
+      "id": "5c2d029d-82e4-45e3-8fad-6f9897ddc98a",
+      "name": "Merge4"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "id",
+              "renameField": true,
+              "outputFieldName": "output_id"
+            },
+            {
+              "fieldToAggregate": "name"
+            },
+            {
+              "fieldToAggregate": "third",
+              "renameField": "={{ 'thirs_name_output' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3024,
+        -48
+      ],
+      "id": "3ecb8a0d-b030-4a07-888c-d81fce0ffa64",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "allFieldsExcept",
+        "fieldsToExclude": "email, name",
+        "options": {
+          "includeBinaries": true,
+          "keepOnlyUnique": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3232,
+        -48
+      ],
+      "id": "132f40dd-f79d-4f92-9586-6af20fd3c140",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast",
+              "overrideEmpty": true
+            }
+          },
+          "fuzzyCompare": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1008,
+        560
+      ],
+      "id": "161c939b-2c73-4bfc-8187-92a54fd3c426",
+      "name": "Merge5"
+    },
+    {
+      "parameters": {
+        "duplicateItem": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a86808ad-b169-4d17-be5d-5dbe45cc79dd",
+              "name": "a.value1",
+              "value": "={{ $json._request.headers.apikeys }}",
+              "type": "array"
+            },
+            {
+              "id": "a0d19e0a-64e1-45cf-a6bc-39ccce2f764c",
+              "name": "b.value2",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "except",
+        "excludeFields": "filedToExclude1, fieldToExclude2",
+        "options": {
+          "stripBinary": false,
+          "ignoreConversionErrors": false,
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        160
+      ],
+      "id": "d0b1091a-06c1-473e-81e5-b4d64c08be92",
+      "name": "Edit Fields1",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "duplicateItem": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a86808ad-b169-4d17-be5d-5dbe45cc79dd",
+              "name": "value1",
+              "value": "={{ $json._request.headers.apikeys }}",
+              "type": "array"
+            },
+            {
+              "id": "a0d19e0a-64e1-45cf-a6bc-39ccce2f764c",
+              "name": "value2",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "stripBinary": false,
+          "ignoreConversionErrors": false,
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        224
+      ],
+      "id": "90d3080b-b2c6-4693-9e53-08cbb3293bf5",
+      "name": "Edit Fields2",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "notesInFlow": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Call 'WF00s — Sync State Updater'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execution Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Call 'WF00c — Context Loader'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates1": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates2": {
+      "main": [
+        [
+          {
+            "node": "Sentiment Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sentiment Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sentiment Analysis": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Time Saved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execution Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execution Data": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Time Saved": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Compare Datasets": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Rename Keys",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 8
+          }
+        ],
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Rename Keys": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Crypto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto": {
+      "main": [
+        [
+          {
+            "node": "Crypto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Call 'WF35 — Voice Probe'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'WF99 — Global ERR Handler'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 7
+          }
+        ],
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 6
+          }
+        ],
+        [
+          {
+            "node": "Call 'WF99 — Global ERR Handler'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto1": {
+      "main": [
+        [
+          {
+            "node": "Crypto2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto2": {
+      "main": [
+        [
+          {
+            "node": "Crypto3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Call 'WF00b — Ozon.Performance.Call'1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Workflow Retriever": {
+      "ai_retriever": [
+        [
+          {
+            "node": "MultiQuery Retriever",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "MultiQuery Retriever",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MultiQuery Retriever": {
+      "ai_retriever": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question and Answer Chain": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'WF99 — Global ERR Handler'": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Call 'WF35 — Voice Probe'": {
+      "main": [
+        [
+          {
+            "node": "Code in Python",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Call 'WF00c — Context Loader'": {
+      "main": [
+        [
+          {
+            "node": "Call 'WF00b — Ozon.Performance.Call'1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'WF00s — Sync State Updater'": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge5": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b401e3d3-2656-4c35-b723-f8fe510a1b27",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "Gby3PGrocRVNHt1yUdjMp",
+  "tags": []
+}

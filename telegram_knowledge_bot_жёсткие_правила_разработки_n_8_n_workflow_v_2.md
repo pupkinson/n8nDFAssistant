@@ -151,7 +151,7 @@
 
 ### 6.2 PATTERN A (по умолчанию) — ErrorPipe через WF99
 
-Для каждой I/O ноды (Postgres/HTTP/Telegram):
+Для каждой I/O ноды (Postgres/HTTP/Telegram/S3/AI):
 
 1. На I/O ноде включить **Continue using error output**.
 2. Error output → **Set: `ERR — Source <NodeName>`**
@@ -160,21 +160,42 @@
      - `_err.node = "<Exact NodeName>"` (точное имя ноды)
      - `_err.operation = "select|insert|update|delete|upsert"` (для Postgres)
      - `_err.table = "schema.table"` (для Postgres)
-   - приклеить `_ctx` (или `ctx`) из ранней точки контекста (см. раздел про контракты).
+   - приклеить `_ctx` (или `ctx`) из ранней точки контекста.
 3. **Set: `ERR — Prepare ErrorPipe v1`** (nocode, dotNotation)
-   - `ctx = _ctx` (каноническое имя для меж-WF контрактов)
+   - `ctx = _ctx`
    - `ctx.contracts.errorpipe = 1`
    - `error_context.node = _err.node`
    - `error_context.operation = _err.operation`
    - `error_context.table = _err.table`
    - `error_context.correlation_id = ctx.correlation_id`
-   - `error_context.error_message` = взять из `message`/`errorMessage`/`description` (что есть)
+   - `error_context.error_message` = взять из `message`/`errorMessage`/`description`/`error.message`
    - `error_context.status_code` = если есть `statusCode/httpCode`, иначе 500
-   - не «резать» item: сохранять исходные поля ошибки (message/error/description/n8nDetails).
+   - не «резать» item: сохранять исходные поля ошибки.
 4. **Execute Workflow: WF99 — Global ERR Handler**
    - предпочтительно `passThrough`.
-   - если используется `defineBelow`, запрещён пустой `{}`; обязательно маппить `ctx` и `error_context` и поля ошибки.
-5. После вызова WF99 — **StopAndError** (успешный путь после ошибки запрещён).
+   - если используется `defineBelow`, запрещён пустой `{}`; обязательно маппить `ctx`, `error_context` и поля ошибки.
+5. **НЕ вызывать StopAndError после WF99.**
+   - Вернуть ErrorEnvelope (выход WF99) как обычный output ветки и завершить её.
+   - Это предотвращает двойное логирование через Error Workflow WF98 (последний рубеж).
+
+> StopAndError допускается только для «неуправляемых падений» (баг/исключение), которые не прошли через ErrorPipe. В обычных managed-error сценариях StopAndError запрещён.
+
+### 6.2.1 Guard IF wiring (Hard Rule)
+
+**Запрещено** оставлять у Guard IF любой выход (TRUE/FALSE) не подключенным.
+
+Для I/O нод с включённым **Continue using error output**:
+
+- **Рекомендуемый вариант (без Guard):**
+  - Success output → normal path
+  - Error output → `ERR — Source` → `ERR — Prepare ErrorPipe v1` → `Execute WF99` → (return ErrorEnvelope)
+
+- **Если Guard IF всё же нужен** (редко, например когда ошибка может прийти в success-output как 200 с телом-ошибкой):
+  - Guard IF обязан иметь **оба** выхода подключёнными.
+  - TRUE → ErrorPipe→WF99
+  - FALSE → normal path
+
+Если Guard IF стоит на error-output (только error branch), он должен быть удалён (избыточен) или его FALSE обязан вести туда же, куда TRUE (в ErrorPipe).
 
 ### 6.3 Исключение (только внутри WF99)
 
@@ -243,17 +264,40 @@
 
 ### Ключевой принцип
 
-- Любая нода, у которой **2+ входящих соединения**, должна быть **Merge**. Исключений нет (Set/IF/Postgres/HTTP/Telegram с 2 входами — запрещено).
+- Любая нода, у которой **2+ входящих соединения**, должна быть **Merge**. Исключений нет (Set/IF/Postgres/HTTP/Telegram/AI с 2 входами — запрещено).
 
 ### Запрещено
 
-- «Сводить» взаимоисключающие ветки (после IF/Switch) прямым подключением двух веток к **одной** обычной ноде (Set/IF/Postgres/HTTP/Telegram и т.п.).
+- «Сводить» взаимоисключающие ветки (после IF/Switch) прямым подключением двух веток к **одной** обычной ноде (Set/IF/Postgres/HTTP/Telegram/AI и т.п.).
   - Это приводит к тому, что n8n может ждать обе ветки, и выполнение "зависает/останавливается".
 
 ### Обязательно
 
 - Для join веток всегда использовать **Merge** (с понятным именем, например `Merge — URL id chosen`).
-$1
+
+### Рекомендованные паттерны join (минимум ошибок)
+
+#### A) Join взаимоисключающих веток после IF/Switch (exclusive)
+
+Цель: после IF/Switch продолжить выполнение **по одной** ветке без «зависаний».
+
+1) В каждой ветке (TRUE и FALSE) сделать `Set — Normalize branch output`, чтобы обе ветки отдавали **одинаковую структуру полей**.
+2) Поставить узел `Merge — <topic> (passThrough)`:
+   - **Mode:** `Pass-through`
+   - **Output:** `Input 1`
+3) Подключить обе ветки к **Input 1** Merge (у одного входа Merge может быть несколько входящих соединений).
+4) Дальше весь core pipeline подключить к выходу Merge.
+
+#### B) Join параллельных веток, которые обязаны обе выполниться (parallel)
+
+1) Ветка A формирует «anchor» (ctx/req/keys) → в `Merge Input 1`.
+2) Ветка B делает I/O и кладёт результат под неймспейс (`db.*`, `http.*`, `ai.*`) → в `Merge Input 2`.
+3) `Merge` в режиме `Merge by index` (или иной режим, который **требует оба входа**) и описан в Notes.
+
+#### C) Быстрый чек при ревью
+
+- Если после IF/Switch видишь ноду (не Merge), у которой 2 входящих линии — это баг.
+- Если Merge стоит, но выбран режим, требующий оба входа для exclusive-веток — это баг (для exclusive использовать паттерн A).
 
 ### Рекомендованные паттерны join (минимум ошибок)
 
@@ -293,14 +337,13 @@ $1
 
 0. **Branch-join sanity:** в workflow нет ни одной ноды (кроме Merge), у которой входящих соединений 2+; все join делаются через Merge (см. 7.5).
 
-Перед выдачей workflow JSON обязательно проверить:
-
 1. Все credentials names строго из `Credentials.json`.
 2. Нет `$env.*`.
-3. Каждая I/O нода (Postgres/HTTP/Telegram) имеет error-output handling и **ErrorPipe v1**:
+3. Каждая I/O нода (Postgres/HTTP/Telegram/S3/AI) имеет error-output handling и **ErrorPipe v1**:
    - `_ctx/ctx` сформирован до I/O,
    - на error-ветке есть `ERR — Source <NodeName>` (includeOtherFields=true) + `ERR — Prepare ErrorPipe v1`,
-   - вызов WF99 сделан с passThrough (или корректным defineBelow), затем StopAndError.
+   - вызов WF99 сделан с `passThrough` (или корректным `defineBelow`).
+   - **после WF99 нет StopAndError** (managed errors возвращаются как ErrorEnvelope).
 4. Ни в одном workflow (кроме WF99) нет «самодельного» ErrorEnvelope.
 5. Не используются запрещённые практики:
    - `raw jsonOutput`/«резать item целиком»,
@@ -308,22 +351,38 @@ $1
    - object-literal в выражениях,
    - `deleteTable` в Postgres нодах.
 6. Merge ноды: `numberInputs` соответствует входящим связям.
-   - дополнительно: режим Merge (append/merge-by-index/…) выбран осознанно и описан в Notes.
+   - режим Merge выбран осознанно и описан в Notes.
 7. Нет Execute Query (если это не отдельное явно разрешённое исключение, зафиксированное решением).
 8. Есть тестовая ветка (Manual Trigger) с записью в БД + verify + cleanup (DELETE по ключам теста).
    - cleanup не использует `deleteTable`.
    - тестовые `correlation_id` — валидные UUID (если тип в БД uuid).
 9. Любой workflow, который используется как sub-workflow, документирует вход/выход в canvas «Контракты входа/выхода workflow» и использует канонические имена (`ctx`, `error_context`, `req`).
 10. Проверка на «потерю данных после I/O»:
+   - если downstream использует поля, сформированные до I/O, то применён Carry/Restore или Branch+Merge паттерн;
+   - после каждого такого I/O шага `ctx` и ключевые поля (`req`, `correlation_id`, message keys) присутствуют.
+11. **IF/Guard sanity:** у каждой IF/Guard ноды **оба выхода** (TRUE/FALSE) либо подключены, либо явно помечены как terminal в Notes (и это действительно terminal).
+12. Для проекта с Error Workflow (WF98):
+   - WF98 остаётся «последним рубежом» для аварийных падений.
+   - Managed errors не должны намеренно триггерить WF98 (поэтому StopAndError после WF99 запрещён).
+   - Если WF98 включён, он обязан иметь дедуп-guard по `correlation_id` перед повторным вызовом WF99.
 
-- если downstream использует поля, сформированные до I/O, то применён Carry/Restore или Branch+Merge паттерн;
-- после каждого такого I/O шага `ctx` и ключевые поля (`req`, `correlation_id`, message keys) присутствуют.
+## 9) IF Node Policy (Hard Rule)
 
-11. Для проекта с Error Workflow (WF98):
+Эта секция добавлена из практики багов (WF34/WF40): у IF нод иногда «пропадают условия» в UI из‑за неправильной JSON-структуры.
 
-- WF98 обязан иметь дедуп-guard по `correlation_id` (проверка `ops.errors` перед вызовом WF99), чтобы исключить двойное логирование при StopAndError.
+Обязательные требования для всех `n8n-nodes-base.if`:
 
-## 9) Связанные документы
+1) Использовать корректную структуру условий для n8n v2.6.3:
+   - `parameters.conditions.options.version = 3`
+   - `parameters.conditions.combinator = "and" | "or"`
+   - запрещено использовать поля вида `combineOperation`.
+2) Каждая запись в `parameters.conditions.conditions[]` должна иметь `id` в формате **UUIDv4** (36 символов).
+   - короткие id (`e5f6g7h8`, `ff6gg7hh`) запрещены.
+3) Использовать только валидные operations, которые реально поддерживаются UI (например: `notEmpty`, `equals`, `exists`, `true/false`).
+   - `isNotEmpty` и подобные «псевдооператоры» запрещены.
+4) При генерации JSON ассистент обязан самопроверить: после импорта в n8n условия видны в UI.
+
+## 10) Связанные документы
 
 - Контракты I/O между workflow: **«Telegram Knowledge Bot — Контракты входа/выхода workflow»**
 

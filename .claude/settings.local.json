@@ -1,0 +1,9 @@
+{
+  "outputStyle": "default",
+  "prefersReducedMotion": false,
+  "env": {
+	"CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000",
+	"ENABLE_TOOL_SEARCH": "auto:5",
+	"CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80"
+  }
+}

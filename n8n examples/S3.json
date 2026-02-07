@@ -1,0 +1,316 @@
+{
+  "name": "S3",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        48
+      ],
+      "id": "83b505d5-3720-4b12-9bbb-0e193a9ccdbf",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://static.tildacdn.com/tild6561-3863-4666-b163-393339356637/ol_5.jpg",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "TelegramKnowledgeBot/1.0 (+fetch)"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 10
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -128,
+        48
+      ],
+      "id": "8f2f6a05-af32-4606-8f9e-b139bcbf0523",
+      "name": "HTTP — Fetch URL",
+      "notesInFlow": true,
+      "onError": "continueErrorOutput",
+      "notes": "⚠️ Fetched content is UNTRUSTED. Stored for extraction only, never executed."
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "dfassistant",
+        "fileName": "file_name_binary",
+        "additionalFields": {
+          "grantRead": true
+        }
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        288,
+        288
+      ],
+      "id": "9ba5532d-0764-446e-8e57-bc663cd13ecf",
+      "name": "Upload a file binary",
+      "retryOnFail": true,
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "=dfassistant",
+        "fileName": "file_name",
+        "binaryData": false,
+        "fileContent": "={{ $json.data }}",
+        "additionalFields": {
+          "grantRead": true
+        }
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        16,
+        -192
+      ],
+      "id": "6b7bad85-95d1-4617-96f5-94c1fe8877ce",
+      "name": "Upload a file text",
+      "retryOnFail": true,
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "bucketName": "dfassistant",
+        "fileKey": "file_key"
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -256
+      ],
+      "id": "bc7fa061-eea9-4b6a-b6e6-7a18144d7c30",
+      "name": "Download a file",
+      "retryOnFail": true,
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "bucketName": "dfassistant",
+        "fileKey": "file_name_binary"
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        496,
+        192
+      ],
+      "id": "da511c96-077c-462f-bc47-a4cc642a4bee",
+      "name": "Download a file1",
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "bucketName": "dfassistant",
+        "folderName": "folder_name",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        704,
+        80
+      ],
+      "id": "b4d1893d-b938-45b8-a962-0ce787117021",
+      "name": "Create a folder",
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "bucketName": "dfassistant",
+        "options": {
+          "fetchOwner": true
+        }
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        544,
+        -352
+      ],
+      "id": "a8094e9b-2741-44d3-b96b-4a36ff042bc8",
+      "name": "Get many files",
+      "retryOnFail": true,
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "getAll",
+        "bucketName": "dfassistant",
+        "options": {
+          "fetchOwner": true
+        }
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        912,
+        80
+      ],
+      "id": "8ac85e16-a27c-4222-a5b0-5a892a3a7eaa",
+      "name": "Get many folders",
+      "retryOnFail": true,
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP — Fetch URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP — Fetch URL": {
+      "main": [
+        [
+          {
+            "node": "Upload a file binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file text": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file binary": {
+      "main": [
+        [
+          {
+            "node": "Download a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file1": {
+      "main": [
+        [
+          {
+            "node": "Create a folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "Get many files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a folder": {
+      "main": [
+        [
+          {
+            "node": "Get many folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "59f60772-81fb-4aa3-9d89-427d9430f2da",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "oahEqfjfQvtfsoxqzJF_g",
+  "tags": []
+}

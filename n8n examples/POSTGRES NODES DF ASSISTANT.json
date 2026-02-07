@@ -1,0 +1,1259 @@
+{
+  "name": "POSTGRES NODES DF ASSISTANT",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d41e2f62-72e0-407d-b9a3-bf8136b43f41",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "raw",
+          "mode": "list",
+          "cachedResultName": "raw"
+        },
+        "table": {
+          "__rl": true,
+          "value": "telegram_update_keys",
+          "mode": "list",
+          "cachedResultName": "telegram_update_keys"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "update_id": 12,
+            "bot_id": "2342",
+            "tenant_id": "6268503c-d34b-45a7-aa6f-4d45585d89cb",
+            "first_request_id": "6268503c-d34b-45a7-aa6f-4d45585d89cd"
+          },
+          "matchingColumns": [
+            "bot_id",
+            "update_id"
+          ],
+          "schema": [
+            {
+              "id": "tenant_id",
+              "displayName": "tenant_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "bot_id",
+              "displayName": "bot_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "update_id",
+              "displayName": "update_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "first_received_at",
+              "displayName": "first_received_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "first_request_id",
+              "displayName": "first_request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "connectionTimeout": 30,
+          "delayClosingIdleConnection": 0,
+          "queryBatching": "single",
+          "outputColumns": [
+            "tenant_id",
+            "bot_id",
+            "update_id",
+            "first_request_id"
+          ],
+          "largeNumbersOutput": "text",
+          "replaceEmptyStrings": false
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        128,
+        176
+      ],
+      "id": "68ebc00f-0f3b-46a1-a8c1-115ed730e6a2",
+      "name": "Insert or update rows in a table",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELEC * FROM tables WHERE a = b;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        432,
+        -144
+      ],
+      "id": "86946f07-405f-41a8-965b-f4d06eaaaa90",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "raw",
+          "mode": "list",
+          "cachedResultName": "raw"
+        },
+        "table": {
+          "__rl": true,
+          "value": "telegram_updates_default",
+          "mode": "list",
+          "cachedResultName": "telegram_updates_default"
+        },
+        "restartSequences": true,
+        "options": {
+          "cascade": true,
+          "connectionTimeout": 30,
+          "delayClosingIdleConnection": 0,
+          "queryBatching": "single",
+          "largeNumbersOutput": "text"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        784,
+        -272
+      ],
+      "id": "3bef0db5-167a-44b2-8bad-7933a7dcfbb7",
+      "name": "Delete table or rows",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "tg",
+          "mode": "list",
+          "cachedResultName": "tg"
+        },
+        "table": {
+          "__rl": true,
+          "value": "message_versions",
+          "mode": "list",
+          "cachedResultName": "message_versions"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "has_media": false,
+            "has_links": false,
+            "id": 112,
+            "message_fk": 3443,
+            "version_no": 32345,
+            "sent_at": "2026-02-07T00:00:00",
+            "edited_at": "2026-02-07T00:00:00",
+            "from_user_id": 324234,
+            "via_bot_user_id": 45656,
+            "text": "message text",
+            "caption": "message caption",
+            "content_sha256": "6268503cd34b45a7aa6f4d45585d89cb",
+            "normalized_text": "normalized text",
+            "payload": "{}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message_fk",
+              "displayName": "message_fk",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "version_no",
+              "displayName": "version_no",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "edited_at",
+              "displayName": "edited_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "from_user_id",
+              "displayName": "from_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "via_bot_user_id",
+              "displayName": "via_bot_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "caption",
+              "displayName": "caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "entities",
+              "displayName": "entities",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "caption_entities",
+              "displayName": "caption_entities",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "reply_to_message_id",
+              "displayName": "reply_to_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "forward_from_user_id",
+              "displayName": "forward_from_user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "forward_from_chat_id",
+              "displayName": "forward_from_chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "forward_date",
+              "displayName": "forward_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "has_media",
+              "displayName": "has_media",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "has_links",
+              "displayName": "has_links",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "normalized_text",
+              "displayName": "normalized_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "content_sha256",
+              "displayName": "content_sha256",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "connectionTimeout": 30,
+          "delayClosingIdleConnection": 0,
+          "queryBatching": "single",
+          "outputColumns": [
+            "*"
+          ],
+          "largeNumbersOutput": "text",
+          "skipOnConflict": true,
+          "replaceEmptyStrings": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        432,
+        208
+      ],
+      "id": "83f20472-3591-4c70-aabb-94699d86c0d6",
+      "name": "Insert rows in a table",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "core",
+          "mode": "list",
+          "cachedResultName": "core"
+        },
+        "table": {
+          "__rl": true,
+          "value": "chat_policies",
+          "mode": "list",
+          "cachedResultName": "chat_policies"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "123123"
+            }
+          ]
+        },
+        "sort": {
+          "values": [
+            {
+              "column": "chat_id"
+            }
+          ]
+        },
+        "options": {
+          "connectionTimeout": 30,
+          "delayClosingIdleConnection": 0,
+          "queryBatching": "single",
+          "outputColumns": [
+            "tenant_id",
+            "chat_id",
+            "retention_days_raw",
+            "retention_days_documents",
+            "allow_url_fetch",
+            "allow_file_download",
+            "meta",
+            "updated_at"
+          ],
+          "largeNumbersOutput": "text"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        80
+      ],
+      "id": "6d0cbb66-d2b2-4a33-9e71-300655c3bcc6",
+      "name": "Select rows from a table",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "urls",
+          "mode": "list",
+          "cachedResultName": "urls"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "normalized_url": "https://example.com",
+            "canonical_url": "http://example.com",
+            "meta": "{}"
+          },
+          "matchingColumns": [
+            "normalized_url"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "normalized_url",
+              "displayName": "normalized_url",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "canonical_url",
+              "displayName": "canonical_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "first_seen_at",
+              "displayName": "first_seen_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_seen_at",
+              "displayName": "last_seen_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "meta",
+              "displayName": "meta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "connectionTimeout": 30,
+          "delayClosingIdleConnection": 0,
+          "queryBatching": "single",
+          "outputColumns": [
+            "id",
+            "normalized_url",
+            "canonical_url",
+            "first_seen_at",
+            "last_seen_at",
+            "meta"
+          ],
+          "largeNumbersOutput": "text",
+          "replaceEmptyStrings": false
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        992,
+        -176
+      ],
+      "id": "e77793e4-57c9-4e04-a66a-f660c1ef5fd3",
+      "name": "Update rows in a table",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "prompt": "Search prompt to retrieve matching documents from the vector store using similarity-based ranking",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1312,
+        -128
+      ],
+      "id": "f31e400c-7e74-48c8-8057-c6601540cbf6",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Hello, how can you help me?"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "includeMergedResponse": true,
+          "systemMessage": "Yo are a helpful assistant",
+          "frequencyPenalty": 0,
+          "maxOutputTokens": 16,
+          "candidateCount": 1,
+          "presencePenalty": 0,
+          "temperature": 1,
+          "topP": 1,
+          "topK": 1,
+          "thinkingBudget": -1,
+          "maxToolsIterations": 15
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1184,
+        -608
+      ],
+      "id": "bf2778f2-0af9-42e4-a4a5-d5cc698705b5",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "alwaysOutputData": true,
+      "notesInFlow": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1216,
+        432
+      ],
+      "id": "b4d80578-249c-416e-bcf4-a9a4a7ecec86",
+      "name": "Postgres PGVector Store1",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        -304
+      ],
+      "id": "881c9d2c-2879-4c09-8676-d4e10ef59ab8",
+      "name": "Vector Store Retriever"
+    },
+    {
+      "parameters": {
+        "options": {
+          "distanceStrategy": "cosine",
+          "collection": {
+            "values": {
+              "useCollection": true
+            }
+          },
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "id",
+                "value": "1111"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1840,
+        -48
+      ],
+      "id": "e25e7161-e7ed-45f3-8818-3340cd162312",
+      "name": "Postgres PGVector Store3",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        224
+      ],
+      "id": "3313ba78-200e-46ef-b59f-6f227bc41bac",
+      "name": "Vector Store Retriever1"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "options": {
+          "collection": {
+            "values": {
+              "useCollection": true
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        -544
+      ],
+      "id": "1f473121-0aec-4444-bffe-14625db8e0e3",
+      "name": "Postgres PGVector Store2",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -304
+      ],
+      "id": "a406210b-07cf-412e-b51a-14167fcab26c",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "name",
+                "value": "value"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        -336
+      ],
+      "id": "1aeb5694-b98f-4dd6-aee7-081b6f37e96f",
+      "name": "Default Data Loader",
+      "retryOnFail": true,
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Desciption",
+        "options": {
+          "distanceStrategy": "cosine",
+          "collection": {
+            "values": {
+              "useCollection": true
+            }
+          },
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "name",
+                "value": "value"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        -336
+      ],
+      "id": "26436aea-f11e-492f-bc34-b62b94d25068",
+      "name": "Postgres PGVector Store4",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "queryCount": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.retrieverMultiQuery",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        48
+      ],
+      "id": "12464ae9-7325-4fcc-b8f2-0d35a128a806",
+      "name": "MultiQuery Retriever"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        896,
+        512
+      ],
+      "id": "4d0ceb1e-c587-4445-85fb-a02b797d83b3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 3072,
+          "batchSize": 512,
+          "stripNewLines": true,
+          "timeout": -1,
+          "encodingFormat": "base64"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1744,
+        208
+      ],
+      "id": "6b9db99e-3191-4891-b8d1-b229d15cb451",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "LB6ntiMR8lDYKSy4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        80
+      ],
+      "id": "9903abb9-1f8d-49cf-af70-52e27f6ddeb4",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "LB6ntiMR8lDYKSy4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        624
+      ],
+      "id": "12b42788-bd5c-4aa7-ad5d-6259419a11d7",
+      "name": "Embeddings Google Gemini1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        592,
+        96
+      ],
+      "id": "78ae3f09-1207-4268-ae49-37f2c1ab458f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        512
+      ],
+      "id": "b14f038e-b153-407b-b14f-6dd59ce5e285",
+      "name": "Call 'WF99 — Global ERR Handler'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Insert or update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert or update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'WF99 — Global ERR Handler'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Delete table or rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Call 'WF99 — Global ERR Handler'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store1": {
+      "ai_tool": [
+        []
+      ],
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Retriever1",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store3": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Retriever",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store2",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store4": {
+      "ai_tool": [
+        [
+          {
+            "node": "Message a model",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Retriever1": {
+      "ai_retriever": [
+        [
+          {
+            "node": "MultiQuery Retriever",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "MultiQuery Retriever",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store3",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Postgres PGVector Store4",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "af551829-bc9f-4967-a5b4-105d8f30e07a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "1feLffgMG7QkRwfJ",
+  "tags": []
+}
