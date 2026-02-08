@@ -197,103 +197,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2416,
-        1648
+        2432,
+        2160
       ],
       "id": "0cfc48d1-d543-4434-8f1a-4a271bd09d33",
       "name": "ERR — Source Guard",
       "notes": "ErrorPipe v1: attach error metadata for WF99."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "778899aa-bbcc-ddee-ff00-112233445566",
-              "name": "error_context.workflow_id",
-              "value": "WF30",
-              "type": "string"
-            },
-            {
-              "id": "8899aabb-ccdd-eeff-0011-223344556677",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "99aabbcc-ddee-ff00-1122-334455667788",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "aabbccdd-eeff-0011-2233-445566778899",
-              "name": "error_context.message",
-              "value": "={{ $json._err?.message }}",
-              "type": "string"
-            },
-            {
-              "id": "bbccddee-ff00-1122-3344-556677889900",
-              "name": "error_context.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "ccddeeff-0011-2233-4455-667788990011",
-              "name": "error_context.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
-              "name": "ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2624,
-        1648
-      ],
-      "id": "bf4bc183-70db-4976-b8e6-a4abafc07316",
-      "name": "ERR — Prepare ErrorPipe Guard",
-      "notes": "ErrorPipe v1: build error_context + ctx for WF99."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        2864,
-        1648
-      ],
-      "id": "494958fe-ab32-48e8-9172-f0897d777b93",
-      "name": "WF99 — Guard Error",
-      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError after this."
     },
     {
       "parameters": {
@@ -344,97 +253,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2720,
-        2304
+        2576,
+        2032
       ],
       "id": "9ceae584-3581-4c29-a89b-f2ebef7fcadd",
       "name": "ERR — Source TG",
       "notes": "ErrorPipe v1: mark Telegram error source."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "00112233-4455-6677-8899-aabbccddeeff",
-              "name": "error_context.workflow_id",
-              "value": "WF30",
-              "type": "string"
-            },
-            {
-              "id": "11223344-5566-7788-99aa-bbccddeeff00",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "22334455-6677-8899-aabb-ccddeeff0011",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
-              "name": "error_context.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "44556677-8899-aabb-ccdd-eeff00112233",
-              "name": "error_context.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
-              "name": "ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2928,
-        2304
-      ],
-      "id": "534a8add-3e0a-4a9c-941d-6f167ea7e703",
-      "name": "ERR — Prepare ErrorPipe TG",
-      "notes": "ErrorPipe v1: build error_context for WF99."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        3200,
-        2304
-      ],
-      "id": "ef020b6f-6702-4804-8fbe-44dd56e670a2",
-      "name": "WF99 — TG Error",
-      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
     },
     {
       "parameters": {
@@ -591,103 +415,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3296,
-        1776
+        3312,
+        1936
       ],
       "id": "207f886e-0e75-40b0-8929-06636c9308b2",
       "name": "ERR — Source inst",
       "notes": "ErrorPipe v1: mark DB error source."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "00112233-4455-6677-8899-aabbccddeeff",
-              "name": "error_context.workflow_id",
-              "value": "WF30",
-              "type": "string"
-            },
-            {
-              "id": "11223344-5566-7788-99aa-bbccddeeff00",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "22334455-6677-8899-aabb-ccddeeff0011",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
-              "name": "error_context.table",
-              "value": "={{ $json._err?.table }}",
-              "type": "string"
-            },
-            {
-              "id": "44556677-8899-aabb-ccdd-eeff00112233",
-              "name": "error_context.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
-              "name": "error_context.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "66778899-aabb-ccdd-eeff-001122334455",
-              "name": "ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        3520,
-        1776
-      ],
-      "id": "c89cad21-b622-4b99-b2a9-0661af9a7f37",
-      "name": "ERR — Prepare ErrorPipe inst",
-      "notes": "ErrorPipe v1: build error_context for WF99."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        3792,
-        1776
-      ],
-      "id": "5daa4946-76a6-49ce-839f-751524ac6aa8",
-      "name": "WF99 — inst Error",
-      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
     },
     {
       "parameters": {
@@ -864,103 +597,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4192,
-        2080
+        3936,
+        1856
       ],
       "id": "5b8ba479-3346-4dff-9feb-85402f29f17c",
       "name": "ERR — Source files",
       "notes": "ErrorPipe v1: mark DB error source."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "44556677-8899-aabb-ccdd-eeff00112233",
-              "name": "error_context.workflow_id",
-              "value": "WF30",
-              "type": "string"
-            },
-            {
-              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "66778899-aabb-ccdd-eeff-001122334455",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "778899aa-bbcc-ddee-ff00-112233445566",
-              "name": "error_context.table",
-              "value": "={{ $json._err?.table }}",
-              "type": "string"
-            },
-            {
-              "id": "8899aabb-ccdd-eeff-0011-223344556677",
-              "name": "error_context.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "99aabbcc-ddee-ff00-1122-334455667788",
-              "name": "error_context.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "aabbccdd-eeff-0011-2233-445566778899",
-              "name": "ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        4384,
-        2096
-      ],
-      "id": "88c53ef8-772c-4510-a75a-a2977e30c734",
-      "name": "ERR — Prepare ErrorPipe files",
-      "notes": "ErrorPipe v1: build error_context for WF99."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        4624,
-        2112
-      ],
-      "id": "20860c29-3487-4973-bcc5-21966091e33f",
-      "name": "WF99 — files Error",
-      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
     },
     {
       "parameters": {
@@ -1091,103 +733,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4480,
-        1904
+        4512,
+        1776
       ],
       "id": "bbbbe0af-0828-4d4c-96b3-caaa8647e427",
       "name": "ERR — Source sel files",
       "notes": "ErrorPipe v1: mark DB error source."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "44556677-8899-aabb-ccdd-eeff00112233",
-              "name": "error_context.workflow_id",
-              "value": "WF30",
-              "type": "string"
-            },
-            {
-              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "66778899-aabb-ccdd-eeff-001122334455",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "778899aa-bbcc-ddee-ff00-112233445566",
-              "name": "error_context.table",
-              "value": "={{ $json._err?.table }}",
-              "type": "string"
-            },
-            {
-              "id": "8899aabb-ccdd-eeff-0011-223344556677",
-              "name": "error_context.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "99aabbcc-ddee-ff00-1122-334455667788",
-              "name": "error_context.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "aabbccdd-eeff-0011-2233-445566778899",
-              "name": "ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        4672,
-        1904
-      ],
-      "id": "8f82c451-c778-4688-834f-3a7e4792a05d",
-      "name": "ERR — Prepare ErrorPipe sel files",
-      "notes": "ErrorPipe v1: build error_context for WF99."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        4896,
-        1904
-      ],
-      "id": "8ba2436c-7a24-4c5e-b0ea-24ca3b44ddb5",
-      "name": "WF99 — sel files Error",
-      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
     },
     {
       "parameters": {
@@ -1477,97 +1028,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        5744,
-        2000
+        5824,
+        1808
       ],
       "id": "7c58d58b-df6b-494e-94be-f1147ecef7cd",
       "name": "ERR — Source S3",
       "notes": "ErrorPipe v1: mark S3 error source."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "ff001122-3344-5566-7788-99aabbccddee",
-              "name": "error_context.workflow_id",
-              "value": "WF30",
-              "type": "string"
-            },
-            {
-              "id": "00112233-4455-6677-8899-aabbccddeeff",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "11223344-5566-7788-99aa-bbccddeeff00",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "22334455-6677-8899-aabb-ccddeeff0011",
-              "name": "error_context.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
-              "name": "error_context.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "44556677-8899-aabb-ccdd-eeff00112233",
-              "name": "ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        5952,
-        2000
-      ],
-      "id": "14b6ba05-844e-40b4-9038-a6272db1dc2d",
-      "name": "ERR — Prepare ErrorPipe S3",
-      "notes": "ErrorPipe v1: build error_context for WF99."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        6160,
-        2000
-      ],
-      "id": "95ce5dfd-2bcd-45fc-89e6-4191ad358e20",
-      "name": "WF99 — S3 Error",
-      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
     },
     {
       "parameters": {
@@ -1767,103 +1233,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6464,
-        2288
+        6576,
+        1776
       ],
       "id": "c8355a2d-3828-4d64-885e-ff2428786c7c",
       "name": "ERR — Source blob",
       "notes": "ErrorPipe v1: mark DB error source."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "66778899-aabb-ccdd-eeff-001122334455",
-              "name": "error_context.workflow_id",
-              "value": "WF30",
-              "type": "string"
-            },
-            {
-              "id": "778899aa-bbcc-ddee-ff00-112233445566",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "8899aabb-ccdd-eeff-0011-223344556677",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "99aabbcc-ddee-ff00-1122-334455667788",
-              "name": "error_context.table",
-              "value": "={{ $json._err?.table }}",
-              "type": "string"
-            },
-            {
-              "id": "aabbccdd-eeff-0011-2233-445566778899",
-              "name": "error_context.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "bbccddee-ff00-1122-3344-556677889900",
-              "name": "error_context.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "ccddeeff-0011-2233-4455-667788990011",
-              "name": "ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        6720,
-        2288
-      ],
-      "id": "755c0548-666a-4907-8e6f-04e432dccd88",
-      "name": "ERR — Prepare ErrorPipe blob",
-      "notes": "ErrorPipe v1: build error_context for WF99."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        6976,
-        2304
-      ],
-      "id": "b0c4b68b-f6c4-41bd-9a09-975076d88f1f",
-      "name": "WF99 — blob Error",
-      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
     },
     {
       "parameters": {
@@ -1938,103 +1313,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6912,
-        1824
+        6896,
+        1712
       ],
       "id": "5100fdd9-3667-4df7-9d3a-55a809054a85",
       "name": "ERR — Source sel blob",
       "notes": "ErrorPipe v1: mark DB error source."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "00112233-4455-6677-8899-aabbccddeeff",
-              "name": "error_context.workflow_id",
-              "value": "WF30",
-              "type": "string"
-            },
-            {
-              "id": "11223344-5566-7788-99aa-bbccddeeff00",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "22334455-6677-8899-aabb-ccddeeff0011",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
-              "name": "error_context.table",
-              "value": "={{ $json._err?.table }}",
-              "type": "string"
-            },
-            {
-              "id": "44556677-8899-aabb-ccdd-eeff00112233",
-              "name": "error_context.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
-              "name": "error_context.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "66778899-aabb-ccdd-eeff-001122334455",
-              "name": "ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        7168,
-        1824
-      ],
-      "id": "a2206b3e-0012-43ae-9d05-4e21be6a76a5",
-      "name": "ERR — Prepare ErrorPipe sel blob",
-      "notes": "ErrorPipe v1: build error_context for WF99."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        7440,
-        1824
-      ],
-      "id": "75cbe592-5e74-489a-bb32-8bf836c35f9d",
-      "name": "WF99 — sel blob Error",
-      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
     },
     {
       "parameters": {
@@ -2207,103 +1491,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        7232,
-        1568
+        7440,
+        1664
       ],
       "id": "7586c014-5624-41c6-a3dc-e2666752fbfb",
       "name": "ERR — Source upd files",
       "notes": "ErrorPipe v1: mark DB error source."
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "44556677-8899-aabb-ccdd-eeff00112233",
-              "name": "error_context.workflow_id",
-              "value": "WF30",
-              "type": "string"
-            },
-            {
-              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
-              "name": "error_context.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "66778899-aabb-ccdd-eeff-001122334455",
-              "name": "error_context.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "778899aa-bbcc-ddee-ff00-112233445566",
-              "name": "error_context.table",
-              "value": "={{ $json._err?.table }}",
-              "type": "string"
-            },
-            {
-              "id": "8899aabb-ccdd-eeff-0011-223344556677",
-              "name": "error_context.tenant_id",
-              "value": "={{ $json.ctx?.tenant_id }}",
-              "type": "string"
-            },
-            {
-              "id": "99aabbcc-ddee-ff00-1122-334455667788",
-              "name": "error_context.correlation_id",
-              "value": "={{ $json.ctx?.correlation_id }}",
-              "type": "string"
-            },
-            {
-              "id": "aabbccdd-eeff-0011-2233-445566778899",
-              "name": "ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {
-          "dotNotation": true
-        }
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        7456,
-        1568
-      ],
-      "id": "16961d32-bd97-41b1-b480-b9a67b6c09fe",
-      "name": "ERR — Prepare ErrorPipe upd files",
-      "notes": "ErrorPipe v1: build error_context for WF99."
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        7680,
-        1568
-      ],
-      "id": "cdb7ab2d-e4e7-4e75-b3e6-4e17ebd1d1b3",
-      "name": "WF99 — upd files Error",
-      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
     },
     {
       "parameters": {
@@ -2542,8 +1735,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        8864,
-        1712
+        8912,
+        1984
       ],
       "id": "95bd379b-8273-4412-8cc4-f6ca87c801c1",
       "name": "ERR — Source job",
@@ -2604,8 +1797,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        9136,
-        1712
+        9312,
+        2608
       ],
       "id": "5aa81d94-49c0-406f-a407-0e59c9829c99",
       "name": "ERR — Prepare ErrorPipe job",
@@ -2633,8 +1826,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        9360,
-        1712
+        9536,
+        2608
       ],
       "id": "83d81c11-07da-437e-9567-4deceec0b921",
       "name": "WF99 — job Error",
@@ -2739,26 +1932,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        8832,
-        1104
+        9440,
+        1168
       ],
       "id": "a4d58455-32b3-44b9-a06e-716dfba5054d",
       "name": "Set — SuccessEnvelope",
       "notes": "Build SuccessEnvelope with ok=true, status_code=200, ctx, data (blob_id/storage_url/enqueued_jobs), error=null."
-    },
-    {
-      "parameters": {
-        "mode": "passThrough"
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3,
-      "position": [
-        9984,
-        2224
-      ],
-      "id": "12455330-5343-4522-beb9-3dc6e792c102",
-      "name": "Merge — Final (Exclusive Join)",
-      "notes": "Exclusive join pattern: passThrough mode, output Input 1. ALL terminal paths (success + all WF99 errors) connect to Input 1. Never waits for non-existing branches."
     }
   ],
   "pinData": {},
@@ -2829,29 +2008,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe Guard",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe Guard": {
-      "main": [
-        [
-          {
-            "node": "WF99 — Guard Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WF99 — Guard Error": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
+            "node": "ERR — Prepare ErrorPipe job",
             "type": "main",
             "index": 0
           }
@@ -2880,29 +2037,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe TG",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe TG": {
-      "main": [
-        [
-          {
-            "node": "WF99 — TG Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WF99 — TG Error": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
+            "node": "ERR — Prepare ErrorPipe job",
             "type": "main",
             "index": 0
           }
@@ -2953,29 +2088,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe inst",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe inst": {
-      "main": [
-        [
-          {
-            "node": "WF99 — inst Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WF99 — inst Error": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
+            "node": "ERR — Prepare ErrorPipe job",
             "type": "main",
             "index": 0
           }
@@ -3026,29 +2139,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe files",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe files": {
-      "main": [
-        [
-          {
-            "node": "WF99 — files Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WF99 — files Error": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
+            "node": "ERR — Prepare ErrorPipe job",
             "type": "main",
             "index": 0
           }
@@ -3088,29 +2179,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe sel files",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe sel files": {
-      "main": [
-        [
-          {
-            "node": "WF99 — sel files Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WF99 — sel files Error": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
+            "node": "ERR — Prepare ErrorPipe job",
             "type": "main",
             "index": 0
           }
@@ -3212,29 +2281,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe S3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe S3": {
-      "main": [
-        [
-          {
-            "node": "WF99 — S3 Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WF99 — S3 Error": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
+            "node": "ERR — Prepare ErrorPipe job",
             "type": "main",
             "index": 0
           }
@@ -3285,29 +2332,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe blob",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe blob": {
-      "main": [
-        [
-          {
-            "node": "WF99 — blob Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WF99 — blob Error": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
+            "node": "ERR — Prepare ErrorPipe job",
             "type": "main",
             "index": 0
           }
@@ -3336,29 +2361,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe sel blob",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe sel blob": {
-      "main": [
-        [
-          {
-            "node": "WF99 — sel blob Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WF99 — sel blob Error": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
+            "node": "ERR — Prepare ErrorPipe job",
             "type": "main",
             "index": 0
           }
@@ -3409,29 +2412,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe upd files",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe upd files": {
-      "main": [
-        [
-          {
-            "node": "WF99 — upd files Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "WF99 — upd files Error": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
+            "node": "ERR — Prepare ErrorPipe job",
             "type": "main",
             "index": 0
           }
@@ -3553,24 +2534,12 @@
     },
     "WF99 — job Error": {
       "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Set — SuccessEnvelope": {
       "main": [
-        [
-          {
-            "node": "Merge — Final (Exclusive Join)",
-            "type": "main",
-            "index": 1
-          }
-        ]
+        []
       ]
     },
     "Code — Collect Job": {
@@ -3585,13 +2554,17 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
   },
-  "versionId": "a0c076d9-a6b5-4fb1-a348-e2f732b0fd0a",
+  "versionId": "e654106a-9c19-4d91-b336-01cd4301cf61",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },

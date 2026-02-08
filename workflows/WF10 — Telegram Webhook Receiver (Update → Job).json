@@ -11,12 +11,12 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [
-        0,
-        0
+        -2000,
+        240
       ],
-      "id": "2d5110ba-604a-4bd0-b37e-6ec5ca4ef25a",
+      "id": "9b2e1e3b-2ee4-46ed-896a-44839337d1f0",
       "name": "Telegram Trigger",
-      "webhookId": "wf11-telegram-webhook",
+      "webhookId": "wf10-telegram-webhook",
       "notesInFlow": true,
       "credentials": {
         "telegramApi": {
@@ -31,10 +31,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        0,
-        304
+        -2000,
+        544
       ],
-      "id": "59948503-5bcd-41e4-a6a5-ef7ac5ceef62",
+      "id": "33de50e6-841d-497d-9e4a-d5fbf0a1301a",
       "name": "Manual Trigger (Tests)",
       "notesInFlow": true,
       "notes": "TEST TRIGGER: Manual execution for test scenarios.\nInput: None.\nOutput: Empty item (test data set by next node).\nWHY: Isolated test path for T1/T2/T3 scenarios."
@@ -50,10 +50,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        224,
-        304
+        -1776,
+        544
       ],
-      "id": "4da8368a-f053-44f5-9072-a5fd1608abaa",
+      "id": "99b662fd-6915-4ac3-8813-0d8c409e7ff0",
       "name": "Test Data (T1 Happy)",
       "notesInFlow": true,
       "notes": "TEST T1 HAPPY: Valid Telegram update.\nInput: Empty from Manual Trigger.\nOutput: Simulated update with update_id=9999990001.\nFor T2 (duplicate): Run twice with same update_id.\nFor T3 (fail): Remove update_id field manually."
@@ -63,10 +63,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        448,
-        160
+        -1552,
+        400
       ],
-      "id": "3b360b70-621f-4310-8c13-7753cb15ec11",
+      "id": "6e875d1d-ba07-454c-b29c-e93cb8ddb53c",
       "name": "Merge Triggers",
       "notesInFlow": true,
       "notes": "Merges PROD (input 0) and TEST (input 1) into single path.\nInput 0: Telegram Trigger.\nInput 1: Test Data.\nOutput: Single update JSON.\nWHY mode=chooseBranch: Only one trigger fires per execution."
@@ -102,10 +102,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        672,
-        160
+        -1328,
+        400
       ],
-      "id": "2963bc6f-38c2-48b1-a600-d8968b3560b6",
+      "id": "b36eb7bc-5f67-476a-9621-145e52e7d341",
       "name": "Init Context",
       "notesInFlow": true,
       "notes": "Initializes processing context.\nInput: Raw Telegram update.\nOutput: {_ctx: {received_at, is_test}, update: <original>}.\nWHY: Capture timestamp early for consistency across all DB writes."
@@ -118,10 +118,10 @@
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        976,
-        160
+        -1024,
+        400
       ],
-      "id": "95f2af61-5c4e-4f0f-9f11-a51d52e16c7d",
+      "id": "b9794920-142f-432a-b2d9-426de0a3e2c2",
       "name": "Generate UUID",
       "notesInFlow": true,
       "notes": "Generates UUID v4 for correlation.\nInput: Context + update.\nOutput: Adds _ctx.correlation_id.\nWHY: Used as request_id, first_request_id, job correlation_id."
@@ -135,10 +135,10 @@
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        1456,
-        160
+        -544,
+        400
       ],
-      "id": "0be2b56f-01b5-401a-aecc-c469d17da97e",
+      "id": "81b4141e-7961-4a13-afa6-e2f664725650",
       "name": "Hash SHA256",
       "notesInFlow": true,
       "notes": "Computes SHA-256 of update JSON.\nInput: update as JSON string.\nOutput: _hash_hex (hex string).\nWHY: For body_sha256 field in raw.telegram_updates."
@@ -171,10 +171,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1712,
-        160
+        -288,
+        400
       ],
-      "id": "d2146668-813f-4ac6-b507-b4ed2f1ef1a8",
+      "id": "27982fff-b568-4901-a48d-b6635e246064",
       "name": "Has update_id?",
       "notesInFlow": true,
       "notes": "Validates update_id exists.\nInput: Context with update.\nOutput TRUE (index 0): Continue processing.\nOutput FALSE (index 1): Error 422.\nWHY: update_id required for deduplication (PK)."
@@ -190,10 +190,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1968,
-        352
+        -32,
+        592
       ],
-      "id": "709d93ee-8a89-4bde-a10a-b4f0cbeb3803",
+      "id": "bf41f20b-2d3c-49c4-9751-db0ed6311551",
       "name": "Error 422",
       "notesInFlow": true,
       "notes": "Creates ErrorEnvelope for missing update_id.\nInput: Failed validation.\nOutput: {ok:false, status_code:422, error:{...}}.\nWHY: Standard error envelope format."
@@ -205,10 +205,10 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        2176,
-        352
+        176,
+        592
       ],
-      "id": "6041c7be-1fce-4fcd-aba3-9f10bdf23ec3",
+      "id": "16ae3771-17ac-4de2-a089-fdf7bb9fe6ec",
       "name": "Stop 422",
       "notesInFlow": true,
       "notes": "Terminates with validation error.\nWHY: Prevents partial processing of invalid updates."
@@ -262,10 +262,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1968,
-        160
+        -32,
+        400
       ],
-      "id": "9cc3559d-bd55-4df6-8754-9914663e7dfa",
+      "id": "dec03881-6872-4eb4-a416-02af4c6c4981",
       "name": "Extract Fields",
       "notesInFlow": true,
       "notes": "Extracts and derives key fields.\nInput: Validated context.\nOutput: update_id, update_type, body_sha256_bytea, bot_username.\nWHY update_type: Checks each known property for type detection.\nWHY bytea format: Postgres needs \\\\x prefix for hex bytea.\nWHY bot_username hardcoded: Matches credential name for DB lookup."
@@ -301,10 +301,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2176,
-        160
+        176,
+        400
       ],
-      "id": "6357dd85-6bdd-445a-88a0-192fb11ad0c7",
+      "id": "fd075921-6b78-4a16-a7d4-1ebb96dd35c5",
       "name": "Lookup Bot",
       "notesInFlow": true,
       "credentials": {
@@ -343,10 +343,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        2608,
-        96
+        608,
+        336
       ],
-      "id": "2168a6a7-4949-4572-8e91-731f459c67a6",
+      "id": "86934b40-afb4-481f-9bf8-ccc480899a13",
       "name": "Bot Found?",
       "notesInFlow": true,
       "notes": "Checks bot lookup results.\nInput: Postgres result array.\nOutput TRUE (0 results): Bot not found error.\nOutput FALSE (1+ results): Continue to count check."
@@ -362,10 +362,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2832,
-        -48
+        832,
+        192
       ],
-      "id": "886a0f87-c454-429d-911e-a6d81da69a8e",
+      "id": "3b1d6831-05e3-4174-99e8-690d248d353c",
       "name": "Error 404 Bot",
       "notesInFlow": true,
       "notes": "Creates ErrorEnvelope for missing bot."
@@ -377,10 +377,10 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        3056,
-        -192
+        1056,
+        48
       ],
-      "id": "4cf8d4e1-a1aa-48a8-9d94-7ef5df057fcb",
+      "id": "370dd8b0-6df2-4ee6-a092-f839b6ef5283",
       "name": "Stop 404",
       "notesInFlow": true,
       "notes": "Terminates on bot not found."
@@ -412,10 +412,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        2864,
-        160
+        864,
+        400
       ],
-      "id": "44b72e47-a5b3-41e9-bb5c-4b0c1869d9e2",
+      "id": "33e21fec-fdd1-4e8f-8bc5-5bb124435249",
       "name": "Exactly 1?",
       "notesInFlow": true,
       "notes": "Validates exactly one bot found.\nInput: Bot lookup results.\nOutput TRUE: Single bot, continue.\nOutput FALSE: Multiple bots (409 error)."
@@ -431,10 +431,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3328,
-        368
+        1328,
+        608
       ],
-      "id": "f223d3c0-c5ba-4995-a80e-d12d01a4a2bc",
+      "id": "40b44617-c07b-4d25-a908-d95e1b9f3bc1",
       "name": "Error 409",
       "notesInFlow": true,
       "notes": "Creates ErrorEnvelope for ambiguous bot."
@@ -446,10 +446,10 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        3712,
-        992
+        1712,
+        1232
       ],
-      "id": "e277e6fd-2ffc-4282-8ab3-75e72669db7b",
+      "id": "58d29ce2-a140-4339-a24e-2d75ecd8c0b0",
       "name": "Stop 409",
       "notesInFlow": true,
       "notes": "Terminates on ambiguous bot."
@@ -509,10 +509,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3088,
-        160
+        1088,
+        400
       ],
-      "id": "80f33c75-fd8c-403a-93f5-8dae3c8cf908",
+      "id": "cf1b3e4b-cd82-4f27-add9-fcf1631f45bb",
       "name": "Merge Bot Info",
       "notesInFlow": true,
       "notes": "Combines bot lookup with extracted fields.\nInput: Bot record + earlier context.\nOutput: Complete context with bot_id, tenant_id."
@@ -592,10 +592,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3264,
-        160
+        1264,
+        400
       ],
-      "id": "c5354a69-3171-4410-82f6-2692c046c766",
+      "id": "b65d895e-b6cc-4b16-82a8-09ae71cbcfb0",
       "name": "Insert Keys",
       "notesInFlow": true,
       "credentials": {
@@ -626,10 +626,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3520,
-        112
+        1520,
+        352
       ],
-      "id": "91ac1fe5-21bb-42cb-8980-0ce8e03c4ad5",
+      "id": "2160b1ab-083a-44aa-aea9-680a524b0fa9",
       "name": "Pass 1",
       "notesInFlow": true,
       "notes": "Passes merged context (Postgres output may not have all fields)."
@@ -767,10 +767,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3696,
-        112
+        1696,
+        352
       ],
-      "id": "cb333101-600b-4e47-9214-165ae7b29731",
+      "id": "41369e77-3d8e-459d-9201-00684a9cb1a4",
       "name": "Insert Updates",
       "notesInFlow": true,
       "credentials": {
@@ -801,10 +801,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3936,
-        96
+        1936,
+        336
       ],
-      "id": "754f437f-5b18-40cd-940a-2af3c935a589",
+      "id": "83feb094-45ec-4263-8b5c-b19da881ab43",
       "name": "Pass 2",
       "notesInFlow": true,
       "notes": "Passes context for job creation."
@@ -825,10 +825,10 @@
           "mappingMode": "defineBelow",
           "value": {
             "tenant_id": "={{ $json.data.tenant_id }}",
-            "payload": "={{ JSON.stringify({tenant_id: $json.data.tenant_id, bot_id: $json.data.bot_id, update_id: $json.data.update_id, received_at: $json.data._ctx.received_at, request_id: $json.data._ctx.correlation_id, update_type: $json.data.update_type}) }}",
+            "payload": "={{ {tenant_id: $json.data.tenant_id, bot_id: $json.data.bot_id, update_id: $json.data.update_id, received_at: $json.data._ctx.received_at, request_id: $json.data._ctx.correlation_id, update_type: $json.data.update_type} }}",
             "correlation_id": "={{ $json.data._ctx.correlation_id }}",
             "next_run_at": "={{ $json.data._ctx.is_test ? $now.plus({days: 1}).toISO() : $now.toISO() }}",
-            "job_type": "telegram_update"
+            "job_type": "normalize_update"
           },
           "matchingColumns": [],
           "schema": [
@@ -900,10 +900,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        4144,
-        96
+        2144,
+        336
       ],
-      "id": "8647886d-817f-4842-8343-3269bb2f16e0",
+      "id": "e73886b7-1439-483f-9571-c757777ae94a",
       "name": "Create Job",
       "notesInFlow": true,
       "credentials": {
@@ -926,10 +926,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4368,
-        80
+        2992,
+        320
       ],
-      "id": "11ed14f3-3498-474b-b986-6aa665493a77",
+      "id": "ef327945-dcc1-485b-b288-5f8110719f36",
       "name": "Success Envelope",
       "notesInFlow": true,
       "notes": "Creates SuccessEnvelope response.\nInput: Job ID + context.\nOutput: {ok:true, data:{job_id,...}, meta:{correlation:...}}.\n_cleanup field for test cleanup operations."
@@ -961,10 +961,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        4576,
-        80
+        3280,
+        336
       ],
-      "id": "81339189-1032-4f0b-8011-79b1ba629b0a",
+      "id": "ca0edb8c-a95b-48a7-b847-30e781eb5b43",
       "name": "Is Test?",
       "notesInFlow": true,
       "notes": "Routes to cleanup for test executions.\nOutput TRUE: Test cleanup path.\nOutput FALSE: Production end."
@@ -974,10 +974,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        4816,
-        304
+        3520,
+        560
       ],
-      "id": "e0a918ee-0bbf-42a0-a280-acdfc89dc125",
+      "id": "3ab8d0ee-dc95-489c-be0c-cfbd2350c49e",
       "name": "PROD End",
       "notesInFlow": true,
       "notes": "Production path termination.\nOutput: SuccessEnvelope (for response)."
@@ -1009,10 +1009,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        4816,
-        0
+        3520,
+        256
       ],
-      "id": "79625bc1-9a2e-4260-a459-8706a4587fa2",
+      "id": "ece5eb24-07a3-48ee-99c6-185581f0a72c",
       "name": "Cleanup Jobs",
       "notesInFlow": true,
       "credentials": {
@@ -1048,10 +1048,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        5024,
-        0
+        3728,
+        256
       ],
-      "id": "13a7691e-8251-40d4-a1a7-e017249721bf",
+      "id": "ebf82e1c-687d-4da0-af07-7cc03a5f9053",
       "name": "Pass Cleanup",
       "notesInFlow": true,
       "notes": "Passes cleanup context for remaining cleanup steps."
@@ -1083,10 +1083,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        5248,
-        0
+        3952,
+        256
       ],
-      "id": "086dae21-f43d-4c0f-a412-18197920c421",
+      "id": "2b5c59f1-de0b-4a94-854c-cb3b82d5b6d8",
       "name": "Cleanup Updates",
       "notesInFlow": true,
       "credentials": {
@@ -1122,10 +1122,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        5472,
-        0
+        4176,
+        256
       ],
-      "id": "3424477a-e2b9-4d1f-bb0a-e5e6646b899f",
+      "id": "85ea59b6-dbfc-4d5f-a62f-1b642e571da7",
       "name": "Pass Cleanup 2",
       "notesInFlow": true,
       "notes": "Passes cleanup context."
@@ -1161,10 +1161,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        5696,
-        0
+        4400,
+        256
       ],
-      "id": "eadde7f2-9a24-4c18-af30-a3d7245ad43e",
+      "id": "e6d7660e-4ad3-434c-9838-eb6628f86684",
       "name": "Cleanup Keys",
       "notesInFlow": true,
       "credentials": {
@@ -1186,10 +1186,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        5904,
-        0
+        4608,
+        256
       ],
-      "id": "0084c906-5671-489d-96ec-b1754074cc3e",
+      "id": "4236afab-691d-4c38-b2a1-635807c8c051",
       "name": "TEST Result",
       "notesInFlow": true,
       "notes": "Returns test result (SuccessEnvelope) after cleanup.\nAssert: ok=true, data.job_id exists, data.update_type='message'."
@@ -1250,10 +1250,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4704,
-        960
+        2704,
+        1200
       ],
-      "id": "391ff40a-c828-4fb9-8261-00f5851fe2a0",
+      "id": "0f19f808-73ff-498f-9def-20a49942d10a",
       "name": "Prepare DB Error",
       "notesInFlow": true,
       "notes": "FIXED: Prepares error context for WF99 (global error handler).\nInput: _ctx, _err from ERR-Source nodes, plus error fields (message/error/description).\nOutput: ctx (object), error_context (object), plus original error fields preserved.\nWHY includeOtherFields=true: Preserves message/error/description from Postgres error output."
@@ -1262,9 +1262,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "RttZ5uj4BvAAHuwX0rrsd",
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
           "mode": "list",
-          "cachedResultUrl": "/workflow/RttZ5uj4BvAAHuwX0rrsd",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
           "cachedResultName": "WF99 — Global ERR Handler"
         },
         "workflowInputs": {
@@ -1344,10 +1344,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4912,
-        960
+        2912,
+        1200
       ],
-      "id": "e3acb092-6de5-49ec-b7a3-baf03bc97036",
+      "id": "54ad3340-5e03-4b50-b207-6e7ed6d0afdb",
       "name": "Call WF99",
       "notesInFlow": true,
       "notes": "FIXED: Calls global error handler WF99.\nInput mapping: ctx, error_context, message, error, description.\nwaitForSubWorkflow=true: Wait for error handling to complete."
@@ -1359,10 +1359,10 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        5136,
-        960
+        3136,
+        1200
       ],
-      "id": "017e6279-4be6-4c88-b2fd-250b3e02e58b",
+      "id": "c278419e-cdfe-42eb-bfd0-fb327841fcf1",
       "name": "Stop DB Error",
       "notesInFlow": true,
       "notes": "Terminates after DB error."
@@ -1385,10 +1385,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1216,
-        160
+        -784,
+        400
       ],
-      "id": "f8a4ec37-834d-4e36-aa4c-2bbd6d4e2757",
+      "id": "4fd90f48-f2d8-4f91-a8ed-527ea5ce8529",
       "name": "Set ctx.corellation_id"
     },
     {
@@ -1429,10 +1429,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3968,
-        784
+        1968,
+        1024
       ],
-      "id": "2566090e-cf24-4531-a70e-8aea102599d7",
+      "id": "0421de19-8cd9-4870-a1ea-066d7fcf2b4a",
       "name": "ERR — Source Lookup Bot"
     },
     {
@@ -1473,10 +1473,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3968,
-        640
+        1968,
+        880
       ],
-      "id": "b049a42b-17ad-40c1-bd54-e33bf0f5dcc2",
+      "id": "a1194747-a5ac-4437-b782-479f1d3f7d87",
       "name": "ERR — Source Insert Keys"
     },
     {
@@ -1517,10 +1517,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4128,
-        512
+        2128,
+        752
       ],
-      "id": "b1aea4a0-e34f-4685-8007-8c75b2674cea",
+      "id": "9dcafe2d-6aaf-4426-959a-1a7a5008578d",
       "name": "ERR — Insert Updates"
     },
     {
@@ -1561,10 +1561,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4416,
-        448
+        2416,
+        688
       ],
-      "id": "671b9eb1-7888-4f64-b9ae-49c5c1a77b1f",
+      "id": "d308275b-f06b-4565-abd0-b9f9ef81a1d4",
       "name": "ERR — Create Job"
     }
   ],
@@ -1577,28 +1577,6 @@
             "node": "Merge Triggers",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Manual Trigger (Tests)": {
-      "main": [
-        [
-          {
-            "node": "Test Data (T1 Happy)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Test Data (T1 Happy)": {
-      "main": [
-        [
-          {
-            "node": "Merge Triggers",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -1763,28 +1741,6 @@
         ]
       ]
     },
-    "Prepare DB Error": {
-      "main": [
-        [
-          {
-            "node": "Call WF99",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call WF99": {
-      "main": [
-        [
-          {
-            "node": "Stop DB Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Merge Bot Info": {
       "main": [
         [
@@ -1872,17 +1828,6 @@
         ]
       ]
     },
-    "Success Envelope": {
-      "main": [
-        [
-          {
-            "node": "Is Test?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Is Test?": {
       "main": [
         [
@@ -1956,6 +1901,28 @@
         ]
       ]
     },
+    "Prepare DB Error": {
+      "main": [
+        [
+          {
+            "node": "Call WF99",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call WF99": {
+      "main": [
+        [
+          {
+            "node": "Stop DB Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Set ctx.corellation_id": {
       "main": [
         [
@@ -2012,34 +1979,38 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "timeSavedMode": "dynamic",
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Europe/Moscow",
+    "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6"
   },
-  "versionId": "2c794195-899d-4705-b580-c6c69e4d3b19",
+  "versionId": "d3936899-e011-4e56-9a2b-3a6a81eb141a",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
   "id": "038ZpJX7gdYCWJD5YjfZ-",
   "tags": [
     {
-      "name": "telegram",
-      "id": "Aa1CkeTlYoyeRoXF",
       "updatedAt": "2026-02-01T21:41:02.506Z",
-      "createdAt": "2026-02-01T21:41:02.506Z"
+      "createdAt": "2026-02-01T21:41:02.506Z",
+      "id": "Aa1CkeTlYoyeRoXF",
+      "name": "telegram"
     },
     {
-      "name": "webhook",
-      "id": "uUvrJLEw7P9GsV8s",
       "updatedAt": "2026-02-01T21:41:02.507Z",
-      "createdAt": "2026-02-01T21:41:02.507Z"
+      "createdAt": "2026-02-01T21:41:02.507Z",
+      "id": "uUvrJLEw7P9GsV8s",
+      "name": "webhook"
     },
     {
-      "name": "job-queue",
-      "id": "zUOMsuOKwekXNmgb",
       "updatedAt": "2026-02-01T21:41:02.481Z",
-      "createdAt": "2026-02-01T21:41:02.481Z"
+      "createdAt": "2026-02-01T21:41:02.481Z",
+      "id": "zUOMsuOKwekXNmgb",
+      "name": "job-queue"
     }
   ]
 }
