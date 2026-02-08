@@ -2,7 +2,9 @@
   "name": "WF42 — Media Describe",
   "nodes": [
     {
-      "parameters": {},
+      "parameters": {
+        "inputSource": "passthrough"
+      },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
@@ -137,7 +139,7 @@
             {
               "id": "01234567-89ab-cdef-0123-456789abcdef",
               "name": "ctx.tenant_id",
-              "value": "={{ $('Set — Normalize Input').item.json.req?.tenant_id }}",
+              "value": "={{ $json.req?.tenant_id }}",
               "type": "string"
             },
             {
@@ -161,13 +163,13 @@
             {
               "id": "45678901-cdef-0123-4567-89abcdef0123",
               "name": "ctx.job_id",
-              "value": "={{ $('Set — Normalize Input').item.json.req?.job_id }}",
+              "value": "={{ $json.req?.job_id }}",
               "type": "string"
             },
             {
               "id": "56789012-def0-1234-5678-9abcdef01234",
               "name": "req",
-              "value": "={{ $('Set — Normalize Input').item.json.req }}",
+              "value": "={{ $json.req }}",
               "type": "object"
             }
           ]
@@ -177,8 +179,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3120,
-        192
+        -3072,
+        256
       ],
       "id": "b8daceef-7c37-4934-bb21-84106ae05344",
       "name": "Set — Build CTX",
@@ -188,9 +190,11 @@
       "parameters": {
         "conditions": {
           "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
             "version": 3
           },
-          "combinator": "and",
           "conditions": [
             {
               "id": "12345678-90ab-cdef-1234-567890abcdef",
@@ -219,15 +223,17 @@
                 "operation": "notEmpty"
               }
             }
-          ]
+          ],
+          "combinator": "and"
         },
+        "looseTypeValidation": true,
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
         -2880,
-        192
+        80
       ],
       "id": "8ab282f9-26f1-411e-8442-e65eb2be694d",
       "name": "IF — Input Guard",
@@ -275,8 +281,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2880,
-        400
+        -2208,
+        1344
       ],
       "id": "844c2016-de35-4bc1-ad6f-377c77f30309",
       "name": "ERR — Source Input Guard",
@@ -341,8 +347,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2640,
-        400
+        -1968,
+        1344
       ],
       "id": "d24ab20e-8693-48a2-a398-1ad5b1ea1a50",
       "name": "ERR — Prepare ErrorPipe v1 (Input)",
@@ -370,8 +376,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -2400,
-        400
+        -1728,
+        1344
       ],
       "id": "eae5da0a-1bc5-475f-afca-c468a1fb80c7",
       "name": "Execute WF99 (Input)",
@@ -392,13 +398,21 @@
           "mode": "list",
           "cachedResultName": "documents"
         },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.req.payload.document_id }}"
+            }
+          ]
+        },
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -2640,
-        192
+        -2656,
+        80
       ],
       "id": "171e1710-0d30-4060-8302-784848d3e4b2",
       "name": "DB — Select Document",
@@ -420,8 +434,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -2400,
-        224
+        -2368,
+        256
       ],
       "id": "1c7876a0-f54a-4511-a488-3742b154715f",
       "name": "Merge — Restore CTX after DB Select",
@@ -469,8 +483,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2400,
-        32
+        -2192,
+        1152
       ],
       "id": "b4ced7de-8c16-4617-b1de-dbfaf012b8ce",
       "name": "ERR — Source DB Document",
@@ -541,8 +555,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2160,
-        32
+        -1968,
+        1152
       ],
       "id": "6763472a-2d84-453a-95c8-f9b8c735efb3",
       "name": "ERR — Prepare ErrorPipe v1 (DB Doc)",
@@ -570,8 +584,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -1920,
-        32
+        -1728,
+        1152
       ],
       "id": "8e9100e7-4081-4d0c-b012-178138b5f0a7",
       "name": "Execute WF99 (DB Doc)",
@@ -628,8 +642,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -2160,
-        464
+        -2000,
+        416
       ],
       "id": "e0e05c65-5652-44a3-8d2c-7b3fc1c3edfa",
       "name": "DB — Select Blob Object",
@@ -651,8 +665,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1920,
-        464
+        -1792,
+        368
       ],
       "id": "2382162f-d7cf-4bcc-a3eb-31005297bf99",
       "name": "Merge — Restore CTX after Blob",
@@ -700,8 +714,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1920,
-        672
+        -1456,
+        752
       ],
       "id": "d9379f55-60dc-4f61-ada1-2c62bb3ec430",
       "name": "ERR — Source DB Blob",
@@ -772,8 +786,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1680,
-        672
+        -1216,
+        752
       ],
       "id": "a149876b-28ba-4297-8390-f5d06faa752c",
       "name": "ERR — Prepare ErrorPipe v1 (DB Blob)",
@@ -801,8 +815,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -1440,
-        672
+        -976,
+        752
       ],
       "id": "7331d6cf-abf2-453f-b41f-d3554565ba07",
       "name": "Execute WF99 (DB Blob)",
@@ -813,8 +827,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1680,
-        304
+        -1616,
+        256
       ],
       "id": "41d6d075-43a9-4e5d-8adf-f7206992b530",
       "name": "Merge — Join Storage Paths",
@@ -915,8 +929,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1200,
-        304
+        -1168,
+        288
       ],
       "id": "b8e5c830-a753-4e81-8a8a-bdde0d8f97cb",
       "name": "Set — Determine Media Kind",
@@ -931,7 +945,7 @@
       "typeVersion": 1,
       "position": [
         -960,
-        304
+        192
       ],
       "id": "231ca575-0a11-4d9f-b49c-582fe21fabde",
       "name": "S3 — Download Media",
@@ -994,6 +1008,12 @@
               "name": "req",
               "value": "={{ $('Set — Determine Media Kind').item.json.req }}",
               "type": "object"
+            },
+            {
+              "id": "4ac75592-ca92-4835-ab01-6466aae3a8e9",
+              "name": "_err.message",
+              "value": "S3 download failed",
+              "type": "string"
             }
           ]
         },
@@ -1003,138 +1023,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -720,
-        544
+        480,
+        1744
       ],
       "id": "b758e8c2-f728-4f28-b54b-8e8bf8430fe6",
       "name": "ERR — Source S3",
       "notes": "Capture error source for S3 download failure. Input: S3 error output. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve S3 error details"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "34567890-bcde-f012-3456-789abcdef012",
-              "name": "error_context.kind",
-              "value": "io",
-              "type": "string"
-            },
-            {
-              "id": "45678901-cdef-0123-4567-89abcdef0123",
-              "name": "error_context.message",
-              "value": "={{ $json.error?.message || 'S3 download failed' }}",
-              "type": "string"
-            },
-            {
-              "id": "56789012-def0-1234-5678-9abcdef01234",
-              "name": "error_context.status_code",
-              "value": 500,
-              "type": "number"
-            },
-            {
-              "id": "67890123-ef01-2345-6789-abcdef012345",
-              "name": "error_context.retryable",
-              "value": true,
-              "type": "boolean"
-            },
-            {
-              "id": "78901234-f012-3456-789a-bcdef0123456",
-              "name": "error_context.details.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "89012345-0123-4567-89ab-cdef01234567",
-              "name": "error_context.details.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "90123456-1234-5678-90ab-def012345678",
-              "name": "error_context.ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            },
-            {
-              "id": "01234567-2345-6789-abcd-ef0123456789",
-              "name": "error_context.req",
-              "value": "={{ $json.req }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -480,
-        544
-      ],
-      "id": "f72f8b75-cee5-4c76-b6c0-aeb34d3f6bdb",
-      "name": "ERR — Prepare ErrorPipe v1 (S3)",
-      "notes": "Build error_context for S3 download failure (retryable I/O error). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        -240,
-        608
-      ],
-      "id": "84b9169a-8064-49a0-832d-66dbc4f6d51d",
-      "name": "Execute WF99 (S3)",
-      "notes": "Call WF99 for S3 download failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized logging for I/O errors"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "version": 3
-          },
-          "combinator": "or",
-          "conditions": [
-            {
-              "id": "34567890-5678-9abc-def0-123456789012",
-              "leftValue": "={{ $json.media_kind }}",
-              "rightValue": "image",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -480,
-        304
-      ],
-      "id": "b382b669-8676-4750-a8e5-333f0f0608f4",
-      "name": "IF — Media Kind Router",
-      "notes": "Route by media_kind: TRUE=image, FALSE=video|audio (will use subsequent IFs). Input: binary + media_kind + ctx. Output: same. WHY: branch to correct AI node"
     },
     {
       "parameters": {
@@ -1146,15 +1040,16 @@
           "mode": "list",
           "cachedResultName": "models/gemini-2.5-flash"
         },
-        "options": {
-          "maxOutputTokens": 800
-        }
+        "text": "You are a strict JSON generator. Output ONLY one valid JSON OBJECT.\nDo NOT wrap the JSON in quotes. Do NOT use markdown/code fences.\nThe first character must be { and the last character must be }\nAnalyze the image and return ONLY this JSON object with exactly these keys:\n{\"description\":\"...\",\"transcription\":\"...\",\"language\":\"...\"}\nRules:\nNo extra keys, no comments.\ndescription: a detailed description of what is shown in the image, avoid using the \" character inside the text (use ' or curly quotes “ ” if needed).\ntranscription: verbatim text in windows encoding, if present in the image; if no text, \"\"\nlanguage: a language of a text, if present in the image, ISO 639-1 code when possible, else \"und\"",
+        "inputType": "binary",
+        "simplify": false,
+        "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        -272,
-        112
+        -48,
+        176
       ],
       "id": "9c63b683-8265-4e7c-a70b-58b49900b9bd",
       "name": "AI — Analyze Image",
@@ -1166,22 +1061,6 @@
       },
       "onError": "continueErrorOutput",
       "notes": "Gemini analyze image: extract description + OCR text. Input: binary image. Output: ai.image.text. WHY model=gemini-2.5-flash: fast/accurate. WHY AOD=OFF: error output"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        0,
-        192
-      ],
-      "id": "cc067e1c-cc4d-4c86-9826-d736286b2665",
-      "name": "Merge — Restore CTX after Image AI",
-      "notes": "Restore ctx/req/media_kind after AI Image analysis (Carry C1). Input1: AI result, Input2: ctx from router. Output: ai.* + media_kind + ctx + req. WHY: AI node overwrites item"
     },
     {
       "parameters": {
@@ -1208,14 +1087,20 @@
             {
               "id": "01234567-cdef-0123-4567-89abcdef0123",
               "name": "ctx",
-              "value": "={{ $('IF — Media Kind Router').item.json.ctx }}",
+              "value": "={{ $('Switch - Media Kind Router').item.json.ctx }}",
               "type": "object"
             },
             {
               "id": "12345678-def0-1234-5678-9abcdef01234",
               "name": "req",
-              "value": "={{ $('IF — Media Kind Router').item.json.req }}",
+              "value": "={{ $('Switch - Media Kind Router').item.json.req }}",
               "type": "object"
+            },
+            {
+              "id": "a5ee66f8-bc92-4ccc-9716-7441a9f860bc",
+              "name": "_err.message",
+              "value": "AI image analysis failed",
+              "type": "string"
             }
           ]
         },
@@ -1225,138 +1110,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        0
+        496,
+        832
       ],
       "id": "f7fd522c-83fb-4e46-894c-411df84872aa",
       "name": "ERR — Source AI Image",
       "notes": "Capture error source for AI Image analysis failure. Input: AI error. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve AI error details"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "34567890-f012-3456-789a-bcdef0123456",
-              "name": "error_context.kind",
-              "value": "ai",
-              "type": "string"
-            },
-            {
-              "id": "45678901-0123-4567-89ab-cdef01234567",
-              "name": "error_context.message",
-              "value": "={{ $json.error?.message || 'AI image analysis failed' }}",
-              "type": "string"
-            },
-            {
-              "id": "56789012-1234-5678-90ab-def012345678",
-              "name": "error_context.status_code",
-              "value": 500,
-              "type": "number"
-            },
-            {
-              "id": "67890123-2345-6789-abcd-ef0123456789",
-              "name": "error_context.retryable",
-              "value": true,
-              "type": "boolean"
-            },
-            {
-              "id": "78901234-3456-789a-bcde-f01234567890",
-              "name": "error_context.details.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "89012345-4567-89ab-cdef-012345678901",
-              "name": "error_context.details.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "90123456-5678-9abc-def0-123456789012",
-              "name": "error_context.ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            },
-            {
-              "id": "01234567-6789-abcd-ef01-23456789abcd",
-              "name": "error_context.req",
-              "value": "={{ $json.req }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        240,
-        0
-      ],
-      "id": "e6967d9c-9020-4a22-ae52-7559ffc3a6f7",
-      "name": "ERR — Prepare ErrorPipe v1 (AI Img)",
-      "notes": "Build error_context for AI Image failure (retryable AI error). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        480,
-        0
-      ],
-      "id": "7cc245ea-3ea4-44f8-a7d9-88570f0415a7",
-      "name": "Execute WF99 (AI Img)",
-      "notes": "Call WF99 for AI Image failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized error logging"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "version": 3
-          },
-          "combinator": "or",
-          "conditions": [
-            {
-              "id": "34567890-9abc-def0-1234-56789abcdef0",
-              "leftValue": "={{ $json.media_kind }}",
-              "rightValue": "video",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -240,
-        432
-      ],
-      "id": "1426d186-8e0c-45fc-ade5-e81d3861179d",
-      "name": "IF — Is Video",
-      "notes": "Check if media_kind=video. TRUE=video, FALSE=audio. Input: binary + media_kind + ctx (from router FALSE). Output: same. WHY: route to video or audio AI"
     },
     {
       "parameters": {
@@ -1368,15 +1127,16 @@
           "mode": "list",
           "cachedResultName": "models/gemini-2.5-flash"
         },
-        "options": {
-          "maxOutputTokens": 1200
-        }
+        "text": "You are a strict JSON generator. Output ONLY one valid JSON OBJECT.\nDo NOT wrap the JSON in quotes. Do NOT use markdown/code fences.\nThe first character must be { and the last character must be }\nAnalyze the video and return ONLY this JSON object with exactly these keys:\n{\"description\":\"...\",\"transcription\":\"...\",\"language\":\"...\"}\nRules:\nNo extra keys, no comments.\ndescription: a detailed description of what happens in the video, avoid using the \" character inside the text (use ' or curly quotes “ ” if needed).\ntranscription: verbatim speech in windows encoding; if no speech, \"\"\nlanguage: ISO 639-1 code when possible, else \"und\"",
+        "inputType": "binary",
+        "simplify": false,
+        "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        64,
-        464
+        -48,
+        544
       ],
       "id": "768aaaa5-4345-4c71-8ab0-a4602f307e5c",
       "name": "AI — Analyze Video",
@@ -1388,22 +1148,6 @@
       },
       "onError": "continueErrorOutput",
       "notes": "Gemini analyze video: describe scenes/actions/text. Input: binary video. Output: ai.video.text. WHY model=gemini-2.5-flash: video support. WHY AOD=OFF: error output"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        448,
-        288
-      ],
-      "id": "58e6dfa8-eb79-4845-b778-e430d660ac96",
-      "name": "Merge — Restore CTX after Video AI",
-      "notes": "Restore ctx/req/media_kind after AI Video analysis (Carry C1). Input1: AI result, Input2: ctx from Is Video. Output: ai.* + media_kind + ctx + req. WHY: preserve context"
     },
     {
       "parameters": {
@@ -1430,14 +1174,20 @@
             {
               "id": "01234567-0123-4567-89ab-cdef01234567",
               "name": "ctx",
-              "value": "={{ $('IF — Is Video').item.json.ctx }}",
+              "value": "={{ $('Switch - Media Kind Router').item.json.ctx }}",
               "type": "object"
             },
             {
               "id": "12345678-1234-5678-90ab-def012345678",
               "name": "req",
-              "value": "={{ $('IF — Is Video').item.json.req }}",
+              "value": "={{ $('Switch - Media Kind Router').item.json.req }}",
               "type": "object"
+            },
+            {
+              "id": "844dec30-0080-43c2-b299-460a2f225d55",
+              "name": "_err.message",
+              "value": "AI video analysis failed",
+              "type": "string"
             }
           ]
         },
@@ -1447,151 +1197,12 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        272,
-        528
+        496,
+        1072
       ],
       "id": "84c5e4bb-baa5-455d-9b24-6d5b7e2c21c1",
       "name": "ERR — Source AI Video",
       "notes": "Capture error source for AI Video analysis failure. Input: AI error. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve error"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "34567890-3456-789a-bcde-f01234567890",
-              "name": "error_context.kind",
-              "value": "ai",
-              "type": "string"
-            },
-            {
-              "id": "45678901-4567-89ab-cdef-012345678901",
-              "name": "error_context.message",
-              "value": "={{ $json.error?.message || 'AI video analysis failed' }}",
-              "type": "string"
-            },
-            {
-              "id": "56789012-5678-9abc-def0-123456789012",
-              "name": "error_context.status_code",
-              "value": 500,
-              "type": "number"
-            },
-            {
-              "id": "67890123-6789-abcd-ef01-23456789abcd",
-              "name": "error_context.retryable",
-              "value": true,
-              "type": "boolean"
-            },
-            {
-              "id": "78901234-789a-bcde-f012-3456789abcde",
-              "name": "error_context.details.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "89012345-89ab-cdef-0123-456789abcdef",
-              "name": "error_context.details.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "90123456-9abc-def0-1234-56789abcdef0",
-              "name": "error_context.ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            },
-            {
-              "id": "01234567-abcd-ef01-2345-6789abcdef01",
-              "name": "error_context.req",
-              "value": "={{ $json.req }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        480,
-        560
-      ],
-      "id": "2504a2fa-a563-41bf-b418-31eea300f6bf",
-      "name": "ERR — Prepare ErrorPipe v1 (AI Vid)",
-      "notes": "Build error_context for AI Video failure. Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope for WF99"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        720,
-        560
-      ],
-      "id": "e009fa2d-9f2a-4254-a939-4125f33847b5",
-      "name": "Execute WF99 (AI Vid)",
-      "notes": "Call WF99 for AI Video failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 pattern"
-    },
-    {
-      "parameters": {
-        "resource": "audio",
-        "modelId": {
-          "__rl": true,
-          "value": "models/gemini-2.5-flash",
-          "mode": "list",
-          "cachedResultName": "models/gemini-2.5-flash"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.googleGemini",
-      "typeVersion": 1.1,
-      "position": [
-        -16,
-        752
-      ],
-      "id": "79d68e28-d251-4ef7-9f5c-6e8fa5fccc4d",
-      "name": "AI — Transcribe Audio",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "4J3UGUqYNZJxtTVa",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      },
-      "onError": "continueErrorOutput",
-      "notes": "Gemini transcribe audio (speech-to-text). Input: binary audio. Output: ai.transcript. WHY: extract verbal content. WHY AOD=OFF: error output"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        240,
-        672
-      ],
-      "id": "de41db1d-2122-426e-b2fa-0d4609c181de",
-      "name": "Merge — Restore CTX after Transcribe",
-      "notes": "Restore ctx/req/media_kind after Transcribe (Carry C1). Input1: transcript, Input2: ctx from Is Video FALSE. Output: ai.transcript + ctx + req + media_kind. WHY: preserve ctx"
     },
     {
       "parameters": {
@@ -1618,14 +1229,20 @@
             {
               "id": "89012345-2345-6789-abcd-ef0123456789",
               "name": "ctx",
-              "value": "={{ $('IF — Is Video').item.json.ctx }}",
+              "value": "={{ $('Switch - Media Kind Router').item.json.ctx }}",
               "type": "object"
             },
             {
               "id": "90123456-3456-789a-bcde-f01234567890",
               "name": "req",
-              "value": "={{ $('IF — Is Video').item.json.req }}",
+              "value": "={{ $('Switch - Media Kind Router').item.json.req }}",
               "type": "object"
+            },
+            {
+              "id": "2b4dc1d5-503a-4e50-ae6a-787cee65f194",
+              "name": "_err.message",
+              "value": "AI audio transcription failed",
+              "type": "string"
             }
           ]
         },
@@ -1635,8 +1252,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        192,
-        960
+        480,
+        1264
       ],
       "id": "9c2784fe-1414-45cb-8aa3-e75f5f8cfc4c",
       "name": "ERR — Source AI Transcribe",
@@ -1644,297 +1261,13 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "12345678-5678-9abc-def0-123456789012",
-              "name": "error_context.kind",
-              "value": "ai",
-              "type": "string"
-            },
-            {
-              "id": "23456789-6789-abcd-ef01-23456789abcd",
-              "name": "error_context.message",
-              "value": "={{ $json.error?.message || 'AI audio transcription failed' }}",
-              "type": "string"
-            },
-            {
-              "id": "34567890-789a-bcde-f012-3456789abcde",
-              "name": "error_context.status_code",
-              "value": 500,
-              "type": "number"
-            },
-            {
-              "id": "45678901-89ab-cdef-0123-456789abcdef",
-              "name": "error_context.retryable",
-              "value": true,
-              "type": "boolean"
-            },
-            {
-              "id": "56789012-9abc-def0-1234-56789abcdef0",
-              "name": "error_context.details.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "67890123-abcd-ef01-2345-6789abcdef01",
-              "name": "error_context.details.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "78901234-bcde-f012-3456-789abcdef012",
-              "name": "error_context.ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            },
-            {
-              "id": "89012345-cdef-0123-4567-89abcdef0123",
-              "name": "error_context.req",
-              "value": "={{ $json.req }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        432,
-        1232
-      ],
-      "id": "b4d1082d-a05a-4692-8952-c216a9e688b4",
-      "name": "ERR — Prepare ErrorPipe v1 (AI Txn)",
-      "notes": "Build error_context for AI Transcribe failure. Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        752,
-        1232
-      ],
-      "id": "b65e3d63-2d50-41c5-b633-93fc22e1ddfe",
-      "name": "Execute WF99 (AI Txn)",
-      "notes": "Call WF99 for AI Transcribe failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1"
-    },
-    {
-      "parameters": {
-        "resource": "audio",
-        "operation": "analyze",
-        "modelId": {
-          "__rl": true,
-          "value": "models/gemini-2.5-flash",
-          "mode": "list",
-          "cachedResultName": "models/gemini-2.5-flash"
-        },
-        "options": {
-          "maxOutputTokens": 600
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.googleGemini",
-      "typeVersion": 1.1,
-      "position": [
-        464,
-        832
-      ],
-      "id": "89a65135-a7cf-46bd-ae6a-f6378454f33a",
-      "name": "AI — Analyze Audio",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "4J3UGUqYNZJxtTVa",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      },
-      "onError": "continueErrorOutput",
-      "notes": "Gemini analyze audio: describe sounds/music/features (after transcribe). Input: ai.transcript + ctx. Output: ai.audio_description. WHY: additional context beyond transcript. WHY AOD=OFF"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
+        "numberInputs": 5
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        832,
-        736
-      ],
-      "id": "69eb42eb-2525-4ee2-9ae0-901c555710a2",
-      "name": "Merge — Restore CTX after Audio Analyze",
-      "notes": "Restore ctx/req after AI Audio Analyze (Carry C1). Input1: audio description, Input2: ctx from Transcribe merge. Output: ai.* + ctx + req + media_kind. WHY: preserve all AI results"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "34567890-1234-5678-90ab-def012345678",
-              "name": "_err.node",
-              "value": "AI — Analyze Audio",
-              "type": "string"
-            },
-            {
-              "id": "45678901-2345-6789-abcd-ef0123456789",
-              "name": "_err.operation",
-              "value": "analyze_audio",
-              "type": "string"
-            },
-            {
-              "id": "56789012-3456-789a-bcde-f01234567890",
-              "name": "_err.table",
-              "value": "",
-              "type": "string"
-            },
-            {
-              "id": "67890123-4567-89ab-cdef-012345678901",
-              "name": "ctx",
-              "value": "={{ $('Merge — Restore CTX after Transcribe').item.json.ctx }}",
-              "type": "object"
-            },
-            {
-              "id": "78901234-5678-9abc-def0-123456789012",
-              "name": "req",
-              "value": "={{ $('Merge — Restore CTX after Transcribe').item.json.req }}",
-              "type": "object"
-            }
-          ]
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        736,
-        976
-      ],
-      "id": "39b8c480-1943-4402-bf0b-d98f7aff5baa",
-      "name": "ERR — Source AI Audio Analyze",
-      "notes": "Capture error source for AI Audio Analyze failure. Input: AI error. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve error"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "90123456-789a-bcde-f012-3456789abcde",
-              "name": "error_context.kind",
-              "value": "ai",
-              "type": "string"
-            },
-            {
-              "id": "01234567-89ab-cdef-0123-456789abcdef",
-              "name": "error_context.message",
-              "value": "={{ $json.error?.message || 'AI audio analysis failed' }}",
-              "type": "string"
-            },
-            {
-              "id": "12345678-9abc-def0-1234-56789abcdef0",
-              "name": "error_context.status_code",
-              "value": 500,
-              "type": "number"
-            },
-            {
-              "id": "23456789-abcd-ef01-2345-6789abcdef01",
-              "name": "error_context.retryable",
-              "value": true,
-              "type": "boolean"
-            },
-            {
-              "id": "34567890-bcde-f012-3456-789abcdef012",
-              "name": "error_context.details.node",
-              "value": "={{ $json._err?.node }}",
-              "type": "string"
-            },
-            {
-              "id": "45678901-cdef-0123-4567-89abcdef0123",
-              "name": "error_context.details.operation",
-              "value": "={{ $json._err?.operation }}",
-              "type": "string"
-            },
-            {
-              "id": "56789012-def0-1234-5678-9abcdef01234",
-              "name": "error_context.ctx",
-              "value": "={{ $json.ctx }}",
-              "type": "object"
-            },
-            {
-              "id": "67890123-ef01-2345-6789-abcdef012345",
-              "name": "error_context.req",
-              "value": "={{ $json.req }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        960,
-        960
-      ],
-      "id": "757eeef7-7882-4dd9-a057-86a0f184bb71",
-      "name": "ERR — Prepare ErrorPipe v1 (AI Aud)",
-      "notes": "Build error_context for AI Audio Analyze failure. Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gcM1ZRVCKVtzJfHOH7OTw",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
-          "cachedResultName": "WF99 — Global ERR Handler"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        1200,
-        960
-      ],
-      "id": "a8c68ee0-0e6a-4535-bb91-315be39e8cea",
-      "name": "Execute WF99 (AI Aud)",
-      "notes": "Call WF99 for AI Audio Analyze failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        960,
-        304
+        1024,
+        352
       ],
       "id": "a3097ad5-211a-49a4-8dcf-3fffcbe5f0e9",
       "name": "Merge — Join All AI Branches",
@@ -1947,49 +1280,49 @@
             {
               "id": "01234567-2345-6789-abcd-ef0123456789",
               "name": "description_text",
-              "value": "={{ $json.text || $json.message || '' }}",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text).description }}",
               "type": "string"
             },
             {
               "id": "12345678-3456-789a-bcde-f01234567890",
               "name": "transcript_text",
-              "value": "={{ $json.media_kind === 'audio' ? ($json.transcript || '') : '' }}",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text).transcription }}",
               "type": "string"
             },
             {
-              "id": "23456789-4567-89ab-cdef-012345678901",
+              "id": "007fb7b7-5512-48cf-b02e-4fe8685a9ccc",
               "name": "language",
-              "value": "",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text).language }}",
               "type": "string"
             },
             {
               "id": "34567890-5678-9abc-def0-123456789012",
               "name": "token_count",
-              "value": "={{ ($json.text?.length || 0) + ($json.transcript?.length || 0) }}",
+              "value": "={{ $json.usageMetadata.candidatesTokenCount }}",
               "type": "number"
-            },
-            {
-              "id": "45678901-6789-abcd-ef01-23456789abcd",
-              "name": "analysis_meta.media.kind",
-              "value": "={{ $json.media_kind }}",
-              "type": "string"
             },
             {
               "id": "56789012-789a-bcde-f012-3456789abcde",
               "name": "analysis_meta.media.mime_type",
-              "value": "={{ $json.mime_type }}",
+              "value": "={{ $binary.data.mimeType }}",
               "type": "string"
             },
             {
               "id": "67890123-89ab-cdef-0123-456789abcdef",
               "name": "analysis_meta.media.description_text",
-              "value": "={{ $json.text || $json.message || '' }}",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text).description }}",
               "type": "string"
             },
             {
               "id": "78901234-9abc-def0-1234-56789abcdef0",
               "name": "analysis_meta.media.transcript_text",
-              "value": "={{ $json.transcript || '' }}",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text).transcription }}",
+              "type": "string"
+            },
+            {
+              "id": "43cf8c8a-463e-4b11-ae3f-c5440afdd744",
+              "name": "analysis_meta.media.language",
+              "value": "={{ JSON.parse($json.candidates[0].content.parts[0].text).language }}",
               "type": "string"
             },
             {
@@ -2023,8 +1356,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1200,
-        304
+        1328,
+        352
       ],
       "id": "d6305125-d10e-4407-b12e-41ce8dd0ae02",
       "name": "Set — Parse AI Results",
@@ -2048,20 +1381,19 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "text": "={{ $json.description_text + ($json.transcript_text ? '\\n\\nTranscript: ' + $json.transcript_text : '') }}",
+            "text": "={{ $json.transcript_text || null }}",
             "language": "={{ $json.language || null }}",
             "token_count": "={{ $json.token_count || null }}",
             "status": "succeeded",
-            "meta": "={{ $json.meta }}",
-            "updated_at": "={{ $now.toISO() }}"
+            "meta": "={{ $json.analysis_meta }}",
+            "updated_at": "={{ $now.toISO() }}",
+            "id": "={{ $json.req.payload.document_id }}",
+            "tenant_id": "={{ $json.req.tenant_id }}",
+            "description": "={{ $json.description_text || null }}"
           },
           "matchingColumns": [
-            "text",
-            "language",
-            "token_count",
-            "status",
-            "meta",
-            "updated_at"
+            "id",
+            "tenant_id"
           ],
           "schema": [
             {
@@ -2072,7 +1404,7 @@
               "display": true,
               "type": "number",
               "canBeUsedToMatch": true,
-              "removed": true
+              "removed": false
             },
             {
               "id": "tenant_id",
@@ -2082,7 +1414,7 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true,
-              "removed": true
+              "removed": false
             },
             {
               "id": "doc_type",
@@ -2213,7 +1545,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "text",
@@ -2241,7 +1574,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "number",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "status",
@@ -2264,7 +1598,8 @@
                   "name": "pending",
                   "value": "pending"
                 }
-              ]
+              ],
+              "removed": false
             },
             {
               "id": "error",
@@ -2283,7 +1618,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "object",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "created_at",
@@ -2302,7 +1638,18 @@
               "defaultMatch": false,
               "display": true,
               "type": "dateTime",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -2313,8 +1660,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1408,
-        464
+        1712,
+        448
       ],
       "id": "b3d695b4-a135-46a1-afad-c3bb0b6a97f8",
       "name": "DB — Update Document",
@@ -2336,7 +1683,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1664,
+        2032,
         288
       ],
       "id": "e07c521f-8361-4bff-86af-e73cdd8dd348",
@@ -2376,6 +1723,12 @@
               "name": "req",
               "value": "={{ $('Set — Parse AI Results').item.json.req }}",
               "type": "object"
+            },
+            {
+              "id": "42a2c41a-4101-4613-b0d4-bd8305420f9a",
+              "name": "_err.message",
+              "value": "DB update failed",
+              "type": "string"
             }
           ]
         },
@@ -2385,8 +1738,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1680,
-        512
+        2032,
+        736
       ],
       "id": "7ef70381-b807-4854-ac76-e545a5442617",
       "name": "ERR — Source DB Update",
@@ -2405,7 +1758,7 @@
             {
               "id": "23456789-89ab-cdef-0123-456789abcdef",
               "name": "error_context.message",
-              "value": "={{ $json.error?.message || 'DB update failed' }}",
+              "value": "={{ $json.error?.message || $json._err?.message }}",
               "type": "string"
             },
             {
@@ -2457,8 +1810,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1920,
-        512
+        2352,
+        960
       ],
       "id": "9ae58a2f-47d9-407c-94a0-d215efc99ae3",
       "name": "ERR — Prepare ErrorPipe v1 (DB Upd)",
@@ -2486,8 +1839,8 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2160,
-        512
+        2592,
+        960
       ],
       "id": "4ab338ce-22b6-43b8-92fe-d258e404dbe7",
       "name": "Execute WF99 (DB Upd)",
@@ -2570,8 +1923,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1920,
-        304
+        2528,
+        288
       ],
       "id": "50f0de82-2392-4e29-b0dd-cbe788754f87",
       "name": "Set — Success Envelope",
@@ -2582,8 +1935,8 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -3840,
-        1152
+        -4032,
+        1392
       ],
       "id": "9a173dfc-5d3e-4521-9362-83dd63e8f731",
       "name": "Manual Trigger TEST",
@@ -2620,7 +1973,7 @@
             {
               "id": "90123456-3456-789a-bcde-f01234567890",
               "name": "test_config.doc_type",
-              "value": "message_attachment",
+              "value": "file",
               "type": "string"
             }
           ]
@@ -2630,8 +1983,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3600,
-        1152
+        -3584,
+        1184
       ],
       "id": "404309c7-a8e9-4365-8145-c782909d1d04",
       "name": "Set — Test Config",
@@ -2655,9 +2008,9 @@
           "mappingMode": "defineBelow",
           "value": {
             "tenant_id": "={{ $json.test_config.tenant_id }}",
-            "doc_type": "={{ $json.test_config.doc_type }}",
             "title": "WF42_TEST",
-            "status": "pending"
+            "status": "pending",
+            "doc_type": "={{ $json.test_config.doc_type }}"
           },
           "matchingColumns": [
             "tenant_id",
@@ -2698,7 +2051,9 @@
               "display": true,
               "type": "string"
             }
-          ]
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {
           "outputColumns": [
@@ -2709,8 +2064,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -3360,
-        1152
+        -3376,
+        1056
       ],
       "id": "5af1c307-1ce0-4c43-90a5-a68d382c3ee9",
       "name": "TEST — DB Insert Document Fixture",
@@ -2731,8 +2086,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -3120,
-        1152
+        -3072,
+        1136
       ],
       "id": "f16fc568-35b0-4198-8548-74979ee368d3",
       "name": "TEST — Merge Config with Document ID",
@@ -2831,13 +2186,25 @@
           "mode": "list",
           "cachedResultName": "documents"
         },
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.data.document_id }}"
+            },
+            {
+              "column": "tenant_id",
+              "value": "={{ $json.ctx.tenant_id }}"
+            }
+          ]
+        },
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2160,
-        304
+        3120,
+        336
       ],
       "id": "6ee1ecd6-0d09-44e4-8211-40419e792481",
       "name": "TEST — DB Verify Updated Document",
@@ -2868,8 +2235,8 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2400,
-        304
+        3360,
+        336
       ],
       "id": "2d41cb81-a6ef-483f-bb1b-d1897afc4722",
       "name": "TEST — DB Cleanup",
@@ -2880,6 +2247,396 @@
         }
       },
       "notes": "Delete test document WHERE id=verified_id AND title=WF42_TEST (safety: no prod rows deleted). Input: verified row. Output: delete result. WHY: test cleanup per rules"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56789012-f012-3456-789a-bcdef0123456",
+              "name": "test_config.tenant_id",
+              "value": "00000000-0000-0000-0000-000000000001",
+              "type": "string"
+            },
+            {
+              "id": "67890123-0123-4567-89ab-cdef01234567",
+              "name": "test_config.storage_url",
+              "value": "test/media/sample_audio.ogg",
+              "type": "string"
+            },
+            {
+              "id": "78901234-1234-5678-90ab-def012345678",
+              "name": "test_config.mime_type",
+              "value": "audio/ogg",
+              "type": "string"
+            },
+            {
+              "id": "89012345-2345-6789-abcd-ef0123456789",
+              "name": "test_config.media_kind",
+              "value": "audio",
+              "type": "string"
+            },
+            {
+              "id": "90123456-3456-789a-bcde-f01234567890",
+              "name": "test_config.doc_type",
+              "value": "file",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3600,
+        1488
+      ],
+      "id": "9dcf576b-3c09-4314-abed-722cf95848a9",
+      "name": "Set — Test Config1",
+      "notes": "Configure test: tenant_id, storage_url (REPLACE with real S3 key in your env), mime_type, media_kind. Input: trigger. Output: test_config.*. WHY: user-editable test params"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56789012-f012-3456-789a-bcdef0123456",
+              "name": "test_config.tenant_id",
+              "value": "00000000-0000-0000-0000-000000000001",
+              "type": "string"
+            },
+            {
+              "id": "67890123-0123-4567-89ab-cdef01234567",
+              "name": "test_config.storage_url",
+              "value": "test/media/sample_video1.mp4",
+              "type": "string"
+            },
+            {
+              "id": "78901234-1234-5678-90ab-def012345678",
+              "name": "test_config.mime_type",
+              "value": "test/test",
+              "type": "string"
+            },
+            {
+              "id": "89012345-2345-6789-abcd-ef0123456789",
+              "name": "test_config.media_kind",
+              "value": "test",
+              "type": "string"
+            },
+            {
+              "id": "90123456-3456-789a-bcde-f01234567890",
+              "name": "test_config.doc_type",
+              "value": "file",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3600,
+        1744
+      ],
+      "id": "d229edd8-7a1d-4f66-9795-60487d684951",
+      "name": "Set — Test Config2",
+      "notes": "Configure test: tenant_id, storage_url (REPLACE with real S3 key in your env), mime_type, media_kind. Input: trigger. Output: test_config.*. WHY: user-editable test params"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "You are a strict JSON generator. Output ONLY one valid JSON OBJECT.\nDo NOT wrap the JSON in quotes. Do NOT use markdown/code fences.\nThe first character must be { and the last character must be }\nAnalyze the audio and return ONLY this JSON object with exactly these keys:\n{\"description\":\"...\",\"transcription\":\"...\",\"language\":\"...\"}\nRules:\nNo extra keys, no comments.\ndescription: a detailed description of what happens in the audio, avoid using the \" character inside the text (use ' or curly quotes “ ” if needed).\ntranscription: verbatim speech in windows encoding; if no speech, \"\"\nlanguage: ISO 639-1 code when possible, else \"und\"",
+        "inputType": "binary",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        784
+      ],
+      "id": "de6c3010-5315-4d4a-8184-379a5cf61621",
+      "name": "Analyze audio",
+      "retryOnFail": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56789012-f012-3456-789a-bcdef0123456",
+              "name": "test_config.tenant_id",
+              "value": "00000000-0000-0000-0000-000000000001",
+              "type": "string"
+            },
+            {
+              "id": "67890123-0123-4567-89ab-cdef01234567",
+              "name": "test_config.storage_url",
+              "value": "test/media/sample_document.pdf",
+              "type": "string"
+            },
+            {
+              "id": "78901234-1234-5678-90ab-def012345678",
+              "name": "test_config.mime_type",
+              "value": "test/test",
+              "type": "string"
+            },
+            {
+              "id": "89012345-2345-6789-abcd-ef0123456789",
+              "name": "test_config.media_kind",
+              "value": "test",
+              "type": "string"
+            },
+            {
+              "id": "90123456-3456-789a-bcde-f01234567890",
+              "name": "test_config.doc_type",
+              "value": "file",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3616,
+        2032
+      ],
+      "id": "a812960f-f099-46a0-b186-b7d62da32ebf",
+      "name": "Set — Test Config3",
+      "notes": "Configure test: tenant_id, storage_url (REPLACE with real S3 key in your env), mime_type, media_kind. Input: trigger. Output: test_config.*. WHY: user-editable test params"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "78901234-9abc-def0-1234-56789abcdef0",
+              "name": "_err.node",
+              "value": "AI — Analyze Document",
+              "type": "string"
+            },
+            {
+              "id": "89012345-abcd-ef01-2345-6789abcdef01",
+              "name": "_err.operation",
+              "value": "analyze_dicument",
+              "type": "string"
+            },
+            {
+              "id": "90123456-bcde-f012-3456-789abcdef012",
+              "name": "_err.table",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "01234567-cdef-0123-4567-89abcdef0123",
+              "name": "ctx",
+              "value": "={{ $('Switch - Media Kind Router').item.json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "12345678-def0-1234-5678-9abcdef01234",
+              "name": "req",
+              "value": "={{ $('Switch - Media Kind Router').item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "83129ec5-300c-4bae-aaff-d7be79747c91",
+              "name": "_err.message",
+              "value": "AI document analysis failed",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        1504
+      ],
+      "id": "bc9ec3db-4b5d-4833-98e5-20e874e8eced",
+      "name": "ERR — Source AI Document",
+      "notes": "Capture error source for AI Image analysis failure. Input: AI error. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve AI error details"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "You are a strict JSON generator. Output ONLY one valid JSON OBJECT.\nDo NOT wrap the JSON in quotes. Do NOT use markdown/code fences.\nThe first character must be { and the last character must be }\nAnalyze the document and return ONLY this JSON object with exactly these keys:\n{\"description\":\"...\",\"transcription\":\"...\",\"language\":\"...\"}\nRules:\nNo extra keys, no comments.\ndescription: a detailed description of what is in the document, avoid using the \" character inside the text (use ' or curly quotes “ ” if needed).\ntranscription: verbatim text in windows encoding, if present in the document; if no text, \"\"\nlanguage: a language used in the document, ISO 639-1 code when possible, else \"und\"",
+        "inputType": "binary",
+        "simplify": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        1056
+      ],
+      "id": "e049df8e-f329-4f05-ba20-3c4c503cce60",
+      "name": "Analyze document",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        560,
+        352
+      ],
+      "id": "58e6dfa8-eb79-4845-b778-e430d660ac96",
+      "name": "Merge — Restore CTX after AI",
+      "notes": "Restore ctx/req/media_kind after AI Video analysis (Carry C1). Input1: AI result, Input2: ctx from Is Video. Output: ai.* + media_kind + ctx + req. WHY: preserve context"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "3520c912-3b40-43ed-8f6f-4029623c9441"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f36d7c09-611e-4fae-ad7b-289dd0ed6bbe",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "video",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "video"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "898ae2d5-f82d-4d9f-815a-dea70481a179",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fa180ab2-3da7-40ce-87d2-6b65958c35f4",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "pdf|text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        304
+      ],
+      "id": "4b1b108e-1683-4a79-b116-1997faaad2ae",
+      "name": "Switch - Media Kind Router"
     }
   ],
   "pinData": {},
@@ -2980,7 +2737,9 @@
             "node": "Merge — Restore CTX after DB Select",
             "type": "main",
             "index": 0
-          },
+          }
+        ],
+        [
           {
             "node": "ERR — Source DB Document",
             "type": "main",
@@ -3052,7 +2811,9 @@
             "node": "Merge — Restore CTX after Blob",
             "type": "main",
             "index": 0
-          },
+          }
+        ],
+        [
           {
             "node": "ERR — Source DB Blob",
             "type": "main",
@@ -3139,7 +2900,9 @@
             "node": "Merge — Restore CTX after S3",
             "type": "main",
             "index": 0
-          },
+          }
+        ],
+        [
           {
             "node": "ERR — Source S3",
             "type": "main",
@@ -3152,7 +2915,7 @@
       "main": [
         [
           {
-            "node": "IF — Media Kind Router",
+            "node": "Switch - Media Kind Router",
             "type": "main",
             "index": 0
           }
@@ -3163,41 +2926,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe v1 (S3)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe v1 (S3)": {
-      "main": [
-        [
-          {
-            "node": "Execute WF99 (S3)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF — Media Kind Router": {
-      "main": [
-        [
-          {
-            "node": "AI — Analyze Image",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge — Restore CTX after Image AI",
-            "type": "main",
-            "index": 1
-          }
-        ],
-        [
-          {
-            "node": "IF — Is Video",
+            "node": "ERR — Prepare ErrorPipe v1 (DB Upd)",
             "type": "main",
             "index": 0
           }
@@ -3208,23 +2937,14 @@
       "main": [
         [
           {
-            "node": "Merge — Restore CTX after Image AI",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "ERR — Source AI Image",
+            "node": "Merge — Restore CTX after AI",
             "type": "main",
             "index": 0
           }
-        ]
-      ]
-    },
-    "Merge — Restore CTX after Image AI": {
-      "main": [
+        ],
         [
           {
-            "node": "Merge — Join All AI Branches",
+            "node": "ERR — Source AI Image",
             "type": "main",
             "index": 0
           }
@@ -3235,48 +2955,9 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe v1 (AI Img)",
+            "node": "ERR — Prepare ErrorPipe v1 (DB Upd)",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe v1 (AI Img)": {
-      "main": [
-        [
-          {
-            "node": "Execute WF99 (AI Img)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF — Is Video": {
-      "main": [
-        [
-          {
-            "node": "AI — Analyze Video",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge — Restore CTX after Video AI",
-            "type": "main",
-            "index": 1
-          }
-        ],
-        [
-          {
-            "node": "AI — Transcribe Audio",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge — Restore CTX after Transcribe",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -3285,10 +2966,12 @@
       "main": [
         [
           {
-            "node": "Merge — Restore CTX after Video AI",
+            "node": "Merge — Restore CTX after AI",
             "type": "main",
             "index": 0
-          },
+          }
+        ],
+        [
           {
             "node": "ERR — Source AI Video",
             "type": "main",
@@ -3297,67 +2980,13 @@
         ]
       ]
     },
-    "Merge — Restore CTX after Video AI": {
-      "main": [
-        [
-          {
-            "node": "Merge — Join All AI Branches",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
     "ERR — Source AI Video": {
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe v1 (AI Vid)",
+            "node": "ERR — Prepare ErrorPipe v1 (DB Upd)",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe v1 (AI Vid)": {
-      "main": [
-        [
-          {
-            "node": "Execute WF99 (AI Vid)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI — Transcribe Audio": {
-      "main": [
-        [
-          {
-            "node": "Merge — Restore CTX after Transcribe",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "ERR — Source AI Transcribe",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge — Restore CTX after Transcribe": {
-      "main": [
-        [
-          {
-            "node": "AI — Analyze Audio",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge — Restore CTX after Audio Analyze",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -3366,56 +2995,7 @@
       "main": [
         [
           {
-            "node": "ERR — Prepare ErrorPipe v1 (AI Txn)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe v1 (AI Txn)": {
-      "main": [
-        [
-          {
-            "node": "Execute WF99 (AI Txn)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI — Analyze Audio": {
-      "main": [
-        [
-          {
-            "node": "Merge — Restore CTX after Audio Analyze",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "ERR — Source AI Audio Analyze",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Source AI Audio Analyze": {
-      "main": [
-        [
-          {
-            "node": "ERR — Prepare ErrorPipe v1 (AI Aud)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ERR — Prepare ErrorPipe v1 (AI Aud)": {
-      "main": [
-        [
-          {
-            "node": "Execute WF99 (AI Aud)",
+            "node": "ERR — Prepare ErrorPipe v1 (DB Upd)",
             "type": "main",
             "index": 0
           }
@@ -3456,7 +3036,9 @@
             "node": "Merge — Restore CTX after Update",
             "type": "main",
             "index": 0
-          },
+          }
+        ],
+        [
           {
             "node": "ERR — Source DB Update",
             "type": "main",
@@ -3500,20 +3082,14 @@
     },
     "Set — Success Envelope": {
       "main": [
-        [
-          {
-            "node": "TEST — DB Verify Updated Document",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Manual Trigger TEST": {
       "main": [
         [
           {
-            "node": "Set — Test Config",
+            "node": "Set — Test Config1",
             "type": "main",
             "index": 0
           }
@@ -3527,6 +3103,11 @@
             "node": "TEST — DB Insert Document Fixture",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "TEST — Merge Config with Document ID",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
@@ -3557,7 +3138,7 @@
       "main": [
         [
           {
-            "node": "Set — Build CTX",
+            "node": "Set — Normalize Input",
             "type": "main",
             "index": 0
           }
@@ -3574,16 +3155,185 @@
           }
         ]
       ]
+    },
+    "Set — Test Config1": {
+      "main": [
+        [
+          {
+            "node": "TEST — DB Insert Document Fixture",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "TEST — Merge Config with Document ID",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set — Test Config2": {
+      "main": [
+        [
+          {
+            "node": "TEST — DB Insert Document Fixture",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "TEST — Merge Config with Document ID",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Analyze audio": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore CTX after AI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source AI Transcribe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Test Config3": {
+      "main": [
+        [
+          {
+            "node": "TEST — DB Insert Document Fixture",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "TEST — Merge Config with Document ID",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ERR — Source AI Document": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (DB Upd)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore CTX after AI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source AI Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Restore CTX after AI": {
+      "main": [
+        [
+          {
+            "node": "Merge — Join All AI Branches",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Switch - Media Kind Router": {
+      "main": [
+        [
+          {
+            "node": "AI — Analyze Image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after AI",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "AI — Analyze Video",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after AI",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Analyze audio",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after AI",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after AI",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Merge — Join All AI Branches",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6",
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "68462c87-0744-4b49-a394-714a2f97d525",
+  "versionId": "8b20994a-b04c-4fca-ab4f-26e14f3d4eea",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
   "id": "Winq61L5rOJhx6u0cwbhe",

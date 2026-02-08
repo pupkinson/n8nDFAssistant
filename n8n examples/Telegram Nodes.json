@@ -1,0 +1,1266 @@
+{
+  "name": "Telegram Nodes",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ],
+        "additionalFields": {
+          "download": true,
+          "chatIds": "",
+          "userIds": ""
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        -16
+      ],
+      "id": "8b07316e-ab73-4377-9c80-d569f45b3c68",
+      "name": "Telegram Trigger",
+      "webhookId": "be947763-bd88-43f3-a7f2-3914d4a85e9b",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "chatId": "111"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -160
+      ],
+      "id": "b3146c0b-11b3-4a4c-a389-5d4275d88ab0",
+      "name": "Get a chat",
+      "webhookId": "0b419472-aff3-422c-b02e-82585b4a8897",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "member",
+        "chatId": "123",
+        "userId": "12345"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        -160
+      ],
+      "id": "a2539593-dd99-4379-89c8-0ae726e70c6a",
+      "name": "Get a member in a chat",
+      "webhookId": "d062d97e-85b6-4293-a2aa-f7273e61f4d3",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "123",
+        "text": "Text",
+        "additionalFields": {
+          "appendAttribution": false,
+          "reply_to_message_id": 1234,
+          "message_thread_id": 12346
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        -256
+      ],
+      "id": "ec0418c2-f9e7-4ee8-8c9b-0d8b93b225c8",
+      "name": "Send a text message",
+      "webhookId": "d9f98cca-b385-41b3-82b4-2c5bd4664dc8",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "123",
+        "file": "Photo_file_id",
+        "additionalFields": {
+          "caption": "",
+          "parse_mode": "HTML",
+          "reply_to_message_id": 123,
+          "message_thread_id": 12345
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        -352
+      ],
+      "id": "101c0059-dc7d-43e7-808a-dc938b1bf9df",
+      "name": "Send a photo message",
+      "webhookId": "6969f4dc-8c7c-4caa-be3f-eb95177a1432",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "channel_post"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        -256
+      ],
+      "id": "bef37960-1cbf-49e8-a485-0d6c13741da6",
+      "name": "Telegram Trigger1",
+      "webhookId": "fa38a8cf-d357-462b-9ee5-6724e30809d1",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "edited_channel_post"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        224
+      ],
+      "id": "f8f888a0-9185-4694-8237-845910a985d0",
+      "name": "Telegram Trigger2",
+      "webhookId": "fab60afe-5732-4841-9ccd-4eefa9576dd0",
+      "retryOnFail": true,
+      "notesInFlow": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "edited_message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        -432
+      ],
+      "id": "c0661e66-dc9b-4d69-b042-c7022c5b3048",
+      "name": "Telegram Trigger3",
+      "webhookId": "17b3595e-2b72-4b2f-a641-7554d864f8bb",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "inline_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        416
+      ],
+      "id": "479c4de3-25ac-482c-a414-afc1226350c7",
+      "name": "Telegram Trigger4",
+      "webhookId": "46dae243-bcd7-4b67-8a89-6d7f4ec58d7f",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1296,
+        352
+      ],
+      "id": "dab95e0a-92bb-47f5-b3e1-f295573c10ae",
+      "name": "Telegram Trigger5",
+      "webhookId": "eba9f46c-491a-4517-acce-230615e5b21c",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "poll"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1280,
+        80
+      ],
+      "id": "bc5e3759-ee3b-4d76-a727-6e00e74b7ac0",
+      "name": "Telegram Trigger6",
+      "webhookId": "5d984151-efc9-4386-a3d9-c44d2acaeadc",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "pre_checkout_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1264,
+        -128
+      ],
+      "id": "621a19ea-6e5e-4437-b5c4-9c71c680a172",
+      "name": "Telegram Trigger7",
+      "webhookId": "ce482523-1446-4dce-9e61-4d5815daaefc",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "shipping_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1232,
+        -336
+      ],
+      "id": "b43ad2c1-cf23-4cf9-b882-17c36d7e3c27",
+      "name": "Telegram Trigger8",
+      "webhookId": "cd25053c-837f-4607-852e-6ae4dd014cb4",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "administrators",
+        "chatId": "123"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1024,
+        -432
+      ],
+      "id": "6b5afb18-857d-4827-b946-f53637517c43",
+      "name": "Get all administrators in a chat",
+      "webhookId": "60ba812f-c896-466c-bf3e-8dc832d146a1",
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "leave",
+        "chatId": "123"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1056,
+        -224
+      ],
+      "id": "00e4f896-16fa-4b97-9c14-e075fa7af77f",
+      "name": "Leave a chat",
+      "webhookId": "5e02e720-bdf9-4429-8ae4-bf040805074f",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "setDescription",
+        "chatId": "123",
+        "description": "Description"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1072,
+        -16
+      ],
+      "id": "fd85c746-393f-425e-a873-9f9524c6f0b1",
+      "name": "Set description on a chat",
+      "webhookId": "078d7f40-8bc2-47ea-a81a-89f13676c018",
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "setTitle",
+        "chatId": "123",
+        "title": "Title"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1088,
+        256
+      ],
+      "id": "76b9f003-1517-494f-8c5f-8705074ec04e",
+      "name": "Set a title on a chat",
+      "webhookId": "728184ba-b805-4009-9860-e8c588fe6328",
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "12345",
+        "additionalFields": {
+          "cache_time": 0,
+          "show_alert": false,
+          "text": "test",
+          "url": "URL"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        -528
+      ],
+      "id": "091d5ad2-e85a-410f-9221-8e096c6ad5b0",
+      "name": "Answer Query a callback",
+      "webhookId": "688dee06-5271-4387-a46c-cb8516118a07",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "operation": "answerInlineQuery",
+        "queryId": "123",
+        "results": "{ results.json }",
+        "additionalFields": {
+          "cache_time": 0,
+          "show_alert": false,
+          "text": "text",
+          "url": "URL"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        -624
+      ],
+      "id": "42a337ea-297e-4a12-8816-23c236041def",
+      "name": "Answer an inline query callback",
+      "webhookId": "4b5f8865-13b8-4340-beec-efcf9aa46283",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "file_id",
+        "additionalFields": {
+          "mimeType": "image/jpeg"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        -528
+      ],
+      "id": "1eb24f87-b79a-4d85-aebf-2425d966cc59",
+      "name": "Get a file",
+      "webhookId": "35c63a6b-a7b0-4ab5-b338-b56b648227c0",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "deleteMessage",
+        "chatId": "123",
+        "messageId": "1234"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        -352
+      ],
+      "id": "b6db9e79-5eaf-4a65-b2c7-612a2ac85e4b",
+      "name": "Delete a chat message",
+      "webhookId": "1f76d408-b86e-4030-9bbd-bcc02eef70d8",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "123",
+        "messageId": "1234",
+        "text": "tesy",
+        "additionalFields": {
+          "disable_web_page_preview": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        -448
+      ],
+      "id": "c21ea9c6-c212-4f87-8a99-8269e52fda58",
+      "name": "Edit a text message",
+      "webhookId": "0f0ce837-accd-4a92-9160-ca64a5cacdbe",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "pinChatMessage",
+        "chatId": "123",
+        "messageId": "1234",
+        "additionalFields": {
+          "disable_notification": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        128
+      ],
+      "id": "e248ad46-a03b-43c3-ad8d-70b1bc287ce3",
+      "name": "Pin a chat message",
+      "webhookId": "81610c48-bd2d-43ad-bea1-3f88a8c98244",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendAnimation",
+        "chatId": "123",
+        "file": "animation",
+        "additionalFields": {
+          "caption": "cation",
+          "disable_notification": false,
+          "duration": 0,
+          "height": 0,
+          "parse_mode": "HTML",
+          "reply_to_message_id": 0,
+          "message_thread_id": 0,
+          "thumb": "thumbnail",
+          "width": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        320
+      ],
+      "id": "a96cd153-bf90-4aa8-b6bf-fdab48986d5a",
+      "name": "Send an animated file",
+      "webhookId": "3e6b57ee-d8de-4399-b092-820340dc01e4",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendAudio",
+        "chatId": "123",
+        "file": "audio",
+        "additionalFields": {
+          "caption": "caption",
+          "disable_notification": false,
+          "duration": 0,
+          "parse_mode": "HTML",
+          "performer": "performer",
+          "reply_to_message_id": 0,
+          "message_thread_id": 0,
+          "title": "title",
+          "thumb": "thumbnail"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -880,
+        160
+      ],
+      "id": "df77fabc-15fe-4906-a2f9-fbcd1a7c6948",
+      "name": "Send an audio file",
+      "webhookId": "0cb594af-2308-426b-82d8-f09d0674b350",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "123"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -864,
+        -16
+      ],
+      "id": "f11facf2-0b76-4418-9e3c-64998f4b5d17",
+      "name": "Send a chat action",
+      "webhookId": "efd7c15f-e995-43fb-b407-af5a459363e0",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "123",
+        "file": "dicument",
+        "additionalFields": {
+          "caption": "caption",
+          "disable_notification": false,
+          "parse_mode": "HTML",
+          "reply_to_message_id": 0,
+          "message_thread_id": 0,
+          "thumb": "thumbnail"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -848,
+        -320
+      ],
+      "id": "6c5651cf-5b2d-4b2a-81d7-ea38b62bafb4",
+      "name": "Send a document",
+      "webhookId": "108ffe2a-0fcb-403f-9042-e3f907a7db9b",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendLocation",
+        "chatId": "123",
+        "additionalFields": {
+          "disable_notification": false,
+          "reply_to_message_id": 0,
+          "message_thread_id": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        32
+      ],
+      "id": "5bd11a24-bbba-44e7-9e22-fab166f391f3",
+      "name": "Send a location",
+      "webhookId": "502990b7-012d-44bc-98e7-1fcd44def216",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendMediaGroup",
+        "chatId": "123",
+        "media": {
+          "media": [
+            {
+              "media": "media_file",
+              "additionalFields": {
+                "caption": "caption",
+                "parse_mode": "HTML"
+              }
+            },
+            {
+              "type": "video",
+              "media": "video_file",
+              "additionalFields": {
+                "caption": "caption",
+                "parse_mode": "HTML"
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "disable_notification": false,
+          "reply_to_message_id": 0,
+          "message_thread_id": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        224
+      ],
+      "id": "39c6db9b-8e40-41eb-b23f-cf5ea8a61e97",
+      "name": "Send a media group message",
+      "webhookId": "16674b71-8b1a-4db8-bb75-7a00cac3630d",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "123",
+        "message": "message",
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 45,
+              "resumeUnit": "minutes"
+            }
+          },
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -640,
+        -416
+      ],
+      "id": "1555805d-6c8a-40c7-bdfe-40dd721d3938",
+      "name": "Send message and wait for response",
+      "webhookId": "a4634e46-ca2c-4f27-8915-dfd192dec268",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "123",
+        "file": "photo",
+        "additionalFields": {
+          "caption": "caption",
+          "disable_notification": false,
+          "parse_mode": "HTML",
+          "reply_to_message_id": 0,
+          "message_thread_id": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -656,
+        -112
+      ],
+      "id": "7a7c24c0-b583-4918-a35b-490483ca6112",
+      "name": "Send a photo message1",
+      "webhookId": "21ec39ae-5bbf-4af3-a9e1-01fb2aeb72ad",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendSticker",
+        "chatId": "123",
+        "file": "sticker",
+        "additionalFields": {
+          "disable_notification": false,
+          "reply_to_message_id": 0,
+          "message_thread_id": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        128
+      ],
+      "id": "8d3b47dc-6f1b-4c2e-9811-a08d064ef1d4",
+      "name": "Send a sticker",
+      "webhookId": "74a958c8-1135-4e13-9997-ceb657cb9aeb",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "123",
+        "file": "video",
+        "additionalFields": {
+          "caption": "caption",
+          "disable_notification": false,
+          "duration": 0,
+          "height": 0,
+          "parse_mode": "HTML",
+          "reply_to_message_id": 0,
+          "message_thread_id": 0,
+          "thumb": "thumbnail",
+          "width": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -672,
+        64
+      ],
+      "id": "3ce232db-43f6-42d1-aa4f-56a68f4f28f2",
+      "name": "Send a video",
+      "webhookId": "8b6cef4f-6a7b-48e5-913a-263e37ba88a9",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "unpinChatMessage",
+        "chatId": "123",
+        "messageId": "1234"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -608,
+        -624
+      ],
+      "id": "a3aced42-386d-4730-841a-828dc2e96dcd",
+      "name": "Unpin a chat message",
+      "webhookId": "b3a7d733-b808-4fc1-b5f1-95e0a1423240",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "*"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -784,
+        464
+      ],
+      "id": "a97239ed-1cc7-4e64-b0c6-1a2afd7e929c",
+      "name": "Telegram Trigger9",
+      "webhookId": "75ca260a-6467-4fdb-86d4-bf7042d9f9f5",
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a chat": {
+      "main": [
+        [
+          {
+            "node": "Get a member in a chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a member in a chat": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger8": {
+      "main": [
+        [
+          {
+            "node": "Get all administrators in a chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger7": {
+      "main": [
+        [
+          {
+            "node": "Leave a chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger6": {
+      "main": [
+        [
+          {
+            "node": "Set description on a chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger5": {
+      "main": [
+        [
+          {
+            "node": "Set a title on a chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger3": {
+      "main": [
+        [
+          {
+            "node": "Answer Query a callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer Query a callback": {
+      "main": [
+        [
+          {
+            "node": "Answer an inline query callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get all administrators in a chat": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Delete a chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a chat message": {
+      "main": [
+        [
+          {
+            "node": "Edit a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Pin a chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger4": {
+      "main": [
+        [
+          {
+            "node": "Send an animated file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set a title on a chat": {
+      "main": [
+        [
+          {
+            "node": "Send an audio file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set description on a chat": {
+      "main": [
+        [
+          {
+            "node": "Send a chat action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leave a chat": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pin a chat message": {
+      "main": [
+        [
+          {
+            "node": "Send a location",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an animated file": {
+      "main": [
+        [
+          {
+            "node": "Send a media group message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a document": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a chat action": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a media group message": {
+      "main": [
+        [
+          {
+            "node": "Send a sticker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an audio file": {
+      "main": [
+        [
+          {
+            "node": "Send a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Unpin a chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "0e73e8fa-a711-479a-bbbf-8a8acd94ab29",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "y-vQUWeGUZJ-wygi1TeiV",
+  "tags": []
+}

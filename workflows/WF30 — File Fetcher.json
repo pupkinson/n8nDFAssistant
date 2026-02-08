@@ -1,0 +1,3600 @@
+{
+  "name": "WF30 — File Fetcher",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1296,
+        1456
+      ],
+      "id": "46912beb-e545-429d-9337-bce64539480e",
+      "name": "Execute Workflow Trigger",
+      "notes": "Trigger: Receives job from WF90 with req{tenant_id, job_id, job_type, payload{tg_file_id, tg_file_unique_id, ...}} and optional ctx."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aa11bb22-cc33-dd44-ee55-ff6677889900",
+              "name": "req",
+              "value": "={{ $json.req ?? {} }}",
+              "type": "object"
+            },
+            {
+              "id": "bb22cc33-dd44-ee55-ff66-778899001122",
+              "name": "ctx",
+              "value": "={{ $json.ctx ?? {} }}",
+              "type": "object"
+            },
+            {
+              "id": "cc33dd44-ee55-ff66-7788-990011223344",
+              "name": "ctx.tenant_id",
+              "value": "={{ $json.req?.tenant_id ?? $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "dd44ee55-ff66-7788-9900-112233445566",
+              "name": "ctx.job_id",
+              "value": "={{ $json.req?.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ee55ff66-7788-9900-1122-334455667788",
+              "name": "ctx.trace_id",
+              "value": "={{ $json.req?.payload?.trace_id ?? $json.ctx?.trace_id ?? 'wf30_' + $now.toUnixInteger() }}",
+              "type": "string"
+            },
+            {
+              "id": "ff667788-9900-1122-3344-556677889900",
+              "name": "_need_correlation_id",
+              "value": "={{ !$json.req?.payload?.correlation_id && !$json.ctx?.correlation_id }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        1456
+      ],
+      "id": "85bca828-6634-44bd-8e8e-c411c5d50049",
+      "name": "Set — Normalize Input",
+      "notes": "Extract req/ctx from input. Preserve existing correlation_id if present. Set flag _need_correlation_id=true if missing."
+    },
+    {
+      "parameters": {
+        "action": "generate"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        1456
+      ],
+      "id": "5d9494f6-f6c0-4279-8180-59a5b0db3f3e",
+      "name": "Crypto — Generate UUID",
+      "notes": "Generate UUIDv4. Output in 'uuid' field. Used if correlation_id was missing."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "aa778899-0011-2233-4455-667788990011",
+              "name": "ctx.correlation_id",
+              "value": "={{ $json.req?.payload?.correlation_id ?? $json.ctx?.correlation_id ?? $('Crypto — Generate UUID').item.json.uuid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1952,
+        1456
+      ],
+      "id": "502b2bf6-d4c7-414f-942b-8d46de1ec136",
+      "name": "Set — Finalize correlation_id",
+      "notes": "Set ctx.correlation_id: use existing if present, else use generated UUID. Ensures always set."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "leftValue": "={{ $json.ctx?.tenant_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "leftValue": "={{ $json.req?.payload?.tg_file_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "leftValue": "={{ $json.req?.payload?.tg_file_unique_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2144,
+        1456
+      ],
+      "id": "0e62c8de-34fa-4a5b-8e22-9b02b03f9018",
+      "name": "IF — Input Guard",
+      "notes": "IF v3. Validate tenant_id, tg_file_id, tg_file_unique_id all present. FALSE→error path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "_err.node",
+              "value": "IF — Input Guard",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "_err.operation",
+              "value": "validate_input",
+              "type": "string"
+            },
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "_err.message",
+              "value": "Missing required: tenant_id, tg_file_id, or tg_file_unique_id",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2416,
+        1648
+      ],
+      "id": "0cfc48d1-d543-4434-8f1a-4a271bd09d33",
+      "name": "ERR — Source Guard",
+      "notes": "ErrorPipe v1: attach error metadata for WF99."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "error_context.message",
+              "value": "={{ $json._err?.message }}",
+              "type": "string"
+            },
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2624,
+        1648
+      ],
+      "id": "bf4bc183-70db-4976-b8e6-a4abafc07316",
+      "name": "ERR — Prepare ErrorPipe Guard",
+      "notes": "ErrorPipe v1: build error_context + ctx for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2864,
+        1648
+      ],
+      "id": "494958fe-ab32-48e8-9172-f0897d777b93",
+      "name": "WF99 — Guard Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError after this."
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.req.payload.tg_file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2368,
+        1360
+      ],
+      "id": "9ba4e1db-ec8e-4f01-9447-defddf4dea1e",
+      "name": "Telegram — Get File",
+      "webhookId": "c9a2940e-6f77-40be-b681-780e27c2af8c",
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Get file metadata + download binary. Download=true. Returns file_path and binary data. Error→ErrorPipe."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "_err.node",
+              "value": "Telegram — Get File",
+              "type": "string"
+            },
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "_err.operation",
+              "value": "getFile",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2720,
+        2304
+      ],
+      "id": "9ceae584-3581-4c29-a89b-f2ebef7fcadd",
+      "name": "ERR — Source TG",
+      "notes": "ErrorPipe v1: mark Telegram error source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2928,
+        2304
+      ],
+      "id": "534a8add-3e0a-4a9c-941d-6f167ea7e703",
+      "name": "ERR — Prepare ErrorPipe TG",
+      "notes": "ErrorPipe v1: build error_context for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3200,
+        2304
+      ],
+      "id": "ef020b6f-6702-4804-8fbe-44dd56e670a2",
+      "name": "WF99 — TG Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "_tg_file_path",
+              "value": "={{ $json.file_path }}",
+              "type": "string"
+            },
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "meta.source",
+              "value": "wf30_telegram",
+              "type": "string"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "meta.downloaded_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2608,
+        1344
+      ],
+      "id": "3b7e5bd9-48b5-4c2f-8091-735c4a271d13",
+      "name": "Set — Extract TG Meta",
+      "notes": "Extract file_path from Telegram response. Build meta object (no literals). Preserve ctx/req/binary."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "_carry_ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "_carry_req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "_carry_meta",
+              "value": "={{ $json.meta }}",
+              "type": "object"
+            },
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "_carry_tg_file_path",
+              "value": "={{ $json._tg_file_path }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2832,
+        1344
+      ],
+      "id": "0d67e4bf-858b-470d-9cff-29ada344fc27",
+      "name": "Carry — Pre file_instances",
+      "notes": "Carry pattern: save ctx/req/meta/tg_file_path before Postgres overwrites item."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "tg",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "file_instances",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "file_id": "={{ $json._carry_req.payload.tg_file_id }}",
+            "file_unique_id": "={{ $json._carry_req.payload.tg_file_unique_id }}",
+            "tg_file_path": "={{ $json._carry_tg_file_path }}",
+            "meta": "={{ $json._carry_meta }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3056,
+        1344
+      ],
+      "id": "bbcd0a53-0a48-4b43-b8b1-b94b6ca7fcdb",
+      "name": "DB — Upsert file_instances",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Upsert tg.file_instances by file_id (PK). Store tg_file_path. On conflict: update. meta is object. Error→ErrorPipe."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "_err.node",
+              "value": "DB — Upsert file_instances",
+              "type": "string"
+            },
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "_err.table",
+              "value": "tg.file_instances",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3296,
+        1776
+      ],
+      "id": "207f886e-0e75-40b0-8929-06636c9308b2",
+      "name": "ERR — Source inst",
+      "notes": "ErrorPipe v1: mark DB error source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table }}",
+              "type": "string"
+            },
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3520,
+        1776
+      ],
+      "id": "c89cad21-b622-4b99-b2a9-0661af9a7f37",
+      "name": "ERR — Prepare ErrorPipe inst",
+      "notes": "ErrorPipe v1: build error_context for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3792,
+        1776
+      ],
+      "id": "5daa4946-76a6-49ce-839f-751524ac6aa8",
+      "name": "WF99 — inst Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "ctx",
+              "value": "={{ $json._carry_ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "req",
+              "value": "={{ $json._carry_req }}",
+              "type": "object"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "meta",
+              "value": "={{ $json._carry_meta }}",
+              "type": "object"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "_tg_file_path",
+              "value": "={{ $json._carry_tg_file_path }}",
+              "type": "string"
+            },
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "db.file_instances",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3280,
+        1344
+      ],
+      "id": "9a286936-2e86-4da2-babc-290b0f81b585",
+      "name": "Restore — Post file_instances",
+      "notes": "Restore pattern: bring back ctx/req/meta. Store DB result under db.file_instances. Binary preserved in separate field."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "_carry_ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "_carry_req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "_carry_meta",
+              "value": "={{ $json.meta }}",
+              "type": "object"
+            },
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "_carry_tg_file_path",
+              "value": "={{ $json._tg_file_path }}",
+              "type": "string"
+            },
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "_carry_db_inst",
+              "value": "={{ $json.db?.file_instances }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3488,
+        1344
+      ],
+      "id": "102f40bd-8d11-4ba3-ad2b-4a98784320de",
+      "name": "Carry — Pre files",
+      "notes": "Carry pattern: save ctx/req/meta/tg_file_path/db.file_instances before next Postgres."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "tg",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "files",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "file_unique_id": "={{ $json._carry_req.payload.tg_file_unique_id }}",
+            "file_type": "={{ $json._carry_req.payload.hint_kind }}",
+            "mime_type": "={{ $json._carry_req.payload.mime_type }}",
+            "file_name": "={{ $json._carry_req.payload.file_name }}",
+            "file_size": "={{ $json._carry_req.payload.file_size }}",
+            "meta": "={{ $json._carry_meta }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3712,
+        1344
+      ],
+      "id": "44a983a8-83f8-4191-835c-5026b8b1ab42",
+      "name": "DB — Upsert files",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Upsert tg.files by file_unique_id (PK). Store metadata. sha256 null until hashed. On conflict: update. meta is object. Error→ErrorPipe."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "_err.node",
+              "value": "DB — Upsert files",
+              "type": "string"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "_err.table",
+              "value": "tg.files",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4192,
+        2080
+      ],
+      "id": "5b8ba479-3346-4dff-9feb-85402f29f17c",
+      "name": "ERR — Source files",
+      "notes": "ErrorPipe v1: mark DB error source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table }}",
+              "type": "string"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4384,
+        2096
+      ],
+      "id": "88c53ef8-772c-4510-a75a-a2977e30c734",
+      "name": "ERR — Prepare ErrorPipe files",
+      "notes": "ErrorPipe v1: build error_context for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        4624,
+        2112
+      ],
+      "id": "20860c29-3487-4973-bcc5-21966091e33f",
+      "name": "WF99 — files Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "ctx",
+              "value": "={{ $json._carry_ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "req",
+              "value": "={{ $json._carry_req }}",
+              "type": "object"
+            },
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "meta",
+              "value": "={{ $json._carry_meta }}",
+              "type": "object"
+            },
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "_tg_file_path",
+              "value": "={{ $json._carry_tg_file_path }}",
+              "type": "string"
+            },
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "db.file_instances",
+              "value": "={{ $json._carry_db_inst }}",
+              "type": "object"
+            },
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "db.files",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3936,
+        1344
+      ],
+      "id": "53e18197-ac7a-4dfa-95b9-81a5ee771a7f",
+      "name": "Restore — Post files",
+      "notes": "Restore pattern: bring back ctx/req/meta. Store DB result under db.files."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "tg",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "files",
+          "mode": "list"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "file_unique_id",
+              "value": "={{ $json.req.payload.tg_file_unique_id }}"
+            }
+          ]
+        },
+        "options": {
+          "queryBatching": "single"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4160,
+        1344
+      ],
+      "id": "2d5670ee-1141-4708-885a-77c196e29285",
+      "name": "DB — Select files (optional)",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Optional lookup: select tg.files to check if sha256 already set. Always Output Data (outputDataFrom=allInputItems) ensures continuation even if 0 rows. Error→ErrorPipe."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "_err.node",
+              "value": "DB — Select files (optional)",
+              "type": "string"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "_err.table",
+              "value": "tg.files",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4480,
+        1904
+      ],
+      "id": "bbbbe0af-0828-4d4c-96b3-caaa8647e427",
+      "name": "ERR — Source sel files",
+      "notes": "ErrorPipe v1: mark DB error source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table }}",
+              "type": "string"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4672,
+        1904
+      ],
+      "id": "8f82c451-c778-4688-834f-3a7e4792a05d",
+      "name": "ERR — Prepare ErrorPipe sel files",
+      "notes": "ErrorPipe v1: build error_context for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        4896,
+        1904
+      ],
+      "id": "8ba2436c-7a24-4c5e-b0ea-24ca3b44ddb5",
+      "name": "WF99 — sel files Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "_sha256_from_db",
+              "value": "={{ $json.sha256 }}",
+              "type": "string"
+            },
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "_has_blob",
+              "value": "={{ !!$json.sha256 }}",
+              "type": "boolean"
+            },
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "_force",
+              "value": "={{ $json.req?.payload?.force ?? false }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4368,
+        1344
+      ],
+      "id": "89c189c8-fb8b-4e03-ab0e-060ce0ef43e0",
+      "name": "Set — Check Reuse",
+      "notes": "Compute _has_blob (true if sha256 exists), _force flag. Decide if can reuse."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "leftValue": "={{ $json._has_blob }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "leftValue": "={{ $json._force }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4592,
+        1344
+      ],
+      "id": "4637a852-c48c-4bb8-b9ac-54f76a52e5e5",
+      "name": "IF — Reuse?",
+      "notes": "IF v3. TRUE: sha256 exists AND force=false → skip download. FALSE: proceed to hash+upload."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "enqueued_jobs",
+              "value": "=[]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4944,
+        1120
+      ],
+      "id": "92df6311-7f42-4f7c-b7b2-e37ca64a65bd",
+      "name": "Set — Init Jobs (reuse)",
+      "notes": "Reuse path: init enqueued_jobs array. Will populate downstream."
+    },
+    {
+      "parameters": {
+        "type": "SHA256",
+        "binaryData": true
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        4816,
+        1440
+      ],
+      "id": "3219813d-cba9-46b8-b514-aa76dcaa2b1f",
+      "name": "Crypto — Hash Binary",
+      "notes": "Hash BINARY file. Binary File=ON (via binaryToText), Binary Property='data', Type=SHA256, Encoding=hex. Output in '_sha256_hex' field."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "_sha256_hex",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "_sha256_bytea",
+              "value": "=\\x{{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "_size_bytes",
+              "value": "={{ $binary.data?.fileSize ?? $json.req?.payload?.file_size ?? 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "_file_ext",
+              "value": "={{ $json.req.payload.file_name?.split('.').pop() ?? ($json.req.payload.mime_type?.split('/')[1] || 'bin') }}",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "_storage_key",
+              "value": "=tg_files/{{ $json.ctx.tenant_id }}/{{ $json.req.payload.tg_file_unique_id }}/{{ $json._sha256_hex }}.{{ $json._file_ext }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5040,
+        1440
+      ],
+      "id": "109fc405-5070-432a-bd19-0b2fe7890d7c",
+      "name": "Set — Hash Meta",
+      "notes": "Extract sha256 hex from Crypto output. Build bytea format (\\x prefix). Compute size, ext, storage_key."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "_carry_ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "_carry_req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "_carry_meta",
+              "value": "={{ $json.meta }}",
+              "type": "object"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "_carry_sha256_hex",
+              "value": "={{ $json._sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "_carry_sha256_bytea",
+              "value": "={{ $json._sha256_bytea }}",
+              "type": "string"
+            },
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "_carry_size_bytes",
+              "value": "={{ $json._size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "_carry_storage_key",
+              "value": "={{ $json._storage_key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5248,
+        1440
+      ],
+      "id": "2d6951dc-47d3-478b-bac5-6c17a06d28a6",
+      "name": "Carry — Pre S3",
+      "notes": "Carry pattern: save ctx/req/meta/hash data before S3 upload."
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "dfassistant",
+        "fileName": "={{ $json._carry_storage_key }}",
+        "additionalFields": {
+          "grantRead": true
+        }
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        5472,
+        1440
+      ],
+      "id": "470a4252-6ee2-45be-9378-8710dadd8cd8",
+      "name": "S3 — Upload",
+      "retryOnFail": true,
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Upload binary to S3. Deterministic key. Grant public read. Retry on transient fail. Error→ErrorPipe."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "_err.node",
+              "value": "S3 — Upload",
+              "type": "string"
+            },
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "_err.operation",
+              "value": "upload",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5744,
+        2000
+      ],
+      "id": "7c58d58b-df6b-494e-94be-f1147ecef7cd",
+      "name": "ERR — Source S3",
+      "notes": "ErrorPipe v1: mark S3 error source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5952,
+        2000
+      ],
+      "id": "14b6ba05-844e-40b4-9038-a6272db1dc2d",
+      "name": "ERR — Prepare ErrorPipe S3",
+      "notes": "ErrorPipe v1: build error_context for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        6160,
+        2000
+      ],
+      "id": "95ce5dfd-2bcd-45fc-89e6-4191ad358e20",
+      "name": "WF99 — S3 Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "ctx",
+              "value": "={{ $json._carry_ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "req",
+              "value": "={{ $json._carry_req }}",
+              "type": "object"
+            },
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "meta",
+              "value": "={{ $json._carry_meta }}",
+              "type": "object"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "_sha256_hex",
+              "value": "={{ $json._carry_sha256_hex }}",
+              "type": "string"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "_sha256_bytea",
+              "value": "={{ $json._carry_sha256_bytea }}",
+              "type": "string"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "_size_bytes",
+              "value": "={{ $json._carry_size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "_storage_key",
+              "value": "={{ $json._carry_storage_key }}",
+              "type": "string"
+            },
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "_storage_url",
+              "value": "=s3://dfassistant/{{ $json._carry_storage_key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5680,
+        1360
+      ],
+      "id": "2caf939d-b74b-40dd-bcf9-be12b6988d67",
+      "name": "Restore — Post S3",
+      "notes": "Restore pattern: bring back ctx/req/meta/hash data. Build storage_url."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "_carry_ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "_carry_req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "_carry_meta",
+              "value": "={{ $json.meta }}",
+              "type": "object"
+            },
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "_carry_sha256_bytea",
+              "value": "={{ $json._sha256_bytea }}",
+              "type": "string"
+            },
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "_carry_size_bytes",
+              "value": "={{ $json._size_bytes }}",
+              "type": "number"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "_carry_storage_key",
+              "value": "={{ $json._storage_key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5920,
+        1328
+      ],
+      "id": "779597d3-f196-42d3-9516-2d66b206bd53",
+      "name": "Carry — Pre blob",
+      "notes": "Carry pattern: save ctx/req/meta/hash before blob insert."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "blob_objects",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sha256": "={{ $json._carry_sha256_bytea }}",
+            "byte_size": "={{ $json._carry_size_bytes }}",
+            "storage_kind": "s3",
+            "storage_key": "={{ $json._carry_storage_key }}",
+            "meta": "={{ $json._carry_meta }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        6112,
+        1328
+      ],
+      "id": "bb5297ab-bb9b-4936-b8d3-ec80ade1622f",
+      "name": "DB — Insert blob",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Insert blob_objects. sha256 UNIQUE (dedupe). On conflict do nothing. meta is object. Error→ErrorPipe."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "_err.node",
+              "value": "DB — Insert blob",
+              "type": "string"
+            },
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "_err.table",
+              "value": "content.blob_objects",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6464,
+        2288
+      ],
+      "id": "c8355a2d-3828-4d64-885e-ff2428786c7c",
+      "name": "ERR — Source blob",
+      "notes": "ErrorPipe v1: mark DB error source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table }}",
+              "type": "string"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6720,
+        2288
+      ],
+      "id": "755c0548-666a-4907-8e6f-04e432dccd88",
+      "name": "ERR — Prepare ErrorPipe blob",
+      "notes": "ErrorPipe v1: build error_context for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        6976,
+        2304
+      ],
+      "id": "b0c4b68b-f6c4-41bd-9a09-975076d88f1f",
+      "name": "WF99 — blob Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "blob_objects",
+          "mode": "list"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "sha256",
+              "value": "={{ $json._carry_sha256_bytea }}"
+            }
+          ]
+        },
+        "options": {
+          "queryBatching": "single"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        6320,
+        1280
+      ],
+      "id": "e1ae5c8f-ab18-42f1-a489-8673b6ed9c51",
+      "name": "DB — Select blob (optional)",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Optional lookup: select blob by sha256 to get id. Always Output Data ensures continuation. Error→ErrorPipe."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "_err.node",
+              "value": "DB — Select blob (optional)",
+              "type": "string"
+            },
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "_err.table",
+              "value": "content.blob_objects",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6912,
+        1824
+      ],
+      "id": "5100fdd9-3667-4df7-9d3a-55a809054a85",
+      "name": "ERR — Source sel blob",
+      "notes": "ErrorPipe v1: mark DB error source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table }}",
+              "type": "string"
+            },
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7168,
+        1824
+      ],
+      "id": "a2206b3e-0012-43ae-9d05-4e21be6a76a5",
+      "name": "ERR — Prepare ErrorPipe sel blob",
+      "notes": "ErrorPipe v1: build error_context for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        7440,
+        1824
+      ],
+      "id": "75cbe592-5e74-489a-bb32-8bf836c35f9d",
+      "name": "WF99 — sel blob Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "ctx",
+              "value": "={{ $json._carry_ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "req",
+              "value": "={{ $json._carry_req }}",
+              "type": "object"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "meta",
+              "value": "={{ $json._carry_meta }}",
+              "type": "object"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "_sha256_bytea",
+              "value": "={{ $json._carry_sha256_bytea }}",
+              "type": "string"
+            },
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "_blob_object_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6624,
+        1328
+      ],
+      "id": "65a26a5d-3305-4016-82e0-1d8ace64de50",
+      "name": "Restore — Post blob",
+      "notes": "Restore pattern: bring back ctx/req/meta. Extract blob_object_id."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "_carry_ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "_carry_req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "_carry_meta",
+              "value": "={{ $json.meta }}",
+              "type": "object"
+            },
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "_carry_sha256_bytea",
+              "value": "={{ $json._sha256_bytea }}",
+              "type": "string"
+            },
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "_carry_blob_object_id",
+              "value": "={{ $json._blob_object_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6800,
+        1440
+      ],
+      "id": "bb8a0af5-1a35-42bc-b92f-2a6c429ae4b6",
+      "name": "Carry — Pre upd files",
+      "notes": "Carry pattern: save ctx/req/meta/sha256/blob_id before update."
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "tg",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "files",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sha256": "={{ $json._carry_sha256_bytea }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        7008,
+        1440
+      ],
+      "id": "3bd954d2-1c23-4904-b1ad-9a3878eefb54",
+      "name": "DB — Update files sha256",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Update tg.files with sha256. Key: file_unique_id. Error→ErrorPipe."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "_err.node",
+              "value": "DB — Update files sha256",
+              "type": "string"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "_err.operation",
+              "value": "update",
+              "type": "string"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "_err.table",
+              "value": "tg.files",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7232,
+        1568
+      ],
+      "id": "7586c014-5624-41c6-a3dc-e2666752fbfb",
+      "name": "ERR — Source upd files",
+      "notes": "ErrorPipe v1: mark DB error source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table }}",
+              "type": "string"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7456,
+        1568
+      ],
+      "id": "16961d32-bd97-41b1-b480-b9a67b6c09fe",
+      "name": "ERR — Prepare ErrorPipe upd files",
+      "notes": "ErrorPipe v1: build error_context for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        7680,
+        1568
+      ],
+      "id": "cdb7ab2d-e4e7-4e75-b3e6-4e17ebd1d1b3",
+      "name": "WF99 — upd files Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "ctx",
+              "value": "={{ $json._carry_ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "req",
+              "value": "={{ $json._carry_req }}",
+              "type": "object"
+            },
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "meta",
+              "value": "={{ $json._carry_meta }}",
+              "type": "object"
+            },
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "_blob_object_id",
+              "value": "={{ $json._carry_blob_object_id }}",
+              "type": "number"
+            },
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "enqueued_jobs",
+              "value": "=[]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7216,
+        1344
+      ],
+      "id": "4a99d357-552e-4d60-8252-f0e39475bb28",
+      "name": "Restore — Post upd files",
+      "notes": "Restore pattern: bring back ctx/req/meta/blob_id. Init enqueued_jobs array."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        7488,
+        1200
+      ],
+      "id": "9444ec2a-e1cd-4796-87f9-85b43e3dcb00",
+      "name": "Merge — Reuse+Fetch Paths",
+      "notes": "Branch Join: merge reuse path (top) and fetch path (bottom). mergeByPosition."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Decide downstream jobs based on mime_type/hint_kind\nconst items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  const ctx = item.json.ctx || {};\n  const payload = item.json.req?.payload || {};\n  const mime_type = payload.mime_type || '';\n  const hint_kind = payload.hint_kind || '';\n  const file_unique_id = payload.tg_file_unique_id;\n  const blob_object_id = item.json._blob_object_id || null;\n  \n  const jobs_to_enqueue = [];\n  \n  // Voice: voice_transcribe\n  if (hint_kind === 'voice' || mime_type.includes('ogg')) {\n    jobs_to_enqueue.push({\n      job_type: 'voice_transcribe',\n      payload: {\n        file_unique_id,\n        blob_object_id,\n        correlation_id: ctx.correlation_id,\n        trace_id: ctx.trace_id\n      }\n    });\n  }\n  \n  // Image/video: media_describe\n  if (hint_kind === 'image' || hint_kind === 'video' || \n      mime_type.startsWith('image/') || mime_type.startsWith('video/')) {\n    jobs_to_enqueue.push({\n      job_type: 'media_describe',\n      payload: {\n        file_unique_id,\n        blob_object_id,\n        correlation_id: ctx.correlation_id,\n        trace_id: ctx.trace_id\n      }\n    });\n  }\n  \n  // Document: build_document\n  if (hint_kind === 'document' || \n      mime_type.includes('pdf') || mime_type.includes('word') || \n      mime_type.includes('text') || mime_type.includes('zip')) {\n    jobs_to_enqueue.push({\n      job_type: 'build_document',\n      payload: {\n        file_unique_id,\n        blob_object_id,\n        correlation_id: ctx.correlation_id,\n        trace_id: ctx.trace_id\n      }\n    });\n  }\n  \n  output.push({\n    json: {\n      ...item.json,\n      _jobs_to_enqueue: jobs_to_enqueue\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7680,
+        1344
+      ],
+      "id": "8336a698-e7da-42e3-95eb-be154e9c33a4",
+      "name": "Code — Decide Jobs",
+      "notes": "⚠️ Code node (no alternative). Decide downstream jobs by mime/hint. Returns _jobs_to_enqueue array. Deterministic."
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        7984,
+        1328
+      ],
+      "id": "c0c567a5-4865-406c-95c8-34c8dd778fee",
+      "name": "Split — Job Loop",
+      "notes": "Split _jobs_to_enqueue into batches of 1. Loop wiring: output→Set Extract; Set Collect→here (2nd input control)."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "_current_job",
+              "value": "={{ $json._jobs_to_enqueue[$('Split — Job Loop').context.currentRunIndex] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8192,
+        1376
+      ],
+      "id": "03f2ce86-4011-4525-a694-0d1cdb74d74e",
+      "name": "Set — Extract Job",
+      "notes": "Extract current job from _jobs_to_enqueue using loop index."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "_carry_ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "_carry_req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "_carry_enqueued_jobs",
+              "value": "={{ $json.enqueued_jobs }}",
+              "type": "array"
+            },
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "_carry_current_job",
+              "value": "={{ $json._current_job }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8384,
+        1360
+      ],
+      "id": "03e04574-71f8-42e4-869b-80ec3281216c",
+      "name": "Carry — Pre job",
+      "notes": "Carry pattern: save ctx/req/enqueued_jobs/current_job before insert."
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $json._carry_ctx.tenant_id }}",
+            "job_type": "={{ $json._carry_current_job.job_type }}",
+            "payload": "={{ $json._carry_current_job.payload }}",
+            "priority": 100,
+            "correlation_id": "={{ $json._carry_ctx.correlation_id }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        8640,
+        1392
+      ],
+      "id": "a1a1e0c7-8e22-4191-a472-e64bccf11ef6",
+      "name": "DB — Insert Job",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Insert downstream job. payload is object (no stringify). Error→ErrorPipe."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "_err.node",
+              "value": "DB — Insert Job",
+              "type": "string"
+            },
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "_err.table",
+              "value": "ops.jobs",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8864,
+        1712
+      ],
+      "id": "95bd379b-8273-4412-8cc4-f6ca87c801c1",
+      "name": "ERR — Source job",
+      "notes": "ErrorPipe v1: mark DB error source."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "error_context.workflow_id",
+              "value": "WF30",
+              "type": "string"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "bbccddee-ff00-1122-3344-556677889900",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table }}",
+              "type": "string"
+            },
+            {
+              "id": "ccddeeff-0011-2233-4455-667788990011",
+              "name": "error_context.tenant_id",
+              "value": "={{ $json.ctx?.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ddeeff00-1122-3344-5566-778899aabbcc",
+              "name": "error_context.correlation_id",
+              "value": "={{ $json.ctx?.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "eeff0011-2233-4455-6677-8899aabbccdd",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        9136,
+        1712
+      ],
+      "id": "5aa81d94-49c0-406f-a407-0e59c9829c99",
+      "name": "ERR — Prepare ErrorPipe job",
+      "notes": "ErrorPipe v1: build error_context for WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        9360,
+        1712
+      ],
+      "id": "83d81c11-07da-437e-9567-4deceec0b921",
+      "name": "WF99 — job Error",
+      "notes": "Call WF99. Returns ErrorEnvelope. NO StopAndError."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect enqueued job\nconst items = $input.all();\nconst output = [];\n\nfor (const item of items) {\n  const enqueued = item.json._carry_enqueued_jobs || [];\n  const new_job = {\n    job_type: item.json._carry_current_job?.job_type,\n    job_id: item.json.id\n  };\n  \n  output.push({\n    json: {\n      ...item.json,\n      enqueued_jobs: [...enqueued, new_job]\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9104,
+        1488
+      ],
+      "id": "92ab2a3f-092d-4eb4-a906-13fcebe991bd",
+      "name": "Code — Collect Job",
+      "notes": "⚠️ Code node (no alternative). Append inserted job to enqueued_jobs array."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ff001122-3344-5566-7788-99aabbccddee",
+              "name": "ok",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "00112233-4455-6677-8899-aabbccddeeff",
+              "name": "status_code",
+              "value": "200",
+              "type": "number"
+            },
+            {
+              "id": "11223344-5566-7788-99aa-bbccddeeff00",
+              "name": "data.job_id",
+              "value": "={{ $json.ctx?.job_id }}",
+              "type": "string"
+            },
+            {
+              "id": "22334455-6677-8899-aabb-ccddeeff0011",
+              "name": "data.tg_file_unique_id",
+              "value": "={{ $json.req?.payload?.tg_file_unique_id }}",
+              "type": "string"
+            },
+            {
+              "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+              "name": "data.blob_object_id",
+              "value": "={{ $json._blob_object_id ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "44556677-8899-aabb-ccdd-eeff00112233",
+              "name": "data.storage_url",
+              "value": "={{ $json._storage_url ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "55667788-99aa-bbcc-ddee-ff0011223344",
+              "name": "data.sha256_hex",
+              "value": "={{ $json._sha256_hex ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "66778899-aabb-ccdd-eeff-001122334455",
+              "name": "data.mime_type",
+              "value": "={{ $json.req?.payload?.mime_type ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "778899aa-bbcc-ddee-ff00-112233445566",
+              "name": "data.size_bytes",
+              "value": "={{ $json._size_bytes ?? null }}",
+              "type": "number"
+            },
+            {
+              "id": "8899aabb-ccdd-eeff-0011-223344556677",
+              "name": "data.enqueued_jobs",
+              "value": "={{ $json.enqueued_jobs ?? [] }}",
+              "type": "object"
+            },
+            {
+              "id": "99aabbcc-ddee-ff00-1122-334455667788",
+              "name": "error",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "aabbccdd-eeff-0011-2233-445566778899",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8832,
+        1104
+      ],
+      "id": "a4d58455-32b3-44b9-a06e-716dfba5054d",
+      "name": "Set — SuccessEnvelope",
+      "notes": "Build SuccessEnvelope with ok=true, status_code=200, ctx, data (blob_id/storage_url/enqueued_jobs), error=null."
+    },
+    {
+      "parameters": {
+        "mode": "passThrough"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        9984,
+        2224
+      ],
+      "id": "12455330-5343-4522-beb9-3dc6e792c102",
+      "name": "Merge — Final (Exclusive Join)",
+      "notes": "Exclusive join pattern: passThrough mode, output Input 1. ALL terminal paths (success + all WF99 errors) connect to Input 1. Never waits for non-existing branches."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set — Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Crypto — Generate UUID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto — Generate UUID": {
+      "main": [
+        [
+          {
+            "node": "Set — Finalize correlation_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Finalize correlation_id": {
+      "main": [
+        [
+          {
+            "node": "IF — Input Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Input Guard": {
+      "main": [
+        [
+          {
+            "node": "Telegram — Get File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Guard": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe Guard": {
+      "main": [
+        [
+          {
+            "node": "WF99 — Guard Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — Guard Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram — Get File": {
+      "main": [
+        [
+          {
+            "node": "Set — Extract TG Meta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source TG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source TG": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe TG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe TG": {
+      "main": [
+        [
+          {
+            "node": "WF99 — TG Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — TG Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Extract TG Meta": {
+      "main": [
+        [
+          {
+            "node": "Carry — Pre file_instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry — Pre file_instances": {
+      "main": [
+        [
+          {
+            "node": "DB — Upsert file_instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Upsert file_instances": {
+      "main": [
+        [
+          {
+            "node": "Restore — Post file_instances",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source inst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source inst": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe inst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe inst": {
+      "main": [
+        [
+          {
+            "node": "WF99 — inst Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — inst Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore — Post file_instances": {
+      "main": [
+        [
+          {
+            "node": "Carry — Pre files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry — Pre files": {
+      "main": [
+        [
+          {
+            "node": "DB — Upsert files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Upsert files": {
+      "main": [
+        [
+          {
+            "node": "Restore — Post files",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source files": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe files": {
+      "main": [
+        [
+          {
+            "node": "WF99 — files Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — files Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore — Post files": {
+      "main": [
+        [
+          {
+            "node": "DB — Select files (optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Select files (optional)": {
+      "main": [
+        [
+          {
+            "node": "Set — Check Reuse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source sel files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source sel files": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe sel files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe sel files": {
+      "main": [
+        [
+          {
+            "node": "WF99 — sel files Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — sel files Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Check Reuse": {
+      "main": [
+        [
+          {
+            "node": "IF — Reuse?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Reuse?": {
+      "main": [
+        [
+          {
+            "node": "Set — Init Jobs (reuse)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crypto — Hash Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Init Jobs (reuse)": {
+      "main": [
+        [
+          {
+            "node": "Merge — Reuse+Fetch Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto — Hash Binary": {
+      "main": [
+        [
+          {
+            "node": "Set — Hash Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Hash Meta": {
+      "main": [
+        [
+          {
+            "node": "Carry — Pre S3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry — Pre S3": {
+      "main": [
+        [
+          {
+            "node": "S3 — Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S3 — Upload": {
+      "main": [
+        [
+          {
+            "node": "Restore — Post S3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source S3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source S3": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe S3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe S3": {
+      "main": [
+        [
+          {
+            "node": "WF99 — S3 Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — S3 Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore — Post S3": {
+      "main": [
+        [
+          {
+            "node": "Carry — Pre blob",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry — Pre blob": {
+      "main": [
+        [
+          {
+            "node": "DB — Insert blob",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Insert blob": {
+      "main": [
+        [
+          {
+            "node": "DB — Select blob (optional)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source blob",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source blob": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe blob",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe blob": {
+      "main": [
+        [
+          {
+            "node": "WF99 — blob Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — blob Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Select blob (optional)": {
+      "main": [
+        [
+          {
+            "node": "Restore — Post blob",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source sel blob",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source sel blob": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe sel blob",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe sel blob": {
+      "main": [
+        [
+          {
+            "node": "WF99 — sel blob Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — sel blob Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore — Post blob": {
+      "main": [
+        [
+          {
+            "node": "Carry — Pre upd files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry — Pre upd files": {
+      "main": [
+        [
+          {
+            "node": "DB — Update files sha256",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Update files sha256": {
+      "main": [
+        [
+          {
+            "node": "Restore — Post upd files",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source upd files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source upd files": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe upd files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe upd files": {
+      "main": [
+        [
+          {
+            "node": "WF99 — upd files Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — upd files Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore — Post upd files": {
+      "main": [
+        [
+          {
+            "node": "Merge — Reuse+Fetch Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Reuse+Fetch Paths": {
+      "main": [
+        [
+          {
+            "node": "Code — Decide Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — Decide Jobs": {
+      "main": [
+        [
+          {
+            "node": "Split — Job Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split — Job Loop": {
+      "main": [
+        [
+          {
+            "node": "Set — SuccessEnvelope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Extract Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Extract Job": {
+      "main": [
+        [
+          {
+            "node": "Carry — Pre job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry — Pre job": {
+      "main": [
+        [
+          {
+            "node": "DB — Insert Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Insert Job": {
+      "main": [
+        [
+          {
+            "node": "Code — Collect Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source job": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe job": {
+      "main": [
+        [
+          {
+            "node": "WF99 — job Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WF99 — job Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — SuccessEnvelope": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Exclusive Join)",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code — Collect Job": {
+      "main": [
+        [
+          {
+            "node": "Split — Job Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a0c076d9-a6b5-4fb1-a348-e2f732b0fd0a",
+  "meta": {
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "1AMSTHBc16Tb3IUQdkZxL",
+  "tags": []
+}
