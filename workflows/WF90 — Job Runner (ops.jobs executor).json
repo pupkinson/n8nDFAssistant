@@ -142,7 +142,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 3
           },
           "conditions": [
             {
@@ -366,7 +367,7 @@
         },
         "options": {
           "outputColumns": [
-            "id"
+            "status"
           ]
         }
       },
@@ -485,11 +486,11 @@
           "conditions": [
             {
               "id": "claim-success",
-              "leftValue": "={{ $json.id }}",
-              "rightValue": 0,
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "running",
               "operator": {
-                "type": "number",
-                "operation": "gt"
+                "type": "string",
+                "operation": "equals"
               }
             }
           ],
@@ -608,7 +609,7 @@
     {
       "parameters": {
         "mode": "combine",
-        "combineBy": "combineAll",
+        "combineBy": "combineByPosition",
         "options": {}
       },
       "id": "7c5f0424-69fe-47af-8672-c35e40c71444",
@@ -3329,8 +3330,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        256,
-        640
+        272,
+        624
       ],
       "notes": "PURPOSE: Build request for WF40 content extractor.\nINPUT: Job with doc_text/url_text.\nOUTPUT: Standardized req for WF40."
     },
@@ -5288,7 +5289,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "cdb0dd22-7de4-4dc3-af26-a37a7f2c8519",
+  "versionId": "b747b570-2434-4fd8-9ab6-c278f823732b",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
