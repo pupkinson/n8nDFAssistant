@@ -5,13 +5,13 @@
       "parameters": {
         "inputSource": "passthrough"
       },
-      "id": "e1812a0b-f7ef-4b3a-8f40-00f4bb2d3e73",
+      "id": "96b599e4-644c-42d9-a116-57b69c1bde00",
       "name": "Execute Workflow Trigger",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -21296,
-        976
+        -20640,
+        4160
       ],
       "notes": "PROD trigger: Receives update payload from Job Runner.\nInput: { req: { tenant_id, update, trace_id, correlation_id } }\nOutput: Same item passed through.\nWHY passthrough: Accepts any shape from caller, processes raw Telegram update."
     },
@@ -40,13 +40,13 @@
         },
         "options": {}
       },
-      "id": "e22268c7-7853-4507-9593-260c98ab7493",
+      "id": "d596d93c-c8e6-4b25-a31d-faa6fe55f79d",
       "name": "IF — Correlation ID Exists",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -21040,
-        1136
+        -20432,
+        4272
       ],
       "notes": "Check if req.correlation_id was provided.\nInput: { req: { ... } }\nOutput true: correlation_id exists, pass through.\nOutput false: need to generate correlation_id.\nWHY: correlation_id required for tracing; generate if missing per CTX spec."
     },
@@ -54,13 +54,13 @@
       "parameters": {
         "action": "generate"
       },
-      "id": "379a0ed5-9264-4087-b932-ff19d32163b4",
+      "id": "04523fde-f742-44c7-94f0-8e3caec83141",
       "name": "Crypto — Generate UUID",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        -20784,
-        1232
+        -20224,
+        4400
       ],
       "notes": "Generate UUID for correlation_id when not provided.\nInput: Item without correlation_id.\nOutput: { data: '<uuid>' } added to item.\nWHY: No Code node for UUID generation per project rules."
     },
@@ -81,13 +81,13 @@
           "dotNotation": true
         }
       },
-      "id": "00c83d50-e47c-4f03-9c31-da20200e41f1",
+      "id": "8b1bad8b-d063-4f54-b874-8cac092f3fb9",
       "name": "Set — Assign Generated Correlation ID",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -20592,
-        1232
+        -20032,
+        4400
       ],
       "notes": "Assign generated UUID to req.correlation_id.\nInput: { data: '<uuid>', req: { ... } }\nOutput: { req: { correlation_id: '<uuid>', ... } }\nWHY: Move generated UUID into proper location."
     },
@@ -132,29 +132,15 @@
           "dotNotation": true
         }
       },
-      "id": "a15ffa09-b715-4c08-87d0-fa571819fcc8",
+      "id": "e44b0313-27d5-498e-a2c1-f50852a3f2a8",
       "name": "Set — Build _ctx",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -20192,
-        1136
+        -19824,
+        4256
       ],
       "notes": "Build _ctx object for correlation and ErrorPipe.\nInput: { req: { tenant_id, update, trace_id, correlation_id } }\nOutput: Adds _ctx.workflow, _ctx.tenant_id, _ctx.trace_id, _ctx.correlation_id, _ctx.contracts.errorpipe.\nWHY: _ctx required for ErrorPipe v1 and meta in SuccessEnvelope."
-    },
-    {
-      "parameters": {
-        "jsCode": "// Parse Telegram update to extract update_kind and canonical fields\n// WHY Code: Telegram update has many optional top-level keys (message, edited_message, etc.)\n// and nested structures. Standard nodes cannot efficiently determine which key exists.\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const update = item.json.req?.update || {};\n  const _ctx = item.json._ctx || {};\n  const req = item.json.req || {};\n  \n  // Determine update_kind based on which top-level key exists\n  let update_kind = 'other';\n  let msg = null;\n  \n  if (update.message) {\n    update_kind = 'message';\n    msg = update.message;\n  } else if (update.edited_message) {\n    update_kind = 'edited_message';\n    msg = update.edited_message;\n  } else if (update.channel_post) {\n    update_kind = 'channel_post';\n    msg = update.channel_post;\n  } else if (update.edited_channel_post) {\n    update_kind = 'edited_channel_post';\n    msg = update.edited_channel_post;\n  } else if (update.my_chat_member) {\n    update_kind = 'my_chat_member';\n  } else if (update.chat_member) {\n    update_kind = 'chat_member';\n  }\n  \n  // Extract canonical fields for message-like updates\n  let parsed = {\n    update_kind,\n    chat_id: null,\n    chat_type: null,\n    message_id: null,\n    message_thread_id: null,\n    is_topic_message: false,\n    from_user: null,\n    sender_chat: null,\n    text: null,\n    caption: null,\n    entities: null,\n    caption_entities: null,\n    reply_to_message_id: null,\n    forward_from: null,\n    forward_from_chat: null,\n    forward_date: null,\n    date: null,\n    edit_date: null,\n    via_bot: null,\n    // File attachments\n    document: null,\n    photo: null,\n    video: null,\n    audio: null,\n    voice: null,\n    animation: null,\n    sticker: null,\n    // Membership\n    membership_update: null\n  };\n  \n  if (msg) {\n    parsed.chat_id = msg.chat?.id || null;\n    parsed.chat_type = msg.chat?.type || null;\n    parsed.message_id = msg.message_id || null;\n    parsed.message_thread_id = msg.message_thread_id || null;\n    parsed.is_topic_message = msg.is_topic_message || false;\n    parsed.from_user = msg.from || null;\n    parsed.sender_chat = msg.sender_chat || null;\n    parsed.text = msg.text || null;\n    parsed.caption = msg.caption || null;\n    parsed.entities = msg.entities || null;\n    parsed.caption_entities = msg.caption_entities || null;\n    parsed.reply_to_message_id = msg.reply_to_message?.message_id || null;\n    parsed.forward_from = msg.forward_from || null;\n    parsed.forward_from_chat = msg.forward_from_chat || null;\n    parsed.forward_date = msg.forward_date ? new Date(msg.forward_date * 1000).toISOString() : null;\n    parsed.date = msg.date ? new Date(msg.date * 1000).toISOString() : null;\n    parsed.edit_date = msg.edit_date ? new Date(msg.edit_date * 1000).toISOString() : null;\n    parsed.via_bot = msg.via_bot || null;\n    // Files\n    parsed.document = msg.document || null;\n    parsed.photo = msg.photo || null; // array of PhotoSize\n    parsed.video = msg.video || null;\n    parsed.audio = msg.audio || null;\n    parsed.voice = msg.voice || null;\n    parsed.animation = msg.animation || null;\n    parsed.sticker = msg.sticker || null;\n    // Chat info for upsert\n    parsed.chat = msg.chat || null;\n  }\n  \n  // Extract membership info\n  if (update_kind === 'my_chat_member' || update_kind === 'chat_member') {\n    const memberUpdate = update.my_chat_member || update.chat_member;\n    parsed.membership_update = memberUpdate;\n    parsed.chat_id = memberUpdate?.chat?.id || null;\n    parsed.chat_type = memberUpdate?.chat?.type || null;\n    parsed.chat = memberUpdate?.chat || null;\n  }\n  \n  // Derive visibility and dm_owner\n  let visibility = 'group';\n  let dm_owner_user_id = null;\n  let channel = 'group';\n  \n  if (parsed.chat_type === 'private') {\n    visibility = 'dm_private';\n    channel = 'dm';\n    // For DM, the owner is the other user (from_user)\n    dm_owner_user_id = parsed.from_user?.id || null;\n  }\n  \n  // Update _ctx with derived fields\n  const updatedCtx = {\n    ..._ctx,\n    chat_id: parsed.chat_id,\n    tg_user_id: parsed.from_user?.id || parsed.membership_update?.from?.id || null,\n    message_id: parsed.message_id,\n    channel,\n    visibility,\n    dm_owner_user_id\n  };\n  \n  // Extract URLs from entities\n  let discovered_urls = [];\n  const textContent = parsed.text || parsed.caption || '';\n  const entitiesToCheck = parsed.entities || parsed.caption_entities || [];\n  \n  for (const ent of entitiesToCheck) {\n    if (ent.type === 'url') {\n      // Extract URL from text by offset/length\n      const url = textContent.substring(ent.offset, ent.offset + ent.length);\n      if (url) discovered_urls.push({ type: 'url', url, entity: ent });\n    } else if (ent.type === 'text_link' && ent.url) {\n      discovered_urls.push({ type: 'text_link', url: ent.url, entity: ent });\n    }\n  }\n  \n  // Determine has_media and has_links\n  const has_media = !!(parsed.document || parsed.photo || parsed.video || parsed.audio || parsed.voice || parsed.animation || parsed.sticker);\n  const has_links = discovered_urls.length > 0;\n  \n  // Using a simple deterministic approach: hash of text+caption\n  \n  results.push({\n    json: {\n      ...item.json,\n      _ctx: updatedCtx,\n      _parsed: {\n        ...parsed,\n        visibility,\n        dm_owner_user_id,\n        has_media,\n        has_links,\n        discovered_urls,\n      }\n    }\n  });\n}\n\nreturn results;"
-      },
-      "id": "5df1e322-61d5-4aca-b283-dcf05df8df3e",
-      "name": "Code — Parse Telegram Update",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -19984,
-        1136
-      ],
-      "notes": "Parse Telegram update to extract update_kind and canonical fields.\nInput: { req: { update: {...} }, _ctx: {...} }\nOutput: Adds _parsed object with extracted fields, discovered_urls, has_media, has_links.\nWHY Code: Telegram update structure is highly polymorphic (message vs edited_message vs chat_member etc.) and extracting URLs requires offset/length substring. Standard nodes cannot handle this efficiently. No network calls, deterministic, comments included."
     },
     {
       "parameters": {
@@ -298,13 +284,13 @@
           "fallbackOutput": "extra"
         }
       },
-      "id": "259a0047-9420-4e43-a086-d2df4691a8ca",
+      "id": "f12bbbee-60a8-41d9-91d3-f031ad4acc49",
       "name": "Switch — Update Kind",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -19776,
-        992
+        -17568,
+        4224
       ],
       "notes": "Route based on update_kind.\nInput: { _parsed: { update_kind: '...' }, ... }\nOutputs: 0=message, 1=edited_message, 2=channel_post, 3=edited_channel_post, 4=my_chat_member, 5=chat_member, 6=other(fallback).\nWHY: Different update types require different processing paths."
     },
@@ -367,13 +353,13 @@
           "dotNotation": true
         }
       },
-      "id": "23f839f5-3549-4465-9ca0-81e88b4ada40",
+      "id": "233f88e5-5268-433d-bf16-1670aaacf31e",
       "name": "Set — Prepare User Upsert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -19536,
-        832
+        -17264,
+        3904
       ],
       "notes": "Prepare fields for tg.users upsert.\nInput: { _parsed: { from_user: {...} }, ... }\nOutput: Adds tg_user_id, is_bot, first_name, etc. for Postgres upsert.\nWHY: Map Telegram user to tg.users schema."
     },
@@ -506,13 +492,13 @@
         },
         "options": {}
       },
-      "id": "78ee9c32-915a-4a44-9cb7-d8d820bfd803",
+      "id": "86f46e48-0df6-4f9c-8318-1bc608dd6655",
       "name": "PG — Upsert tg.users",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -19360,
-        912
+        -17040,
+        4016
       ],
       "credentials": {
         "postgres": {
@@ -552,13 +538,13 @@
           "dotNotation": true
         }
       },
-      "id": "48c48d82-ee04-48ca-ac2d-b3106698b766",
+      "id": "6747137d-f275-4bee-8b87-204cc30f3f08",
       "name": "ERR — Source PG Upsert tg.users",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -19104,
-        1040
+        -16736,
+        4144
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -609,13 +595,13 @@
           "dotNotation": true
         }
       },
-      "id": "28a08e9c-a097-4cf4-a1d6-769195cc4820",
+      "id": "20de8edd-c2f0-4140-8105-2308b059291e",
       "name": "Set — Prepare Chat Upsert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -18944,
-        592
+        -16576,
+        3744
       ],
       "notes": "Prepare fields for tg.chats upsert.\nInput: { _parsed: { chat_id, chat_type, chat: {...} }, ... }\nOutput: Adds chat_id, chat_type, title, etc.\nWHY: Map Telegram chat to tg.chats schema."
     },
@@ -746,13 +732,13 @@
         },
         "options": {}
       },
-      "id": "809c33e3-fa07-4800-af7c-cd63f25ad8dc",
+      "id": "0c273d8a-c223-40b9-a9f9-15cf2606ab6c",
       "name": "PG — Upsert tg.chats",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -18800,
-        672
+        -16416,
+        3776
       ],
       "credentials": {
         "postgres": {
@@ -792,13 +778,13 @@
           "dotNotation": true
         }
       },
-      "id": "53b851fb-4f91-4fd3-8736-005bbd1945f2",
+      "id": "a4157d99-ef36-4c40-adeb-ce3b0dc24bf1",
       "name": "ERR — Source PG Upsert tg.chats",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -18256,
-        1136
+        -15904,
+        4016
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -822,7 +808,7 @@
           "values": [
             {
               "column": "tenant_id",
-              "value": "={{ $json._ctx.tenant_id }}"
+              "value": "={{ $json.tenant_id }}"
             },
             {
               "column": "chat_id",
@@ -841,13 +827,13 @@
           ]
         }
       },
-      "id": "ce2d08e4-f135-4f02-81e6-3b50d06d811b",
+      "id": "d23cab42-7e26-4efe-9ab1-ae94f0acaebb",
       "name": "PG — Select Existing Message",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -18288,
-        608
+        -15920,
+        3712
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -888,13 +874,13 @@
           "dotNotation": true
         }
       },
-      "id": "b5a89134-050f-42dd-9584-367fc66e8f89",
+      "id": "2ff30755-b246-48d2-b6d2-8d8d81b7267f",
       "name": "ERR — Source PG Select Message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -17904,
-        912
+        -15536,
+        4016
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -923,13 +909,13 @@
         },
         "options": {}
       },
-      "id": "2fe17c8b-f84c-49a9-922e-3efd70a8821f",
+      "id": "679ebdf6-d181-4c29-a2a8-c8918b2dbda3",
       "name": "IF — Message Exists",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -17872,
-        240
+        -15504,
+        3344
       ],
       "notes": "Check if message already exists in tg.messages.\nInput: Select result with id field or empty.\nOutput true: Message exists, need to create new version.\nOutput false: New message, insert message first.\nWHY: Different paths for new message vs edit."
     },
@@ -986,13 +972,13 @@
           "dotNotation": true
         }
       },
-      "id": "6d626580-40a8-47f2-bf93-47fa29ec8a27",
+      "id": "7237d028-975e-47b2-8f58-76e933deb28f",
       "name": "Set — Prepare New Message Insert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -17648,
-        560
+        -15280,
+        3664
       ],
       "notes": "Prepare fields for new tg.messages insert.\nInput: { _ctx, _parsed }\nOutput: Adds tenant_id, chat_id, message_id, visibility, dm_owner_user_id.\nWHY: Map to tg.messages schema for new message."
     },
@@ -1141,13 +1127,13 @@
           "skipOnConflict": true
         }
       },
-      "id": "9eb33e92-58ea-412b-8815-0ef3a12b290f",
+      "id": "a1f3bec0-4ff4-421e-a6a6-332c9157bb0d",
       "name": "PG — Insert tg.messages",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -17472,
-        656
+        -15104,
+        3760
       ],
       "credentials": {
         "postgres": {
@@ -1187,13 +1173,13 @@
           "dotNotation": true
         }
       },
-      "id": "010888af-8209-4e1e-bc6e-d58bcf707a3f",
+      "id": "0e32459a-0564-4b08-9b96-3cfe8e9bb94b",
       "name": "ERR — Source PG Insert Message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -16400,
-        1488
+        -14032,
+        4592
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -1220,13 +1206,13 @@
           "dotNotation": true
         }
       },
-      "id": "ac71fac6-8af3-4413-a47b-a190bddd2287",
+      "id": "b259b072-2d45-4018-9e9d-b3b337bfac42",
       "name": "Set — New Message FK (version 1)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -17008,
-        560
+        -14640,
+        3664
       ],
       "notes": "Set message_fk and version_no=1 for new message.\nInput: { id: <new message id>, ... }\nOutput: Adds _message_fk, _version_no=1.\nWHY: New message always starts at version 1."
     },
@@ -1266,13 +1252,13 @@
           ]
         }
       },
-      "id": "42cd1b71-54bd-42a1-b9b8-7a2ec7c2e16c",
+      "id": "8ecce1a1-80fa-45c7-b606-10fc46d5141b",
       "name": "PG — Select Max Version",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -17648,
-        304
+        -15280,
+        3408
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -1313,13 +1299,13 @@
           "dotNotation": true
         }
       },
-      "id": "802d7393-8e8e-4ead-bf73-eca6c0a79f71",
+      "id": "caec6ba2-6666-4698-aa89-e32b01ab32ad",
       "name": "ERR — Source PG Select Version",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -16720,
-        816
+        -14352,
+        3920
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -1346,13 +1332,13 @@
           "dotNotation": true
         }
       },
-      "id": "918dd61c-5f21-4c1a-8b27-7554b4bfdf42",
+      "id": "15ac8409-7a4f-4549-8b6a-c9169b59fa82",
       "name": "Set — Existing Message FK (next version)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -17136,
-        144
+        -14768,
+        3248
       ],
       "notes": "Set message_fk and increment version_no for edited message.\nInput: { version_no, ... } from select or empty.\nOutput: Adds _message_fk from prior IF node, _version_no = current + 1.\nWHY: Edited message gets next version number."
     },
@@ -1463,13 +1449,13 @@
           "dotNotation": true
         }
       },
-      "id": "1889ba4c-52c0-4e15-a976-d5482936809b",
+      "id": "27276e91-6055-4e2b-8918-5ace3d4569fc",
       "name": "Set — Prepare Version Insert",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -16448,
-        480
+        -14080,
+        3584
       ],
       "notes": "Prepare fields for tg.message_versions insert.\nInput: { _message_fk, _version_no, _parsed, _content_sha256, req.update }\nOutput: All version fields mapped from parsed data.\nWHY: Map Telegram message content to tg.message_versions schema.\nNOTE: entities/caption_entities are NOT written separately (n8n Set node cannot handle arrays as 'object' type). They remain accessible via payload jsonb column."
     },
@@ -1693,13 +1679,13 @@
           ]
         }
       },
-      "id": "692d6d83-2cd0-410a-93c1-f94f262d71f3",
+      "id": "ef57664e-dd61-4bb5-83fc-79cb51d1160a",
       "name": "PG — Insert tg.message_versions",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -16240,
-        576
+        -13872,
+        3680
       ],
       "credentials": {
         "postgres": {
@@ -1739,13 +1725,13 @@
           "dotNotation": true
         }
       },
-      "id": "4441b89b-766f-44c9-9102-907459b65a09",
+      "id": "378e572a-812e-4bec-809f-e5b67383c0a1",
       "name": "ERR — Source PG Insert Version",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -15936,
-        544
+        -13568,
+        3648
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
     },
@@ -1766,13 +1752,13 @@
           "dotNotation": true
         }
       },
-      "id": "2820e713-4d3c-4be6-b3ac-d7a489008f34",
+      "id": "4bb7c26c-c0f0-4891-b304-c2b6f8df65e8",
       "name": "Set — Store Version ID",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -15760,
-        304
+        -13392,
+        3408
       ],
       "notes": "Store inserted version ID for later use.\nInput: { id: <version id> }\nOutput: Adds _version_id.\nWHY: Need version ID to update tg.messages.current_version_id and for attachments."
     },
@@ -1917,13 +1903,13 @@
         },
         "options": {}
       },
-      "id": "cb7b7dea-6aa1-4e43-9f5d-dc576b144c1c",
+      "id": "ffa219d2-df3c-44c9-98ad-2120db6968c4",
       "name": "PG — Update messages.current_version_id",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -15520,
-        96
+        -13152,
+        3200
       ],
       "credentials": {
         "postgres": {
@@ -1963,29 +1949,15 @@
           "dotNotation": true
         }
       },
-      "id": "540ebfc6-ea49-467e-bf0b-b178ed0da126",
+      "id": "647cc52a-1cdf-4ca9-9800-03401cb31c81",
       "name": "ERR — Source PG Update Message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -15008,
-        496
+        -12640,
+        3600
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error item from PG node.\nOutput: Adds _err.node, _err.operation, _err.table.\nWHY: ErrorPipe requires explicit source identification."
-    },
-    {
-      "parameters": {
-        "jsCode": "// Process file attachments and URLs for discovery\n// WHY Code: Need to iterate over files and URLs, create multiple attachment records\n// Standard nodes cannot handle variable number of attachments per message\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const parsed = item.json._parsed || {};\n  const version_id = item.json._version_id;\n  \n  const files = [];\n  const urls = parsed.discovered_urls || [];\n  \n  // Collect file attachments\n  const fileTypes = ['document', 'video', 'audio', 'voice', 'animation', 'sticker'];\n  for (const ft of fileTypes) {\n    if (parsed[ft]) {\n      files.push({\n        type: ft,\n        file_id: parsed[ft].file_id,\n        file_unique_id: parsed[ft].file_unique_id,\n        mime_type: parsed[ft].mime_type,\n        file_name: parsed[ft].file_name,\n        file_size: parsed[ft].file_size,\n        width: parsed[ft].width,\n        height: parsed[ft].height,\n        duration: parsed[ft].duration,\n        payload: parsed[ft]\n      });\n    }\n  }\n  \n  // Handle photos (array of PhotoSize, take largest)\n  if (parsed.photo && Array.isArray(parsed.photo) && parsed.photo.length > 0) {\n    const largest = parsed.photo.reduce((a, b) => (b.file_size > a.file_size) ? b : a);\n    files.push({\n      type: 'photo',\n      file_id: largest.file_id,\n      file_unique_id: largest.file_unique_id,\n      mime_type: 'image/jpeg',\n      file_name: null,\n      file_size: largest.file_size,\n      width: largest.width,\n      height: largest.height,\n      duration: null,\n      payload: largest\n    });\n  }\n  \n  results.push({\n    json: {\n      ...item.json,\n      _attachments: {\n        files,\n        urls,\n        files_count: files.length,\n        urls_count: urls.length\n      }\n    }\n  });\n}\n\nreturn results;"
-      },
-      "id": "6012927f-cc07-455e-96cc-f35687dd54e2",
-      "name": "Code — Collect Attachments",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -14928,
-        272
-      ],
-      "notes": "Collect file attachments and URLs for discovery persistence.\nInput: { _parsed with document/photo/video/etc, _version_id }\nOutput: Adds _attachments.files[], _attachments.urls[], counts.\nWHY Code: Need to normalize variable file types (document/photo/video) into array for batch insert. No network calls."
     },
     {
       "parameters": {
@@ -2012,29 +1984,15 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "aada3ab4-99cd-4e7d-b212-64c209682bef",
+      "id": "d0aaf31d-e995-4f71-b0a7-3f5e8db47fea",
       "name": "IF — Has File Attachments",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -14672,
-        320
+        -12160,
+        3712
       ],
       "notes": "Check if message has file attachments to persist.\nInput: { _attachments: { files_count } }\nOutput true: Has files, process attachments.\nOutput false: No files, skip to URL processing.\nWHY: Only run file persistence if files exist."
-    },
-    {
-      "parameters": {
-        "jsCode": "// Expand files into individual items for batch insert\n// WHY Code: Need to split array of files into multiple items\n// for Postgres batch insert into tg.files, tg.file_instances, tg.message_attachments\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const files = item.json._attachments?.files || [];\n  const baseJson = item.json;\n  \n  for (const file of files) {\n    results.push({\n      json: {\n        ...baseJson,\n        _file: file\n      }\n    });\n  }\n  \n  // If no files, still need to pass through for merge\n  if (files.length === 0) {\n    results.push({ json: baseJson });\n  }\n}\n\nreturn results;"
-      },
-      "id": "e0269d84-507f-4563-b42e-fa402ff8139e",
-      "name": "Code — Expand Files",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -14448,
-        224
-      ],
-      "notes": "Expand files array into individual items for batch processing.\nInput: { _attachments: { files: [...] } }\nOutput: Multiple items, each with _file object.\nWHY Code: Need to split array for Postgres per-item operations. No network calls."
     },
     {
       "parameters": {
@@ -2065,13 +2023,13 @@
           "dotNotation": true
         }
       },
-      "id": "6ed1a5df-198b-4180-a1e3-d75ccf4ecdc1",
+      "id": "c755aaf9-18f1-4d48-9c69-90b7ae58ac4e",
       "name": "ERR — Source PG Upsert File",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -13392,
-        912
+        -11024,
+        4016
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -2152,13 +2110,13 @@
         },
         "options": {}
       },
-      "id": "d0dbb006-b2b8-44e9-a70b-b9eaca5264da",
+      "id": "91d0cebb-cdfa-4789-a8f4-e51b3ccafad3",
       "name": "PG — Upsert tg.file_instances",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -13408,
-        176
+        -11040,
+        3280
       ],
       "credentials": {
         "postgres": {
@@ -2198,13 +2156,13 @@
           "dotNotation": true
         }
       },
-      "id": "7c532f40-4f9c-4f3f-82cd-2f80334130db",
+      "id": "1b0e2af7-8393-4d8f-a439-933cc424afaa",
       "name": "ERR — Source PG Upsert File Instance",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -12432,
-        640
+        -10064,
+        3744
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -2364,13 +2322,13 @@
         },
         "options": {}
       },
-      "id": "6836faef-6591-433b-9e41-15f6d1099592",
+      "id": "3c9142ca-0663-4cc2-8533-2aedc99d7a49",
       "name": "PG — Insert tg.message_attachments",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -11664,
-        1184
+        -9296,
+        4288
       ],
       "credentials": {
         "postgres": {
@@ -2410,13 +2368,13 @@
           "dotNotation": true
         }
       },
-      "id": "2b303428-1f27-47f3-a524-a49caeac759b",
+      "id": "c8533563-f1a3-48e7-a943-ed57ff70ea69",
       "name": "ERR — Source PG Insert Attachment",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -11472,
-        1472
+        -9104,
+        4576
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -2444,29 +2402,15 @@
         },
         "options": {}
       },
-      "id": "0acc2441-1881-432f-b46e-36174089abd1",
+      "id": "bd5fa2b2-e88f-43f9-9c97-547b20e55954",
       "name": "IF — Has URLs",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -10992,
-        1904
+        -8432,
+        5200
       ],
       "notes": "Check if message has discovered URLs.\nInput: { _attachments: { urls_count } }\nOutput true: Has URLs, persist to content.urls.\nOutput false: No URLs, skip.\nWHY: Only process URLs if found."
-    },
-    {
-      "parameters": {
-        "jsCode": "// Expand URLs into individual items for batch insert\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const urls = item.json._attachments?.urls || [];\n  const baseJson = item.json;\n  \n  for (const urlObj of urls) {\n    results.push({\n      json: {\n        ...baseJson,\n        _url: urlObj.url\n      }\n    });\n  }\n  \n  if (urls.length === 0) {\n    results.push({ json: baseJson });\n  }\n}\n\nreturn results;"
-      },
-      "id": "d5d19d8f-e41a-465f-9834-cc39841598a2",
-      "name": "Code — Expand URLs",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -10832,
-        1680
-      ],
-      "notes": "Expand URLs array into individual items for batch upsert.\nInput: { _attachments: { urls: [...] } }\nOutput: Multiple items, each with _url string.\nWHY Code: Need to split array for Postgres per-item operations."
     },
     {
       "parameters": {
@@ -2556,13 +2500,13 @@
         },
         "options": {}
       },
-      "id": "456367cd-1d7b-4a86-96b1-8abe64780c17",
+      "id": "3fffb896-494e-42fa-9567-e9989069784b",
       "name": "PG — Upsert content.urls",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -10512,
-        1808
+        -8144,
+        4912
       ],
       "credentials": {
         "postgres": {
@@ -2602,13 +2546,13 @@
           "dotNotation": true
         }
       },
-      "id": "fe4dbc91-7226-4796-907c-5899e35973b4",
+      "id": "dc12b18a-067f-429e-9cfb-83af6ee57ff9",
       "name": "ERR — Source PG Upsert URL",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -10320,
-        1952
+        -7952,
+        5056
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -2679,7 +2623,7 @@
             {
               "id": "err",
               "name": "error",
-              "value": null,
+              "value": {},
               "type": "object"
             },
             {
@@ -2736,13 +2680,13 @@
           "dotNotation": true
         }
       },
-      "id": "056f45f5-fa04-4907-9852-862edc56480b",
+      "id": "f6d3e715-2a31-4064-89d6-fec1fe507ffc",
       "name": "Set — SuccessEnvelope (Message)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -8624,
-        2304
+        -6256,
+        5408
       ],
       "notes": "Build SuccessEnvelope for message-like updates.\nInput: { _ctx, _parsed, _message_fk, _version_id, _attachments }\nOutput: SuccessEnvelope per I/O contract.\nWHY: Final output format per Contracts canvas."
     },
@@ -2799,13 +2743,13 @@
           "dotNotation": true
         }
       },
-      "id": "89e78a7b-a71f-449e-840c-09d245721858",
+      "id": "24411a43-85d6-45a7-bda6-68732c531740",
       "name": "Set — Prepare Membership Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -19552,
-        1152
+        -17184,
+        4640
       ],
       "notes": "Prepare fields for membership event insert.\nInput: { _parsed.membership_update }\nOutput: Adds membership_chat_id, membership_user_id, old_status, new_status, etc.\nWHY: Map Telegram membership update to tg.chat_member_events schema."
     },
@@ -2925,13 +2869,13 @@
         },
         "options": {}
       },
-      "id": "69410e52-b139-4b10-b7ed-cfcf94735dc7",
+      "id": "6491efea-6e31-43ed-bad7-c1728df33890",
       "name": "PG — Insert tg.chat_member_events",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -19344,
-        1312
+        -16976,
+        4416
       ],
       "credentials": {
         "postgres": {
@@ -2971,13 +2915,13 @@
           "dotNotation": true
         }
       },
-      "id": "9a6f7ece-baf1-4a5d-9be4-b57bc2b7c92f",
+      "id": "5f47c201-5af5-4670-aaa7-ba5cd6b35b38",
       "name": "ERR — Source PG Insert Member Event",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -19040,
-        1408
+        -16720,
+        4512
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -3070,13 +3014,13 @@
         },
         "options": {}
       },
-      "id": "86e435fa-af7f-4d30-bb08-82e224eb3763",
+      "id": "bdeaba10-f691-41c4-ac00-2e6fde50b531",
       "name": "PG — Upsert tg.chat_memberships_current",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -18576,
-        1664
+        -16208,
+        4816
       ],
       "credentials": {
         "postgres": {
@@ -3116,13 +3060,13 @@
           "dotNotation": true
         }
       },
-      "id": "d3ee7283-d97b-4262-9463-22bc49d34bbd",
+      "id": "e5b06a1b-49f3-46ca-9b46-e462dd7eb657",
       "name": "ERR — Source PG Upsert Membership",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -18240,
-        1808
+        -15872,
+        4912
       ],
       "notes": "Tag error source for ErrorPipe v1."
     },
@@ -3193,7 +3137,7 @@
             {
               "id": "err",
               "name": "error",
-              "value": null,
+              "value": {},
               "type": "object"
             },
             {
@@ -3250,13 +3194,13 @@
           "dotNotation": true
         }
       },
-      "id": "aa757649-5993-408e-a1f3-4c22b6f29ce2",
+      "id": "a8b872fd-7ed3-4712-b755-72f6fb70f4d8",
       "name": "Set — SuccessEnvelope (Membership)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -17568,
-        1776
+        -15200,
+        4880
       ],
       "notes": "Build SuccessEnvelope for membership updates.\nInput: { _ctx, _parsed, membership_chat_id }\nOutput: SuccessEnvelope per I/O contract.\nWHY: Membership updates don't have message_id/version_id."
     },
@@ -3327,7 +3271,7 @@
             {
               "id": "err",
               "name": "error",
-              "value": null,
+              "value": {},
               "type": "object"
             },
             {
@@ -3384,13 +3328,13 @@
           "dotNotation": true
         }
       },
-      "id": "9023d49b-f241-412c-9bb0-207cf9d205e3",
+      "id": "ab0eabd1-7e88-49be-bcb3-a79abcf8f186",
       "name": "Set — SuccessEnvelope (Other)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -19536,
-        1584
+        -16336,
+        5136
       ],
       "notes": "Build SuccessEnvelope for 'other' update types.\nInput: { _ctx }\nOutput: SuccessEnvelope with update_kind='other', nulls for message fields.\nWHY: No-op for unrecognized update types but still return valid envelope."
     },
@@ -3447,13 +3391,13 @@
           "dotNotation": true
         }
       },
-      "id": "7aa65b4d-ab2a-4154-a285-e04b80f1403a",
+      "id": "28158e06-947a-40db-b08d-4181f0360928",
       "name": "Set — Prepare ErrorPipe v1",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -8336,
-        3392
+        -5968,
+        6496
       ],
       "notes": "Prepare ErrorPipe v1 payload for WF99.\nInput: { _ctx, _err, message/error from PG error output }\nOutput: { ctx, error_context } per ErrorPipe Contract v1.\nWHY: Normalize error format before calling WF99."
     },
@@ -3461,13 +3405,13 @@
       "parameters": {
         "numberInputs": 15
       },
-      "id": "6e070e84-f715-4c96-860d-5e6154beba1a",
+      "id": "1ba3bf63-be7d-48dc-a15e-6ae51399c299",
       "name": "Merge — All Error Paths",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -8544,
-        3280
+        -6176,
+        6384
       ],
       "notes": "Merge all error outputs from Postgres nodes.\nInput: Multiple error streams from different PG nodes (13 original + 2 job insert errors).\nOutput: Single error stream for ErrorPipe preparation.\nWHY: Centralize error handling. numberInputs=15 for all PG error outputs."
     },
@@ -3490,13 +3434,13 @@
         },
         "options": {}
       },
-      "id": "f3f853dc-17e6-4ec4-928b-fb863e76fedd",
+      "id": "3a713e97-4e7b-4ef9-b7aa-04104c87b376",
       "name": "Execute Workflow — WF99",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -8032,
-        3456
+        -5664,
+        6560
       ],
       "notes": "Call WF99 Global Error Handler.\nInput: { ctx, error_context, message, error, etc. }\nOutput: ErrorEnvelope from WF99.\nWHY: Centralized error handling per ErrorPipe Contract v1. No StopAndError after - returns ErrorEnvelope."
     },
@@ -3504,25 +3448,25 @@
       "parameters": {
         "numberInputs": 3
       },
-      "id": "978bb0bb-8930-4c08-aba5-567d9926b64a",
+      "id": "de097f83-67ce-4307-a53b-e10c4d0fb793",
       "name": "Merge — All Success Paths",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -8368,
-        2640
+        -6000,
+        5744
       ],
       "notes": "Merge all success outputs (message, membership, other).\nInput 1: Message success envelope.\nInput 2: Membership success envelope.\nInput 3: Other success envelope.\nOutput: Final SuccessEnvelope.\nWHY: Single exit point for success. numberInputs=3."
     },
     {
       "parameters": {},
-      "id": "e5413ebb-2b6e-4cec-87cb-a94188c42482",
+      "id": "1f986e61-656d-4c6a-b874-bbff91bad82b",
       "name": "Manual Trigger (TEST)",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -21296,
-        1568
+        -20640,
+        5072
       ],
       "notes": "TEST trigger for manual testing.\nInput: None.\nOutput: Triggers test case switch.\nWHY: Allows testing without Job Runner."
     },
@@ -3560,13 +3504,13 @@
           "dotNotation": true
         }
       },
-      "id": "185858c1-bb58-4327-b4e0-ffdbd3dc00bf",
+      "id": "1ba3f40f-83a8-4aa4-bc36-2d5d527420af",
       "name": "Set — Test Happy Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -20880,
-        1408
+        -20224,
+        4912
       ],
       "notes": "Happy path test data: new message with URL.\nInput: None.\nOutput: { req: { tenant_id, update, trace_id, correlation_id } }\nWHY: Tests complete message+URL flow. Uses test IDs (-999xxx)."
     },
@@ -3604,13 +3548,13 @@
           "dotNotation": true
         }
       },
-      "id": "5152ffe9-693e-43a0-b54d-22700622229d",
+      "id": "f5ecea00-f60d-4743-afb9-1d297096d381",
       "name": "Set — Test Edge Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -20880,
-        1568
+        -20224,
+        5072
       ],
       "notes": "Edge case test data: edited message.\nInput: None.\nOutput: { req: { tenant_id, update (edited_message), ... } }\nWHY: Tests edit flow with version increment."
     },
@@ -3648,13 +3592,13 @@
           "dotNotation": true
         }
       },
-      "id": "78031e40-7e03-46e2-9ab6-5db1ec6d9467",
+      "id": "9ae26e09-6cf3-4bbe-a41e-8a27bcaf658a",
       "name": "Set — Test Fail Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -20880,
-        1728
+        -20224,
+        5232
       ],
       "notes": "Fail path test data: triggers error.\nInput: None.\nOutput: { req: { update with null user id } }\nWHY: Tests error handling path with invalid data."
     },
@@ -3662,13 +3606,13 @@
       "parameters": {
         "numberInputs": 3
       },
-      "id": "7d6e1c29-5337-45a9-962e-2de81c6928d8",
+      "id": "9cedd84d-50d9-4fbb-bfd0-d949a2e94d76",
       "name": "Merge — Test Cases",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -20672,
-        1568
+        -20016,
+        5072
       ],
       "notes": "Merge test case outputs.\nInput 0: Happy path data.\nInput 1: Edge case data.\nInput 2: Fail case data.\nOutput: Single item for correlation check.\nWHY: Converge test paths before main flow."
     },
@@ -3743,13 +3687,13 @@
           "dotNotation": true
         }
       },
-      "id": "b6033edf-019b-489c-b874-fc012cdd64e6",
+      "id": "c3aeda14-62ba-428f-b7ba-09c291fd385c",
       "name": "Set — Prepare Job File Fetch",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -12624,
-        784
+        -10256,
+        3888
       ],
       "notes": "Prepare ops.jobs payload for fetch_tg_file.\nInput: { _file, _ctx, _message_fk, _version_id, _parsed }\nOutput: Adds _job_file object with payload fields via dotNotation.\nPayload contract: tg_file_id, file_unique_id, file_kind, message_version_id, chat_id, visibility.\nWHY: Create background job to fetch file content from Telegram. No object literals per project rules."
     },
@@ -3814,13 +3758,13 @@
         },
         "options": {}
       },
-      "id": "d569bb74-0bde-4499-859a-1b93884fc3cf",
+      "id": "b49d5dec-9a23-4476-8236-00176117a722",
       "name": "PG — Insert ops.jobs (File)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -11968,
-        944
+        -9600,
+        4048
       ],
       "credentials": {
         "postgres": {
@@ -3860,13 +3804,13 @@
           "dotNotation": true
         }
       },
-      "id": "8eeef33a-04fe-452c-ba4a-da29ef8d3008",
+      "id": "6d50029a-9bf8-4ff8-87d4-5d72d4b5b63e",
       "name": "ERR — Source PG Insert Job File",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -10592,
-        1328
+        -8224,
+        4432
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error from job insert.\nOutput: Adds _err metadata.\nWHY: Identify error source for WF99."
     },
@@ -3935,13 +3879,13 @@
           "dotNotation": true
         }
       },
-      "id": "8848948b-7235-451f-9948-61fb10344667",
+      "id": "c103028d-45f7-43a2-a64b-db2cbd9c2b53",
       "name": "Set — Prepare Job URL Fetch",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -9440,
-        1744
+        -7072,
+        4848
       ],
       "notes": "Prepare ops.jobs payload for fetch_url.\nInput: { _url, _ctx, _message_fk, _version_id, _parsed, db.url }\nOutput: Adds _job_url object with payload fields via dotNotation.\nPayload contract: url_id, url, message_version_id, chat_id, visibility.\nWHY: Create background job to fetch URL content. No object literals per project rules."
     },
@@ -4193,13 +4137,13 @@
         },
         "options": {}
       },
-      "id": "98af5f8d-5ccd-4a08-acd6-dccd325c64fb",
+      "id": "7247489b-3b57-4452-b03e-11d4cbdab3f5",
       "name": "PG — Insert ops.jobs (URL)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -9120,
-        1872
+        -6752,
+        4976
       ],
       "credentials": {
         "postgres": {
@@ -4239,13 +4183,13 @@
           "dotNotation": true
         }
       },
-      "id": "cdc67e9e-b872-4bad-96df-fd5673be63a5",
+      "id": "ef49d675-abc1-44ad-93c0-b656f4ee4c61",
       "name": "ERR — Source PG Insert Job URL",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -8864,
-        2352
+        -6496,
+        5456
       ],
       "notes": "Tag error source for ErrorPipe v1.\nInput: Error from job insert.\nOutput: Adds _err metadata.\nWHY: Identify error source for WF99."
     },
@@ -4265,13 +4209,13 @@
           "dotNotation": true
         }
       },
-      "id": "cc601822-79b5-4078-bb29-2db6582202c8",
+      "id": "6308c052-9793-4bea-89a9-b7b8cc65ca9e",
       "name": "Set — Wrap PG — Upsert tg.users",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -19216,
-        784
+        -16864,
+        3888
       ],
       "notes": "Wrap PG result into db.user namespace.\nInput: PG result.\nOutput: { db.user: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
     },
@@ -4287,13 +4231,13 @@
           }
         }
       },
-      "id": "7eaa9487-8a43-4142-b45a-23fa5d3212a1",
+      "id": "ed148f31-aac4-4b2e-98b5-8940eed747f7",
       "name": "Merge — Restore After PG — Upsert tg.users",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -19088,
-        640
+        -16720,
+        3792
       ],
       "notes": "Restore working item after PG � Upsert tg.users.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.user).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
     },
@@ -4313,13 +4257,13 @@
           "dotNotation": true
         }
       },
-      "id": "932ed2ee-3067-429f-a8ed-50f1daa35fc2",
+      "id": "bbfc9aff-1839-400f-a4fe-211e3389e66a",
       "name": "Set — Wrap PG — Upsert tg.chats",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -18640,
-        640
+        -16240,
+        3696
       ],
       "notes": "Wrap PG result into db.chat namespace.\nInput: PG result.\nOutput: { db.chat: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
     },
@@ -4335,13 +4279,13 @@
           }
         }
       },
-      "id": "4f57423e-93c0-4d78-b5a0-0cfecf7820b2",
+      "id": "7a80527e-03ab-406e-b72a-f1f3ab77b8da",
       "name": "Merge — Restore After PG — Upsert tg.chats",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -18464,
-        480
+        -16096,
+        3584
       ],
       "notes": "Restore working item after PG � Upsert tg.chats.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.chat).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
     },
@@ -4361,13 +4305,13 @@
           "dotNotation": true
         }
       },
-      "id": "fe8bfc43-293c-47d5-8c11-859784de8c31",
+      "id": "891bb916-7d85-45ff-898b-1d54ef0a533a",
       "name": "Set — Wrap PG — Select Existing Message",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -18064,
-        560
+        -15696,
+        3664
       ],
       "notes": "Wrap PG result into db.existing_msg namespace.\nInput: PG result.\nOutput: { db.existing_msg: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
     },
@@ -4383,13 +4327,13 @@
           }
         }
       },
-      "id": "c7b9c9de-245a-4018-a5ac-87ed80a2e14b",
+      "id": "3b25ab82-5fa7-408b-afed-1a79efeb85e9",
       "name": "Merge — Restore After PG — Select Existing Message",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -18080,
-        288
+        -15712,
+        3392
       ],
       "notes": "Restore working item after PG � Select Existing Message.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.existing_msg).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
     },
@@ -4409,13 +4353,13 @@
           "dotNotation": true
         }
       },
-      "id": "40244496-33dd-4f4a-b49e-a45a6aaa21ba",
+      "id": "e9cd58c3-9f10-4dff-9192-4ca4a6646e25",
       "name": "Set — Wrap Insert tg.messages",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -17312,
-        544
+        -14944,
+        3648
       ],
       "notes": "Wrap PG result into db.new_message namespace.\nInput: PG result.\nOutput: { db.new_message: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
     },
@@ -4431,13 +4375,13 @@
           }
         }
       },
-      "id": "46d08f78-3d7b-424e-8a2c-7ae5e37edb8b",
+      "id": "8cf1b3a2-afd8-40a6-934d-a6fd93949993",
       "name": "Merge — Restore After Insert tg.messages",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -17168,
-        448
+        -14800,
+        3552
       ],
       "notes": "Restore working item after PG — Insert tg.messages.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.new_message).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
     },
@@ -4457,13 +4401,13 @@
           "dotNotation": true
         }
       },
-      "id": "7f46bd6d-504d-4222-9591-9f24a95c7971",
+      "id": "d60e2bd5-4a66-4580-92c4-30a99f194b92",
       "name": "Set — Wrap Select Max Version",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -17504,
-        192
+        -15136,
+        3296
       ],
       "notes": "Wrap PG result into db.max_version namespace.\nInput: PG result.\nOutput: { db.max_version: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
     },
@@ -4479,13 +4423,13 @@
           }
         }
       },
-      "id": "1be50c9e-70b7-433e-9e96-78cf058c08f5",
+      "id": "e9ca7175-d99d-4d0e-8733-cbe48fd6cc85",
       "name": "Merge — Restore After Select Max Version",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -17344,
-        64
+        -14976,
+        3168
       ],
       "notes": "Restore working item after PG — Select Max Version.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.max_version).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
     },
@@ -4505,13 +4449,13 @@
           "dotNotation": true
         }
       },
-      "id": "0416a042-c965-40e0-83ff-a242c94068af",
+      "id": "2295d8ff-a419-47ce-bad2-04fb21811019",
       "name": "Set — Wrap Insert tg.message_versions",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -16048,
-        336
+        -13680,
+        3440
       ],
       "notes": "Wrap PG result into db.version namespace.\nInput: PG result.\nOutput: { db.version: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
     },
@@ -4527,13 +4471,13 @@
           }
         }
       },
-      "id": "d4fcce77-eedd-470c-aa12-d8f75b3df3ad",
+      "id": "ce94b5bb-4ee3-4cf1-86fe-f2f701149bce",
       "name": "Merge — Restore After Insert tg.message_versions",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -15904,
-        176
+        -13536,
+        3280
       ],
       "notes": "Restore working item after PG — Insert tg.message_versions.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.version).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
     },
@@ -4553,13 +4497,13 @@
           "dotNotation": true
         }
       },
-      "id": "dee438f1-b00f-4eba-862c-cb05d6420ef9",
+      "id": "c62d379e-40d3-41f0-9eec-95e3a3561373",
       "name": "Set — Wrap Update messages.current_version_id",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -15296,
-        96
+        -12928,
+        3200
       ],
       "notes": "Wrap PG result into db.update_result namespace.\nInput: PG result.\nOutput: { db.update_result: {...db fields...} }\nWHY: Prevent collision with working item fields during merge."
     },
@@ -4575,13 +4519,13 @@
           }
         }
       },
-      "id": "c6cba5cf-1ea6-4c3e-a9a7-98fe7859d1f1",
+      "id": "ed4d5b5b-2e55-4608-bfa1-ecab33517f84",
       "name": "Merge — Restore After Update messages.current_version_id",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -15088,
-        224
+        -12720,
+        3328
       ],
       "notes": "Restore working item after PG — Update messages.current_version_id.\nInput 0: Original working item with _ctx/_parsed/req.\nInput 1: Wrapped DB result (db.update_result).\nOutput: Merged item with all context + DB result.\nWHY: PG nodes only return DB fields, losing working context."
     },
@@ -4601,13 +4545,13 @@
           "dotNotation": true
         }
       },
-      "id": "6ea3a69a-2635-4077-949c-8734b726702c",
+      "id": "be2d740b-cfe6-4f5f-ae38-4c767a38be83",
       "name": "Set — Wrap Upsert content.urls",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -10000,
-        1920
+        -7632,
+        5024
       ],
       "notes": "Wrap PG result into db.url namespace.\nWHY: Preserve _ctx/_url/_message_fk/_version_id after URL upsert."
     },
@@ -4623,13 +4567,13 @@
           }
         }
       },
-      "id": "94448154-e4ca-4ddb-ae3b-1289f91b23a6",
+      "id": "00ed5e52-b759-4e87-b3cc-10f05f81fd71",
       "name": "Merge — Restore After Upsert URLs",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -9760,
-        1648
+        -7392,
+        4752
       ],
       "notes": "Restore working item after URL upsert.\nWHY: Need _ctx, _url, _message_fk, _version_id for job creation."
     },
@@ -4649,13 +4593,13 @@
           "dotNotation": true
         }
       },
-      "id": "de68a9d5-993b-4251-b19c-138ccf909087",
+      "id": "df5c6656-3e49-474a-bb3f-6d9053a00a28",
       "name": "Set — Wrap Upsert tg.files",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -14128,
-        320
+        -11648,
+        3344
       ],
       "notes": "Wrap PG result into db.file.\nWHY: Preserve _file/_ctx context."
     },
@@ -4671,13 +4615,13 @@
           }
         }
       },
-      "id": "04e6f005-ede0-4b6b-be6c-2620404d813a",
+      "id": "ba434748-27cf-45fa-b362-e27d42cf1064",
       "name": "Merge — Restore After Upsert tg.files",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -13680,
-        64
+        -11280,
+        3200
       ],
       "notes": "Restore context after PG — Upsert tg.files.\nWHY: Need _file, _ctx for downstream operations."
     },
@@ -4697,13 +4641,13 @@
           "dotNotation": true
         }
       },
-      "id": "883c0c96-19ea-4eeb-a449-e2d206270b49",
+      "id": "adcfe872-fb31-48ac-b210-d54645ae528e",
       "name": "Set — Wrap Upsert tg.file_instances",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -13120,
-        384
+        -10752,
+        3488
       ],
       "notes": "Wrap PG result into db.file_instance.\nWHY: Preserve _file/_ctx context."
     },
@@ -4719,13 +4663,13 @@
           }
         }
       },
-      "id": "5837cbfb-5364-4dcc-9cdb-f5fd0015a9b0",
+      "id": "d9866dd5-ff07-425b-a9ed-4fbbdaa08910",
       "name": "Merge — Restore After Upsert tg.file_instances",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -12896,
-        592
+        -10528,
+        3696
       ],
       "notes": "Restore context after PG — Upsert tg.file_instances.\nWHY: Need _file, _ctx for downstream operations."
     },
@@ -4745,13 +4689,13 @@
           "dotNotation": true
         }
       },
-      "id": "26c1ef3b-a934-4430-9cb5-008ba23d09ea",
+      "id": "15baa96e-d6d5-4678-aa11-7dcfcc94a67b",
       "name": "Set — Wrap Insert tg.chat_member_events",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -18976,
-        1216
+        -16720,
+        4336
       ],
       "notes": "Wrap PG result into db.member_event.\nWHY: Preserve _ctx/_parsed/membership_* context."
     },
@@ -4767,13 +4711,13 @@
           }
         }
       },
-      "id": "de0dd73e-517a-4ec1-b305-15273a9f0990",
+      "id": "900b188b-9f9b-4929-980e-9a32dc9c273c",
       "name": "Merge — Restore After Insert tg.chat_member_events",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -18784,
-        1632
+        -16464,
+        4832
       ],
       "notes": "Restore context after PG — Insert tg.chat_member_events.\nWHY: Need _ctx, _parsed for SuccessEnvelope."
     },
@@ -4793,13 +4737,13 @@
           "dotNotation": true
         }
       },
-      "id": "59f821c3-2b34-4e5b-bb8d-8e0572a7f73f",
+      "id": "7c90395d-29ae-43e1-a160-810ad3930506",
       "name": "Set — Wrap Upsert tg.chat_memberships_current",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -18320,
-        1344
+        -15952,
+        4448
       ],
       "notes": "Wrap PG result into db.membership.\nWHY: Preserve _ctx/_parsed/membership_* context."
     },
@@ -4815,13 +4759,13 @@
           }
         }
       },
-      "id": "98925846-235f-4808-a0fe-dbf4d83225d7",
+      "id": "17a20bb5-d69f-469b-a96e-a810b99cc386",
       "name": "Merge — Restore After Upsert tg.chat_memberships_current",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -17968,
-        1680
+        -15600,
+        4784
       ],
       "notes": "Restore context after PG — Upsert tg.chat_memberships_current.\nWHY: Need _ctx, _parsed for SuccessEnvelope."
     },
@@ -4831,13 +4775,13 @@
         "value": "={{ JSON.stringify({ text: String($json._parsed?.text || ''), caption: String($json._parsed?.caption || ''), entities: $json._parsed?.entities || null, caption_entities: $json._parsed?.caption_entities || null }) }}",
         "dataPropertyName": "_hash_hex"
       },
-      "id": "e89e02dc-d213-47ad-abb5-b8148b0aa89a",
+      "id": "e06dc237-e3ef-40ee-a199-edce805daa02",
       "name": "Crypto — SHA256 Content",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        -16736,
-        320
+        -14368,
+        3424
       ],
       "notes": "Compute SHA256 hash of message content.\nInput: Item with _parsed.text, _parsed.caption, _parsed.entities, _parsed.caption_entities.\nOutput: Adds _hash_hex field with hex-encoded hash.\nWHY: content_sha256 column for deduplication."
     },
@@ -4858,13 +4802,13 @@
           "dotNotation": true
         }
       },
-      "id": "1835e292-58b8-490a-a27c-f791059b117d",
+      "id": "570ac670-abf4-44b7-bfcc-bbc3ba27a184",
       "name": "Set — Format Content Hash",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -16592,
-        400
+        -14224,
+        3504
       ],
       "notes": "Format hash as PostgreSQL bytea.\nInput: _hash_hex from Crypto node.\nOutput: _content_sha256 = '\\x' + hex_hash.\nWHY: PostgreSQL bytea column needs \\x prefix."
     },
@@ -4934,13 +4878,13 @@
           "replaceEmptyStrings": true
         }
       },
-      "id": "d6aaacb4-5e1b-4313-a463-318f12ebd385",
+      "id": "4696c5a6-abd6-43f0-81a2-ba268c606864",
       "name": "PG — Upsert tg.files",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -13888,
-        208
+        -11504,
+        3296
       ],
       "credentials": {
         "postgres": {
@@ -4950,6 +4894,810 @@
       },
       "onError": "continueErrorOutput",
       "notes": "Upsert file metadata into tg.files table.\nInput: { _file: { file_unique_id, mime_type, file_name, file_size, ... } }\nOutput success: Upserted row.\nOutput error: Error object routed to ErrorPipe.\nWHY: Store unique file metadata; file_unique_id is natural key per Telegram API.\nError output enabled for ErrorPipe v1 pattern."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "payload-parsed",
+              "name": "_payload",
+              "value": "={{ $json.req.job.payload }}",
+              "type": "object"
+            },
+            {
+              "id": "bot-id-key",
+              "name": "_raw_lookup.bot_id",
+              "value": "={{ $json.req.job.payload.bot_id }}",
+              "type": "string"
+            },
+            {
+              "id": "update-id-key",
+              "name": "_raw_lookup.update_id",
+              "value": "={{ $json.req.job.payload.update_id }}",
+              "type": "number"
+            },
+            {
+              "id": "received-at-key",
+              "name": "_raw_lookup.received_at",
+              "value": "={{ $json.req.job.payload.received_at }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef06d10-a992-4e01-969b-0050a7a1fab1",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "a573e9f4-9888-4679-a2bf-ab8822a3dcca",
+      "name": "Set — Parse job.payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -19440,
+        4240
+      ],
+      "notes": "Parse req.job.payload (may be string or object from WF90) and extract bot_id, update_id, received_at for DB lookup"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "raw",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "telegram_updates",
+          "mode": "list"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "bot_id",
+              "value": "={{ $json._raw_lookup.bot_id }}"
+            },
+            {
+              "column": "update_id",
+              "value": "={{ $json._raw_lookup.update_id }}"
+            },
+            {
+              "column": "received_at",
+              "value": "={{ $json._raw_lookup.received_at }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8c6924a2-ec60-4d66-9c5c-265813f2d61a",
+      "name": "PG — Load raw.telegram_updates",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -19200,
+        4368
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Load raw Telegram update from raw.telegram_updates by bot_id + update_id + received_at"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-body-exists",
+              "leftValue": "={{ $json.body }}",
+              "rightValue": "",
+              "operator": {
+                "type": "any",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b0702d14-6c06-42b0-b1e2-1ca4c6a150e6",
+      "name": "IF — Raw Update Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -18816,
+        4432
+      ],
+      "notes": "Check if raw.telegram_updates row found (body field exists)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-update",
+              "name": "req.update",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "a8d7d733-f4ea-4c1f-81a6-9adbf9b26e1c",
+      "name": "Set — req.update from DB",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -18656,
+        4320
+      ],
+      "notes": "Assign loaded body (JSONB) to req.update"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-node",
+              "name": "_err.node",
+              "value": "PG — Load raw.telegram_updates",
+              "type": "string"
+            },
+            {
+              "id": "err-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "err-table",
+              "name": "_err.table",
+              "value": "raw.telegram_updates",
+              "type": "string"
+            },
+            {
+              "id": "err-kind",
+              "name": "_err.kind",
+              "value": "db",
+              "type": "string"
+            },
+            {
+              "id": "err-msg",
+              "name": "_err.message",
+              "value": "raw.telegram_updates row not found for payload keys",
+              "type": "string"
+            },
+            {
+              "id": "err-retryable",
+              "name": "_err.retryable",
+              "value": "=false",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "2e5c3b6e-c09e-4b77-aa14-b8a9ff561305",
+      "name": "Set — Error: Raw Update Not Found",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -18224,
+        5792
+      ],
+      "notes": "Create error envelope tags for missing raw update"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "kind",
+              "name": "_parsed.update_kind",
+              "value": "={{ \n                        $json.req.update.message ? 'message' :\n                        $json.req.update.edited_message ? 'edited_message' :\n                        $json.req.update.channel_post ? 'channel_post' :\n                        $json.req.update.edited_channel_post ? 'edited_channel_post' :\n                        $json.req.update.my_chat_member ? 'my_chat_member' :\n                        $json.req.update.chat_member ? 'chat_member' :\n                        'other'\n                    }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-ref",
+              "name": "_msg",
+              "value": "={{\n                        $json.req.update.message || \n                        $json.req.update.edited_message || \n                        $json.req.update.channel_post || \n                        $json.req.update.edited_channel_post ||\n                        null\n                    }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "ef0befa4-9ec1-40b6-befa-62a2c53a3abb",
+      "name": "Set — Determine update_kind",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -18112,
+        4240
+      ],
+      "notes": "Determine update_kind and extract message-like object (_msg)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "chat-id",
+              "name": "_parsed.chat_id",
+              "value": "={{ $json._msg?.chat?.id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "chat-type",
+              "name": "_parsed.chat_type",
+              "value": "={{ $json._msg?.chat?.type || null }}",
+              "type": "string"
+            },
+            {
+              "id": "msg-id",
+              "name": "_parsed.message_id",
+              "value": "={{ $json._msg?.message_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "thread-id",
+              "name": "_parsed.message_thread_id",
+              "value": "={{ $json._msg?.message_thread_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "is-topic",
+              "name": "_parsed.is_topic_message",
+              "value": "={{ $json._msg?.is_topic_message || false }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "bf040de5-0644-4a5c-a6ba-58ec4844e265",
+      "name": "Set — Extract Chat Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -18112,
+        4480
+      ],
+      "notes": "Extract chat, message ID fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "from-user",
+              "name": "_parsed.from_user",
+              "value": "={{ $json._msg?.from || null }}",
+              "type": "object"
+            },
+            {
+              "id": "sender-chat",
+              "name": "_parsed.sender_chat",
+              "value": "={{ $json._msg?.sender_chat || null }}",
+              "type": "object"
+            },
+            {
+              "id": "text",
+              "name": "_parsed.text",
+              "value": "={{ $json._msg?.text || null }}",
+              "type": "string"
+            },
+            {
+              "id": "caption",
+              "name": "_parsed.caption",
+              "value": "={{ $json._msg?.caption || null }}",
+              "type": "string"
+            },
+            {
+              "id": "entities",
+              "name": "_parsed.entities",
+              "value": "={{ $json._msg?.entities || null }}",
+              "type": "array"
+            },
+            {
+              "id": "caption-ent",
+              "name": "_parsed.caption_entities",
+              "value": "={{ $json._msg?.caption_entities || null }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "11fbc697-2434-41b6-b29a-51bc15d4d49b",
+      "name": "Set — Extract User & Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -18096,
+        4704
+      ],
+      "notes": "Extract from_user, sender_chat, text, caption, entities"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "date",
+              "name": "_parsed.date",
+              "value": "={{ $json._msg?.date || null }}",
+              "type": "number"
+            },
+            {
+              "id": "edit-date",
+              "name": "_parsed.edit_date",
+              "value": "={{ $json._msg?.edit_date || null }}",
+              "type": "number"
+            },
+            {
+              "id": "via-bot",
+              "name": "_parsed.via_bot",
+              "value": "={{ $json._msg?.via_bot || null }}",
+              "type": "object"
+            },
+            {
+              "id": "reply-to",
+              "name": "_parsed.reply_to_message_id",
+              "value": "={{ $json._msg?.reply_to_message?.message_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "fwd-from",
+              "name": "_parsed.forward_from",
+              "value": "={{ $json._msg?.forward_from || null }}",
+              "type": "object"
+            },
+            {
+              "id": "fwd-chat",
+              "name": "_parsed.forward_from_chat",
+              "value": "={{ $json._msg?.forward_from_chat || null }}",
+              "type": "object"
+            },
+            {
+              "id": "fwd-date",
+              "name": "_parsed.forward_date",
+              "value": "={{ $json._msg?.forward_date || null }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "d685539a-4a1e-467e-9caf-dfc80532bd29",
+      "name": "Set — Extract Dates & Reply",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -18064,
+        4912
+      ],
+      "notes": "Extract date, edit_date, reply_to, forward_*"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "doc",
+              "name": "_parsed.document",
+              "value": "={{ $json._msg?.document || null }}",
+              "type": "object"
+            },
+            {
+              "id": "photo",
+              "name": "_parsed.photo",
+              "value": "={{ $json._msg?.photo || null }}",
+              "type": "array"
+            },
+            {
+              "id": "video",
+              "name": "_parsed.video",
+              "value": "={{ $json._msg?.video || null }}",
+              "type": "object"
+            },
+            {
+              "id": "audio",
+              "name": "_parsed.audio",
+              "value": "={{ $json._msg?.audio || null }}",
+              "type": "object"
+            },
+            {
+              "id": "voice",
+              "name": "_parsed.voice",
+              "value": "={{ $json._msg?.voice || null }}",
+              "type": "object"
+            },
+            {
+              "id": "anim",
+              "name": "_parsed.animation",
+              "value": "={{ $json._msg?.animation || null }}",
+              "type": "object"
+            },
+            {
+              "id": "sticker",
+              "name": "_parsed.sticker",
+              "value": "={{ $json._msg?.sticker || null }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "23c611c9-5b6e-421d-92a5-b6b1f37a79c6",
+      "name": "Set — Extract Attachments",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -18192,
+        5184
+      ],
+      "notes": "Extract file attachments: document, photo, video, audio, voice, animation, sticker"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "membership",
+              "name": "_parsed.membership_update",
+              "value": "={{ $json.req.update.my_chat_member || $json.req.update.chat_member || null }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "719dc658-44d2-4f33-92df-efaea75fb90d",
+      "name": "Set — Extract Membership",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -18000,
+        5184
+      ],
+      "notes": "Extract membership_update for my_chat_member or chat_member updates"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "urls",
+              "name": "_parsed.discovered_urls",
+              "value": "={{\n                    (() => {\n                        const entities = ($json._parsed.entities || []).concat($json._parsed.caption_entities || []);\n                        const text = $json._parsed.text || $json._parsed.caption || '';\n                        const urls = [];\n                        const seen = new Set();\n                        \n                        for (const e of entities) {\n                            let url = null;\n                            if (e.type === 'text_link' && e.url) {\n                                url = e.url;\n                            } else if (e.type === 'url' && e.offset != null && e.length != null) {\n                                url = text.substring(e.offset, e.offset + e.length);\n                            }\n                            if (url && !seen.has(url)) {\n                                seen.add(url);\n                                urls.push({url: url, source: 'entity'});\n                            }\n                        }\n                        \n                        return urls;\n                    })()\n                }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "6cda3b1a-379c-44a8-98db-09db9dcda32c",
+      "name": "Set — Extract URLs from Entities",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -17776,
+        4704
+      ],
+      "notes": "Extract URLs from text_link and url entities, deduplicate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "files",
+              "name": "_attachments.files",
+              "value": "={{\n                    (() => {\n                        const files = [];\n                        const p = $json._parsed;\n                        \n                        // Helper to add file\n                        const addFile = (type, obj) => {\n                            if (!obj) return;\n                            files.push({\n                                type: type,\n                                file_id: obj.file_id,\n                                file_unique_id: obj.file_unique_id,\n                                mime_type: obj.mime_type || null,\n                                file_name: obj.file_name || null,\n                                file_size: obj.file_size || null,\n                                width: obj.width || null,\n                                height: obj.height || null,\n                                duration: obj.duration || null,\n                                payload: obj\n                            });\n                        };\n                        \n                        // Add each type\n                        addFile('document', p.document);\n                        addFile('video', p.video);\n                        addFile('audio', p.audio);\n                        addFile('voice', p.voice);\n                        addFile('animation', p.animation);\n                        addFile('sticker', p.sticker);\n                        \n                        // Photo: take largest\n                        if (p.photo && Array.isArray(p.photo) && p.photo.length > 0) {\n                            const largest = p.photo.reduce((a, b) => (b.file_size > a.file_size ? b : a));\n                            addFile('photo', {...largest, mime_type: 'image/jpeg'});\n                        }\n                        \n                        return files;\n                    })()\n                }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "b1970a89-c3af-4e8e-b9f5-c62a0cbf5d1a",
+      "name": "Set — Build Files Array",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -12528,
+        3424
+      ],
+      "notes": "Build _attachments.files array from parsed attachment objects (document, video, audio, voice, animation, sticker, photo)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "files-count",
+              "name": "_attachments.files_count",
+              "value": "={{ $json._attachments.files.length }}",
+              "type": "number"
+            },
+            {
+              "id": "urls-arr",
+              "name": "_attachments.urls",
+              "value": "={{ $json._parsed.discovered_urls || [] }}",
+              "type": "array"
+            },
+            {
+              "id": "urls-count",
+              "name": "_attachments.urls_count",
+              "value": "={{ ($json._parsed.discovered_urls || []).length }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "ca9bdd7d-0c02-4774-9702-e03de90688e3",
+      "name": "Set — Attachment Counts & URLs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -12352,
+        3360
+      ],
+      "notes": "Set files_count, urls array, and urls_count in _attachments"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "is-base",
+              "name": "_is_base_item",
+              "value": "=true",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "468f6d86-e4d5-4249-ad4e-871268fceeb1",
+      "name": "Set — Mark Base Item",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -11888,
+        3856
+      ],
+      "notes": "Mark this as the base item (no file/url expansion yet)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "unmark-base",
+              "name": "_is_base_item",
+              "value": "=false",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "37103885-5fbf-480e-a837-58ba73116d95",
+      "name": "Set — Mark File Items",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -11968,
+        3504
+      ],
+      "notes": "Mark file items as NOT base (they have _file field)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-file-exists",
+              "leftValue": "={{ $json._file }}",
+              "rightValue": "",
+              "operator": {
+                "type": "any",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cceb1031-80bc-4b1a-a766-7ecea9c1e62d",
+      "name": "IF — Has File",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -11824,
+        3456
+      ],
+      "notes": "Check if item has _file (file expansion happened)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-is-base",
+              "leftValue": "={{ $json._is_base_item }}",
+              "rightValue": "=true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "286e51cd-8c7d-47af-b720-b64eee75ccba",
+      "name": "IF — Is Base Item (for URLs)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -11168,
+        3536
+      ],
+      "notes": "Only expand URLs for the base item to avoid duplicates"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "url-str",
+              "name": "_url",
+              "value": "={{ $json._url_obj.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "a191f12b-a2ce-4bb3-968b-c82e85c8f478",
+      "name": "Set — Extract URL String",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -10384,
+        3280
+      ],
+      "notes": "Extract _url string from _url_obj"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "_attachments.files",
+        "include": "allOtherFields",
+        "options": {
+          "destinationFieldName": "_file"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -11616,
+        3888
+      ],
+      "id": "61e8a687-e404-4a33-a02e-535a29594656",
+      "name": "Item Lists — Split Files",
+      "notes": "Split _attachments.files array into individual items, each with _file field. If no files, output single item."
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "_attachments.urls",
+        "include": "allOtherFields",
+        "options": {
+          "destinationFieldName": "_url_obj"
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -10688,
+        3248
+      ],
+      "id": "985f812f-d208-43bb-a1ee-e3f2b58754f9",
+      "name": "Item Lists — Split URLs",
+      "notes": "Split _attachments.urls array into individual items. Only processes base item."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -18976,
+        4304
+      ],
+      "id": "1c21d996-7ce2-415f-8225-1fe878e4b773",
+      "name": "Merge"
     }
   ],
   "pinData": {},
@@ -4999,28 +5747,6 @@
         [
           {
             "node": "Set — Build _ctx",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set — Build _ctx": {
-      "main": [
-        [
-          {
-            "node": "Code — Parse Telegram Update",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code — Parse Telegram Update": {
-      "main": [
-        [
-          {
-            "node": "Switch — Update Kind",
             "type": "main",
             "index": 0
           }
@@ -5408,22 +6134,11 @@
         ]
       ]
     },
-    "Code — Collect Attachments": {
-      "main": [
-        [
-          {
-            "node": "IF — Has File Attachments",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "IF — Has File Attachments": {
       "main": [
         [
           {
-            "node": "Code — Expand Files",
+            "node": "Set — Mark Base Item",
             "type": "main",
             "index": 0
           }
@@ -5431,27 +6146,6 @@
         [
           {
             "node": "IF — Has URLs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code — Expand Files": {
-      "main": [
-        [
-          {
-            "node": "Merge — Restore After Upsert tg.files",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge — Restore After Upsert tg.file_instances",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Set — Wrap Upsert tg.files",
             "type": "main",
             "index": 0
           }
@@ -5531,7 +6225,7 @@
       "main": [
         [
           {
-            "node": "Code — Expand URLs",
+            "node": "IF — Is Base Item (for URLs)",
             "type": "main",
             "index": 0
           }
@@ -5539,22 +6233,6 @@
         [
           {
             "node": "Set — SuccessEnvelope (Message)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code — Expand URLs": {
-      "main": [
-        [
-          {
-            "node": "PG — Upsert content.urls",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge — Restore After Upsert URLs",
             "type": "main",
             "index": 0
           }
@@ -5776,11 +6454,6 @@
             "index": 2
           }
         ]
-      ]
-    },
-    "Merge — Test Cases": {
-      "main": [
-        []
       ]
     },
     "Set — Prepare Job File Fetch": {
@@ -6011,17 +6684,6 @@
         ]
       ]
     },
-    "Merge — Restore After Update messages.current_version_id": {
-      "main": [
-        [
-          {
-            "node": "Code — Collect Attachments",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Set — Wrap Upsert content.urls": {
       "main": [
         [
@@ -6171,6 +6833,296 @@
           }
         ]
       ]
+    },
+    "Set — Parse job.payload": {
+      "main": [
+        [
+          {
+            "node": "PG — Load raw.telegram_updates",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "PG — Load raw.telegram_updates": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Raw Update Found": {
+      "main": [
+        [
+          {
+            "node": "Set — req.update from DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Error: Raw Update Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — req.update from DB": {
+      "main": [
+        [
+          {
+            "node": "Set — Determine update_kind",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Determine update_kind": {
+      "main": [
+        [
+          {
+            "node": "Set — Extract Chat Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Extract Chat Fields": {
+      "main": [
+        [
+          {
+            "node": "Set — Extract User & Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Extract User & Content": {
+      "main": [
+        [
+          {
+            "node": "Set — Extract Dates & Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Extract Dates & Reply": {
+      "main": [
+        [
+          {
+            "node": "Set — Extract Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Extract Attachments": {
+      "main": [
+        [
+          {
+            "node": "Set — Extract Membership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Extract Membership": {
+      "main": [
+        [
+          {
+            "node": "Set — Extract URLs from Entities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Extract URLs from Entities": {
+      "main": [
+        [
+          {
+            "node": "Switch — Update Kind",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Build Files Array": {
+      "main": [
+        [
+          {
+            "node": "Set — Attachment Counts & URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Attachment Counts & URLs": {
+      "main": [
+        [
+          {
+            "node": "IF — Has File Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Mark File Items": {
+      "main": [
+        [
+          {
+            "node": "IF — Has File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Has File": {
+      "main": [
+        [
+          {
+            "node": "Set — Wrap Upsert tg.files",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF — Is Base Item (for URLs)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Is Base Item (for URLs)": {
+      "main": [
+        [
+          {
+            "node": "Item Lists — Split URLs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge — Restore After Upsert tg.file_instances",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set — Extract URL String": {
+      "main": [
+        [
+          {
+            "node": "PG — Upsert content.urls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Error: Raw Update Not Found": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow — WF99",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Build _ctx": {
+      "main": [
+        [
+          {
+            "node": "Set — Parse job.payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Mark Base Item": {
+      "main": [
+        [
+          {
+            "node": "Item Lists — Split Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Lists — Split Files": {
+      "main": [
+        [
+          {
+            "node": "Set — Mark File Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Restore After Update messages.current_version_id": {
+      "main": [
+        [
+          {
+            "node": "Set — Build Files Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Lists — Split URLs": {
+      "main": [
+        [
+          {
+            "node": "Set — Extract URL String",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "IF — Raw Update Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -6181,7 +7133,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6"
   },
-  "versionId": "ce723947-e023-472a-a818-f0e8b95b9150",
+  "versionId": "b343c531-a091-46e9-99ce-469e57b1d201",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },

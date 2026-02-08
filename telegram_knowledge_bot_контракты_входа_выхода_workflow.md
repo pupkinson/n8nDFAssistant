@@ -7,9 +7,8 @@
 - **n8n:** 2.4.8
 - **DB:** PostgreSQL + pgvector (схема из `SQL.txt`)
 - **Credentials:** строго из `Credentials.json`
-- **n8n справочник:** 2×MCP (см. canvas «Telegram Knowledge Bot — единый регламент проекта (n8n 2.4.8) + 2×MCP»)
+- **n8n справочник:** n8n MCP (см. canvas «Telegram Knowledge Bot — единый регламент проекта (n8n 2.4.8)»)
   - MCP#1: `n8n-mcp`
-  - MCP#2: второй MCP сервера проекта (имя/правила — в «едином регламенте»)
 
 ---
 
@@ -52,7 +51,7 @@
   1. mention `@<bot_username>` в `entities/caption_entities`, ИЛИ
   2. reply на сообщение бота (`reply_to_message` от бота), ИЛИ
   3. `/command@<bot_username>` (если включена поддержка команд).
-- В group-ответах источники строго ограничены **текущим ****chat\_id**. Запросы «принеси из другого чата/лички» в группе — отказ.
+- В group-ответах источники строго ограничены \*\*текущим \*\***chat\_id**. Запросы «принеси из другого чата/лички» в группе — отказ.
 
 ### 0.2.2 Голосовые сообщения (STT): авто и по запросу
 
@@ -100,7 +99,7 @@
    - на error-ветке **явно** проставить источник ошибки (`_err.*`) и **приклеить** контекст,
    - вызвать **WF99** (Execute Workflow),
    - завершить ветку через **StopAndError**.
-3. **ErrorEnvelope формируется и возвращается только WF99** (ErrorPipe Contract v1). fileciteturn20file0
+3. **ErrorEnvelope формируется и возвращается только WF99** (ErrorPipe Contract v1).&#x20;
 
 **SuccessEnvelope**
 
@@ -163,7 +162,7 @@
 }
 ```
 
-**Инвариант:** `error.details.*` — **объекты**, а не строки (никаких stringify / raw jsonOutput). fileciteturn20file0
+**Инвариант:** `error.details.*` — **объекты**, а не строки (никаких stringify / raw jsonOutput).&#x20;
 
 ### 0.4 Общий `ctx`
 
@@ -173,7 +172,7 @@
 
 Минимальный контракт `ctx`:
 
-```json
+````json
 {
   "tenant_id": "<uuid>",
   "tg_user_id": "<bigint>",
@@ -207,7 +206,7 @@
     "errorpipe": 1
   }
 }
-```
+````
 
 ---
 
@@ -286,11 +285,11 @@
 **DB side-effects:**
 
 - WRITE: RAW таблицы `raw.telegram_updates` и `raw.telegram_update_keys`
-- WRITE: `ops.jobs` (job\_type: обработка Telegram update; payload = raw update + мета)
+- WRITE: `ops.jobs` (job\_type: обработка Telegram update; payload = ключи, raw = в raw\.telegram\_updates)
 
 **ErrorPipe v1 (обязательно):** WF10 является источником правды для `error_context` при DB-ошибках своих Postgres-нод:
 
-- Postgres error output → Set `ERR — Source <NodeName>` (includeOtherFields=true) с `_err.node/_err.operation/_err.table` + приклейка `ctx` → Set `ERR — Prepare ErrorPipe v1` (создаёт `error_context.*`, копирует `ctx`) → Execute WF99 → StopAndError. fileciteturn20file0
+- Postgres error output → Set `ERR — Source <NodeName>` (includeOtherFields=true) с `_err.node/_err.operation/_err.table` + приклейка `ctx` → Set `ERR — Prepare ErrorPipe v1` (создаёт `error_context.*`, копирует `ctx`) → Execute WF99 → StopAndError.&#x20;
 
 **Примечания:**
 
@@ -298,7 +297,7 @@
 
 ---
 
-### WF20 — Update Processor (Upsert tg.* + discovery + job fan-out)
+### WF20 — Update Processor (Upsert tg.\* + discovery + job fan-out)
 
 **Назначение:** разобрать update, записать факты в `tg.*`, определить необходимость ответа (DM/Group rules) и создать задачи `ops.jobs` на дальнейшую обработку контента и/или ответ.
 
@@ -315,14 +314,18 @@
 **DB side-effects:**
 
 - UPSERT/UPDATE: `tg.users`, `tg.chats`
+
 - INSERT/UPSERT: `tg.messages` (identity), `tg.message_versions`, `tg.message_attachments`
-- UPSERT/UPDATE: `tg.files`, `tg.file_instances` (если есть file_id)
+
+- UPSERT/UPDATE: `tg.files`, `tg.file_instances` (если есть file\_id)
+
 - INSERT/UPDATE: `tg.chat_member_events` и `tg.chat_memberships_current` (если update о member’ах)
 
-- WRITE: `ops.jobs` (payload — **объект**, без stringify) — **строго enum из `ops.job_type` (см. `SQL.txt`)**:
+- WRITE: `ops.jobs` (payload — **объект**, без stringify) — **строго enum из **``**)**:
+
   - `fetch_tg_file` — для каждого file/voice/video/photo/document
   - `fetch_url` — для каждого URL
-  - `build_document` — создать/обновить `content.documents` (doc_type=`file|url|message`, visibility и связи)
+  - `build_document` — создать/обновить `content.documents` (doc\_type=`file|url|message`, visibility и связи)
   - `extract_text` — **универсальный анализ**:
     - voice/audio → transcript
     - video → описание/сцены
@@ -455,10 +458,10 @@
 { "data": { "wake_detected": true, "confidence": 0.9, "probe_text": "...", "next_action": "transcribe_full|ignore" } }
 ```
 
-**DB side-effects (по `SQL.txt`):**
+**DB side-effects (по ****\`\`****):**
 
 - UPDATE: `content.documents.meta.voice_probe` (json) + `updated_at`
-- `content.documents.status` **не переводить в `succeeded`** (probe — вспомогательный шаг)
+- `content.documents.status` \*\*не переводить в \*\*\`\` (probe — вспомогательный шаг)
 
 ---
 
@@ -488,7 +491,7 @@
 { "data": { "transcript": "...", "token_count": 123, "document_id": 101 } }
 ```
 
-**DB side-effects (по `SQL.txt`):**
+**DB side-effects (по ****\`\`****):**
 
 - UPDATE: `content.documents`:
   - `text` = transcript (поиск/цитирование)
@@ -719,7 +722,7 @@
 
 ### WF99 — Global ERR Handler
 
-**Назначение:** единый обработчик ошибок (ErrorPipe Contract v1): нормализация ошибки → запись в `ops.errors` **всегда** → (опционально) фиксация job failure → возврат канонического ErrorEnvelope. fileciteturn20file0
+**Назначение:** единый обработчик ошибок (ErrorPipe Contract v1): нормализация ошибки → запись в `ops.errors` **всегда** → (опционально) фиксация job failure → возврат канонического ErrorEnvelope.&#x20;
 
 **Trigger:** Execute Workflow Trigger (sub-workflow).
 
@@ -742,11 +745,11 @@
   - `n8nDetails` (object)
   - любые иные поля
 
-**Выход:** ErrorEnvelope v1 (канонический), `meta.source="WF99"`, `error.details` — объект. fileciteturn20file0
+**Выход:** ErrorEnvelope v1 (канонический), `meta.source="WF99"`, `error.details` — объект.&#x20;
 
 **DB side-effects:**
 
-- INSERT **всегда** (best-effort): `ops.errors` (детали как json/jsonb объекты, без stringify). fileciteturn20file0
+- INSERT **всегда** (best-effort): `ops.errors` (детали как json/jsonb объекты, без stringify).&#x20;
 - Если `ctx.job_id` задан:
   - UPDATE `ops.jobs` (status='failed' и связанные поля по схеме)
   - INSERT `ops.job_runs` (с фиксацией ошибки)
@@ -755,7 +758,7 @@
 **Инварианты:**
 
 - `correlation_id` переиспользуется: если пришёл во входе — не заменять.
-- Если запись в `ops.errors` не удалась — WF99 не должен падать; в выходе пометить `_internal.persist_failed=true`. fileciteturn20file0
+- Если запись в `ops.errors` не удалась — WF99 не должен падать; в выходе пометить `_internal.persist_failed=true`.&#x20;
 
 ## 2) Правило эволюции контрактов
 

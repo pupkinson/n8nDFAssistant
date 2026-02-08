@@ -913,7 +913,7 @@
         }
       },
       "onError": "continueErrorOutput",
-      "notes": "Creates job for worker WF20.\nInput: Context with all fields.\nOutput: {id: job_id}.\nWHY job_type=telegram_update: Enum value for processing.\nWHY next_run_at+1day for tests: Prevents job runner pickup.\nWHY outputColumns=[id]: Get job_id for response.\n\nNOTE: Verify 'telegram_update' is valid ops.job_type enum value!"
+      "notes": "Creates job for worker WF20.\nInput: Context with all fields.\nOutput: {id: job_id}.\nWHY job_type=normalize_update: Enum value for processing.\nWHY next_run_at+1day for tests: Prevents job runner pickup.\nWHY outputColumns=[id]: Get job_id for response.\n\nNOTE: Verify 'normalise_update' is valid ops.job_type enum value!"
     },
     {
       "parameters": {
@@ -1988,7 +1988,7 @@
     "timezone": "Europe/Moscow",
     "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6"
   },
-  "versionId": "d3936899-e011-4e56-9a2b-3a6a81eb141a",
+  "versionId": "b2a95612-6ec9-48ed-91fc-a46dda44df15",
   "meta": {
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
