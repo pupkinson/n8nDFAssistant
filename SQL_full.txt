@@ -2,12 +2,12 @@
 -- PostgreSQL database dump
 --
 
-\restrict LF31CCDeBltsb99np2G3jrEwUS8jSoXkgxxc4q7Fnd7WSh3KhM3PviNW9hQUKBl
+\restrict NaA1ZNwhAB3STV0Kfkm4iqXUuA0EZR9cDiHphszsutEd07AKagFuf2r2621314s
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.7
 
--- Started on 2026-02-01 21:31:57 UTC
+-- Started on 2026-02-08 14:18:51 UTC
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -22,7 +22,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 12 (class 2615 OID 47564)
+-- TOC entry 11 (class 2615 OID 47564)
 -- Name: audit; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -32,7 +32,7 @@ CREATE SCHEMA audit;
 ALTER SCHEMA audit OWNER TO postgres;
 
 --
--- TOC entry 10 (class 2615 OID 47561)
+-- TOC entry 17 (class 2615 OID 47561)
 -- Name: content; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -42,7 +42,7 @@ CREATE SCHEMA content;
 ALTER SCHEMA content OWNER TO postgres;
 
 --
--- TOC entry 16 (class 2615 OID 47558)
+-- TOC entry 15 (class 2615 OID 47558)
 -- Name: core; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -52,7 +52,7 @@ CREATE SCHEMA core;
 ALTER SCHEMA core OWNER TO postgres;
 
 --
--- TOC entry 11 (class 2615 OID 47562)
+-- TOC entry 10 (class 2615 OID 47562)
 -- Name: kg; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -62,7 +62,7 @@ CREATE SCHEMA kg;
 ALTER SCHEMA kg OWNER TO postgres;
 
 --
--- TOC entry 17 (class 2615 OID 47563)
+-- TOC entry 16 (class 2615 OID 47563)
 -- Name: ops; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -72,7 +72,7 @@ CREATE SCHEMA ops;
 ALTER SCHEMA ops OWNER TO postgres;
 
 --
--- TOC entry 13 (class 2615 OID 47559)
+-- TOC entry 12 (class 2615 OID 47559)
 -- Name: raw; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -82,7 +82,7 @@ CREATE SCHEMA raw;
 ALTER SCHEMA raw OWNER TO postgres;
 
 --
--- TOC entry 14 (class 2615 OID 47560)
+-- TOC entry 13 (class 2615 OID 47560)
 -- Name: tg; Type: SCHEMA; Schema: -; Owner: postgres
 --
 
@@ -100,7 +100,7 @@ CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;
 
 
 --
--- TOC entry 4288 (class 0 OID 0)
+-- TOC entry 4289 (class 0 OID 0)
 -- Dependencies: 5
 -- Name: EXTENSION citext; Type: COMMENT; Schema: -; Owner: 
 --
@@ -117,7 +117,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 
 
 --
--- TOC entry 4289 (class 0 OID 0)
+-- TOC entry 4290 (class 0 OID 0)
 -- Dependencies: 3
 -- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: 
 --
@@ -134,7 +134,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 
 --
--- TOC entry 4290 (class 0 OID 0)
+-- TOC entry 4291 (class 0 OID 0)
 -- Dependencies: 6
 -- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
 --
@@ -151,7 +151,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 
 --
--- TOC entry 4291 (class 0 OID 0)
+-- TOC entry 4292 (class 0 OID 0)
 -- Dependencies: 4
 -- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: 
 --
@@ -168,7 +168,7 @@ CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 
 
 --
--- TOC entry 4292 (class 0 OID 0)
+-- TOC entry 4293 (class 0 OID 0)
 -- Dependencies: 2
 -- Name: EXTENSION vector; Type: COMMENT; Schema: -; Owner: 
 --
@@ -197,7 +197,8 @@ ALTER TYPE audit.qa_channel OWNER TO postgres;
 CREATE TYPE content.doc_type AS ENUM (
     'message',
     'file',
-    'url'
+    'url',
+    'voice'
 );
 
 
@@ -307,7 +308,8 @@ CREATE TYPE ops.job_type AS ENUM (
     'embed_chunks',
     'answer_query',
     'reembed_model_migration',
-    'test_job'
+    'test_job',
+    'telegram_update'
 );
 
 
@@ -524,7 +526,7 @@ CREATE SEQUENCE audit.qa_turns_id_seq
 ALTER SEQUENCE audit.qa_turns_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4540 (class 0 OID 0)
+-- TOC entry 4541 (class 0 OID 0)
 -- Dependencies: 270
 -- Name: qa_turns_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: postgres
 --
@@ -566,7 +568,7 @@ CREATE SEQUENCE content.blob_objects_id_seq
 ALTER SEQUENCE content.blob_objects_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4541 (class 0 OID 0)
+-- TOC entry 4543 (class 0 OID 0)
 -- Dependencies: 254
 -- Name: blob_objects_id_seq; Type: SEQUENCE OWNED BY; Schema: content; Owner: postgres
 --
@@ -599,7 +601,8 @@ CREATE TABLE content.documents (
     error jsonb,
     meta jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    description text
 );
 
 
@@ -621,7 +624,7 @@ CREATE SEQUENCE content.documents_id_seq
 ALTER SEQUENCE content.documents_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4542 (class 0 OID 0)
+-- TOC entry 4546 (class 0 OID 0)
 -- Dependencies: 256
 -- Name: documents_id_seq; Type: SEQUENCE OWNED BY; Schema: content; Owner: postgres
 --
@@ -668,7 +671,7 @@ CREATE SEQUENCE content.url_fetches_id_seq
 ALTER SEQUENCE content.url_fetches_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4543 (class 0 OID 0)
+-- TOC entry 4549 (class 0 OID 0)
 -- Dependencies: 252
 -- Name: url_fetches_id_seq; Type: SEQUENCE OWNED BY; Schema: content; Owner: postgres
 --
@@ -709,7 +712,7 @@ CREATE SEQUENCE content.urls_id_seq
 ALTER SEQUENCE content.urls_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4544 (class 0 OID 0)
+-- TOC entry 4552 (class 0 OID 0)
 -- Dependencies: 250
 -- Name: urls_id_seq; Type: SEQUENCE OWNED BY; Schema: content; Owner: postgres
 --
@@ -919,7 +922,7 @@ CREATE SEQUENCE kg.chunks_id_seq
 ALTER SEQUENCE kg.chunks_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4552 (class 0 OID 0)
+-- TOC entry 4561 (class 0 OID 0)
 -- Dependencies: 258
 -- Name: chunks_id_seq; Type: SEQUENCE OWNED BY; Schema: kg; Owner: postgres
 --
@@ -963,7 +966,7 @@ CREATE SEQUENCE kg.embedding_models_id_seq
 ALTER SEQUENCE kg.embedding_models_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4553 (class 0 OID 0)
+-- TOC entry 4562 (class 0 OID 0)
 -- Dependencies: 260
 -- Name: embedding_models_id_seq; Type: SEQUENCE OWNED BY; Schema: kg; Owner: postgres
 --
@@ -1009,7 +1012,7 @@ CREATE SEQUENCE ops.bot_transport_events_id_seq
 ALTER SEQUENCE ops.bot_transport_events_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4555 (class 0 OID 0)
+-- TOC entry 4564 (class 0 OID 0)
 -- Dependencies: 277
 -- Name: bot_transport_events_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
 --
@@ -1052,7 +1055,7 @@ CREATE SEQUENCE ops.errors_id_seq
 ALTER SEQUENCE ops.errors_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4558 (class 0 OID 0)
+-- TOC entry 4567 (class 0 OID 0)
 -- Dependencies: 267
 -- Name: errors_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
 --
@@ -1094,7 +1097,7 @@ CREATE SEQUENCE ops.job_runs_id_seq
 ALTER SEQUENCE ops.job_runs_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4561 (class 0 OID 0)
+-- TOC entry 4570 (class 0 OID 0)
 -- Dependencies: 265
 -- Name: job_runs_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
 --
@@ -1116,7 +1119,7 @@ CREATE TABLE ops.jobs (
     payload jsonb NOT NULL,
     attempts integer DEFAULT 0 NOT NULL,
     max_attempts integer DEFAULT 10 NOT NULL,
-    next_run_at timestamp with time zone DEFAULT now() NOT NULL,
+    next_run_at timestamp with time zone DEFAULT now(),
     locked_at timestamp with time zone,
     locked_by text,
     correlation_id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -1144,7 +1147,7 @@ CREATE SEQUENCE ops.jobs_id_seq
 ALTER SEQUENCE ops.jobs_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4564 (class 0 OID 0)
+-- TOC entry 4573 (class 0 OID 0)
 -- Dependencies: 263
 -- Name: jobs_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
 --
@@ -1194,7 +1197,7 @@ CREATE SEQUENCE ops.webhook_health_snapshots_id_seq
 ALTER SEQUENCE ops.webhook_health_snapshots_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4567 (class 0 OID 0)
+-- TOC entry 4576 (class 0 OID 0)
 -- Dependencies: 275
 -- Name: webhook_health_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: ops; Owner: postgres
 --
@@ -1297,7 +1300,7 @@ CREATE SEQUENCE tg.chat_member_events_id_seq
 ALTER SEQUENCE tg.chat_member_events_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4573 (class 0 OID 0)
+-- TOC entry 4582 (class 0 OID 0)
 -- Dependencies: 247
 -- Name: chat_member_events_id_seq; Type: SEQUENCE OWNED BY; Schema: tg; Owner: postgres
 --
@@ -1416,7 +1419,7 @@ CREATE SEQUENCE tg.message_attachments_id_seq
 ALTER SEQUENCE tg.message_attachments_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4580 (class 0 OID 0)
+-- TOC entry 4589 (class 0 OID 0)
 -- Dependencies: 243
 -- Name: message_attachments_id_seq; Type: SEQUENCE OWNED BY; Schema: tg; Owner: postgres
 --
@@ -1472,7 +1475,7 @@ CREATE SEQUENCE tg.message_versions_id_seq
 ALTER SEQUENCE tg.message_versions_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4583 (class 0 OID 0)
+-- TOC entry 4592 (class 0 OID 0)
 -- Dependencies: 241
 -- Name: message_versions_id_seq; Type: SEQUENCE OWNED BY; Schema: tg; Owner: postgres
 --
@@ -1517,7 +1520,7 @@ CREATE SEQUENCE tg.messages_id_seq
 ALTER SEQUENCE tg.messages_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4586 (class 0 OID 0)
+-- TOC entry 4595 (class 0 OID 0)
 -- Dependencies: 239
 -- Name: messages_id_seq; Type: SEQUENCE OWNED BY; Schema: tg; Owner: postgres
 --
@@ -2742,7 +2745,16 @@ ALTER TABLE ONLY tg.messages
 
 --
 -- TOC entry 4283 (class 0 OID 0)
--- Dependencies: 16
+-- Dependencies: 17
+-- Name: SCHEMA content; Type: ACL; Schema: -; Owner: postgres
+--
+
+GRANT USAGE ON SCHEMA content TO n8n;
+
+
+--
+-- TOC entry 4284 (class 0 OID 0)
+-- Dependencies: 15
 -- Name: SCHEMA core; Type: ACL; Schema: -; Owner: postgres
 --
 
@@ -2750,8 +2762,8 @@ GRANT USAGE ON SCHEMA core TO service_role;
 
 
 --
--- TOC entry 4284 (class 0 OID 0)
--- Dependencies: 17
+-- TOC entry 4285 (class 0 OID 0)
+-- Dependencies: 16
 -- Name: SCHEMA ops; Type: ACL; Schema: -; Owner: postgres
 --
 
@@ -2760,8 +2772,8 @@ GRANT USAGE ON SCHEMA ops TO service_role;
 
 
 --
--- TOC entry 4285 (class 0 OID 0)
--- Dependencies: 15
+-- TOC entry 4286 (class 0 OID 0)
+-- Dependencies: 14
 -- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
 --
 
@@ -2769,8 +2781,8 @@ GRANT USAGE ON SCHEMA public TO service_role;
 
 
 --
--- TOC entry 4286 (class 0 OID 0)
--- Dependencies: 13
+-- TOC entry 4287 (class 0 OID 0)
+-- Dependencies: 12
 -- Name: SCHEMA raw; Type: ACL; Schema: -; Owner: postgres
 --
 
@@ -2778,8 +2790,8 @@ GRANT USAGE ON SCHEMA raw TO service_role;
 
 
 --
--- TOC entry 4287 (class 0 OID 0)
--- Dependencies: 14
+-- TOC entry 4288 (class 0 OID 0)
+-- Dependencies: 13
 -- Name: SCHEMA tg; Type: ACL; Schema: -; Owner: postgres
 --
 
@@ -2787,7 +2799,7 @@ GRANT USAGE ON SCHEMA tg TO service_role;
 
 
 --
--- TOC entry 4293 (class 0 OID 0)
+-- TOC entry 4294 (class 0 OID 0)
 -- Dependencies: 310
 -- Name: FUNCTION citextin(cstring); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2796,7 +2808,7 @@ GRANT ALL ON FUNCTION public.citextin(cstring) TO service_role;
 
 
 --
--- TOC entry 4294 (class 0 OID 0)
+-- TOC entry 4295 (class 0 OID 0)
 -- Dependencies: 327
 -- Name: FUNCTION citextout(public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2805,7 +2817,7 @@ GRANT ALL ON FUNCTION public.citextout(public.citext) TO service_role;
 
 
 --
--- TOC entry 4295 (class 0 OID 0)
+-- TOC entry 4296 (class 0 OID 0)
 -- Dependencies: 471
 -- Name: FUNCTION citextrecv(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2814,7 +2826,7 @@ GRANT ALL ON FUNCTION public.citextrecv(internal) TO service_role;
 
 
 --
--- TOC entry 4296 (class 0 OID 0)
+-- TOC entry 4297 (class 0 OID 0)
 -- Dependencies: 299
 -- Name: FUNCTION citextsend(public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2823,7 +2835,7 @@ GRANT ALL ON FUNCTION public.citextsend(public.citext) TO service_role;
 
 
 --
--- TOC entry 4297 (class 0 OID 0)
+-- TOC entry 4298 (class 0 OID 0)
 -- Dependencies: 488
 -- Name: FUNCTION gtrgm_in(cstring); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2832,7 +2844,7 @@ GRANT ALL ON FUNCTION public.gtrgm_in(cstring) TO service_role;
 
 
 --
--- TOC entry 4298 (class 0 OID 0)
+-- TOC entry 4299 (class 0 OID 0)
 -- Dependencies: 448
 -- Name: FUNCTION gtrgm_out(public.gtrgm); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2841,7 +2853,7 @@ GRANT ALL ON FUNCTION public.gtrgm_out(public.gtrgm) TO service_role;
 
 
 --
--- TOC entry 4299 (class 0 OID 0)
+-- TOC entry 4300 (class 0 OID 0)
 -- Dependencies: 392
 -- Name: FUNCTION halfvec_in(cstring, oid, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2850,7 +2862,7 @@ GRANT ALL ON FUNCTION public.halfvec_in(cstring, oid, integer) TO service_role;
 
 
 --
--- TOC entry 4300 (class 0 OID 0)
+-- TOC entry 4301 (class 0 OID 0)
 -- Dependencies: 527
 -- Name: FUNCTION halfvec_out(public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2859,7 +2871,7 @@ GRANT ALL ON FUNCTION public.halfvec_out(public.halfvec) TO service_role;
 
 
 --
--- TOC entry 4301 (class 0 OID 0)
+-- TOC entry 4302 (class 0 OID 0)
 -- Dependencies: 485
 -- Name: FUNCTION halfvec_recv(internal, oid, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2868,7 +2880,7 @@ GRANT ALL ON FUNCTION public.halfvec_recv(internal, oid, integer) TO service_rol
 
 
 --
--- TOC entry 4302 (class 0 OID 0)
+-- TOC entry 4303 (class 0 OID 0)
 -- Dependencies: 342
 -- Name: FUNCTION halfvec_send(public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2877,7 +2889,7 @@ GRANT ALL ON FUNCTION public.halfvec_send(public.halfvec) TO service_role;
 
 
 --
--- TOC entry 4303 (class 0 OID 0)
+-- TOC entry 4304 (class 0 OID 0)
 -- Dependencies: 436
 -- Name: FUNCTION halfvec_typmod_in(cstring[]); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2886,7 +2898,7 @@ GRANT ALL ON FUNCTION public.halfvec_typmod_in(cstring[]) TO service_role;
 
 
 --
--- TOC entry 4304 (class 0 OID 0)
+-- TOC entry 4305 (class 0 OID 0)
 -- Dependencies: 492
 -- Name: FUNCTION sparsevec_in(cstring, oid, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2895,7 +2907,7 @@ GRANT ALL ON FUNCTION public.sparsevec_in(cstring, oid, integer) TO service_role
 
 
 --
--- TOC entry 4305 (class 0 OID 0)
+-- TOC entry 4306 (class 0 OID 0)
 -- Dependencies: 399
 -- Name: FUNCTION sparsevec_out(public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2904,7 +2916,7 @@ GRANT ALL ON FUNCTION public.sparsevec_out(public.sparsevec) TO service_role;
 
 
 --
--- TOC entry 4306 (class 0 OID 0)
+-- TOC entry 4307 (class 0 OID 0)
 -- Dependencies: 404
 -- Name: FUNCTION sparsevec_recv(internal, oid, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2913,7 +2925,7 @@ GRANT ALL ON FUNCTION public.sparsevec_recv(internal, oid, integer) TO service_r
 
 
 --
--- TOC entry 4307 (class 0 OID 0)
+-- TOC entry 4308 (class 0 OID 0)
 -- Dependencies: 283
 -- Name: FUNCTION sparsevec_send(public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2922,7 +2934,7 @@ GRANT ALL ON FUNCTION public.sparsevec_send(public.sparsevec) TO service_role;
 
 
 --
--- TOC entry 4308 (class 0 OID 0)
+-- TOC entry 4309 (class 0 OID 0)
 -- Dependencies: 465
 -- Name: FUNCTION sparsevec_typmod_in(cstring[]); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2931,7 +2943,7 @@ GRANT ALL ON FUNCTION public.sparsevec_typmod_in(cstring[]) TO service_role;
 
 
 --
--- TOC entry 4309 (class 0 OID 0)
+-- TOC entry 4310 (class 0 OID 0)
 -- Dependencies: 444
 -- Name: FUNCTION vector_in(cstring, oid, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2940,7 +2952,7 @@ GRANT ALL ON FUNCTION public.vector_in(cstring, oid, integer) TO service_role;
 
 
 --
--- TOC entry 4310 (class 0 OID 0)
+-- TOC entry 4311 (class 0 OID 0)
 -- Dependencies: 317
 -- Name: FUNCTION vector_out(public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2949,7 +2961,7 @@ GRANT ALL ON FUNCTION public.vector_out(public.vector) TO service_role;
 
 
 --
--- TOC entry 4311 (class 0 OID 0)
+-- TOC entry 4312 (class 0 OID 0)
 -- Dependencies: 446
 -- Name: FUNCTION vector_recv(internal, oid, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2958,7 +2970,7 @@ GRANT ALL ON FUNCTION public.vector_recv(internal, oid, integer) TO service_role
 
 
 --
--- TOC entry 4312 (class 0 OID 0)
+-- TOC entry 4313 (class 0 OID 0)
 -- Dependencies: 439
 -- Name: FUNCTION vector_send(public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2967,7 +2979,7 @@ GRANT ALL ON FUNCTION public.vector_send(public.vector) TO service_role;
 
 
 --
--- TOC entry 4313 (class 0 OID 0)
+-- TOC entry 4314 (class 0 OID 0)
 -- Dependencies: 410
 -- Name: FUNCTION vector_typmod_in(cstring[]); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2976,7 +2988,7 @@ GRANT ALL ON FUNCTION public.vector_typmod_in(cstring[]) TO service_role;
 
 
 --
--- TOC entry 4314 (class 0 OID 0)
+-- TOC entry 4315 (class 0 OID 0)
 -- Dependencies: 522
 -- Name: FUNCTION array_to_halfvec(real[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2985,7 +2997,7 @@ GRANT ALL ON FUNCTION public.array_to_halfvec(real[], integer, boolean) TO servi
 
 
 --
--- TOC entry 4315 (class 0 OID 0)
+-- TOC entry 4316 (class 0 OID 0)
 -- Dependencies: 491
 -- Name: FUNCTION array_to_sparsevec(real[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -2994,7 +3006,7 @@ GRANT ALL ON FUNCTION public.array_to_sparsevec(real[], integer, boolean) TO ser
 
 
 --
--- TOC entry 4316 (class 0 OID 0)
+-- TOC entry 4317 (class 0 OID 0)
 -- Dependencies: 378
 -- Name: FUNCTION array_to_vector(real[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3003,7 +3015,7 @@ GRANT ALL ON FUNCTION public.array_to_vector(real[], integer, boolean) TO servic
 
 
 --
--- TOC entry 4317 (class 0 OID 0)
+-- TOC entry 4318 (class 0 OID 0)
 -- Dependencies: 508
 -- Name: FUNCTION array_to_halfvec(double precision[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3012,7 +3024,7 @@ GRANT ALL ON FUNCTION public.array_to_halfvec(double precision[], integer, boole
 
 
 --
--- TOC entry 4318 (class 0 OID 0)
+-- TOC entry 4319 (class 0 OID 0)
 -- Dependencies: 388
 -- Name: FUNCTION array_to_sparsevec(double precision[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3021,7 +3033,7 @@ GRANT ALL ON FUNCTION public.array_to_sparsevec(double precision[], integer, boo
 
 
 --
--- TOC entry 4319 (class 0 OID 0)
+-- TOC entry 4320 (class 0 OID 0)
 -- Dependencies: 498
 -- Name: FUNCTION array_to_vector(double precision[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3030,7 +3042,7 @@ GRANT ALL ON FUNCTION public.array_to_vector(double precision[], integer, boolea
 
 
 --
--- TOC entry 4320 (class 0 OID 0)
+-- TOC entry 4321 (class 0 OID 0)
 -- Dependencies: 420
 -- Name: FUNCTION array_to_halfvec(integer[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3039,7 +3051,7 @@ GRANT ALL ON FUNCTION public.array_to_halfvec(integer[], integer, boolean) TO se
 
 
 --
--- TOC entry 4321 (class 0 OID 0)
+-- TOC entry 4322 (class 0 OID 0)
 -- Dependencies: 421
 -- Name: FUNCTION array_to_sparsevec(integer[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3048,7 +3060,7 @@ GRANT ALL ON FUNCTION public.array_to_sparsevec(integer[], integer, boolean) TO 
 
 
 --
--- TOC entry 4322 (class 0 OID 0)
+-- TOC entry 4323 (class 0 OID 0)
 -- Dependencies: 309
 -- Name: FUNCTION array_to_vector(integer[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3057,7 +3069,7 @@ GRANT ALL ON FUNCTION public.array_to_vector(integer[], integer, boolean) TO ser
 
 
 --
--- TOC entry 4323 (class 0 OID 0)
+-- TOC entry 4324 (class 0 OID 0)
 -- Dependencies: 512
 -- Name: FUNCTION array_to_halfvec(numeric[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3066,7 +3078,7 @@ GRANT ALL ON FUNCTION public.array_to_halfvec(numeric[], integer, boolean) TO se
 
 
 --
--- TOC entry 4324 (class 0 OID 0)
+-- TOC entry 4325 (class 0 OID 0)
 -- Dependencies: 325
 -- Name: FUNCTION array_to_sparsevec(numeric[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3075,7 +3087,7 @@ GRANT ALL ON FUNCTION public.array_to_sparsevec(numeric[], integer, boolean) TO 
 
 
 --
--- TOC entry 4325 (class 0 OID 0)
+-- TOC entry 4326 (class 0 OID 0)
 -- Dependencies: 499
 -- Name: FUNCTION array_to_vector(numeric[], integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3084,7 +3096,7 @@ GRANT ALL ON FUNCTION public.array_to_vector(numeric[], integer, boolean) TO ser
 
 
 --
--- TOC entry 4326 (class 0 OID 0)
+-- TOC entry 4327 (class 0 OID 0)
 -- Dependencies: 376
 -- Name: FUNCTION citext(boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3093,7 +3105,7 @@ GRANT ALL ON FUNCTION public.citext(boolean) TO service_role;
 
 
 --
--- TOC entry 4327 (class 0 OID 0)
+-- TOC entry 4328 (class 0 OID 0)
 -- Dependencies: 496
 -- Name: FUNCTION citext(character); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3102,7 +3114,7 @@ GRANT ALL ON FUNCTION public.citext(character) TO service_role;
 
 
 --
--- TOC entry 4328 (class 0 OID 0)
+-- TOC entry 4329 (class 0 OID 0)
 -- Dependencies: 365
 -- Name: FUNCTION halfvec_to_float4(public.halfvec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3111,7 +3123,7 @@ GRANT ALL ON FUNCTION public.halfvec_to_float4(public.halfvec, integer, boolean)
 
 
 --
--- TOC entry 4329 (class 0 OID 0)
+-- TOC entry 4330 (class 0 OID 0)
 -- Dependencies: 443
 -- Name: FUNCTION halfvec(public.halfvec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3120,7 +3132,7 @@ GRANT ALL ON FUNCTION public.halfvec(public.halfvec, integer, boolean) TO servic
 
 
 --
--- TOC entry 4330 (class 0 OID 0)
+-- TOC entry 4331 (class 0 OID 0)
 -- Dependencies: 431
 -- Name: FUNCTION halfvec_to_sparsevec(public.halfvec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3129,7 +3141,7 @@ GRANT ALL ON FUNCTION public.halfvec_to_sparsevec(public.halfvec, integer, boole
 
 
 --
--- TOC entry 4331 (class 0 OID 0)
+-- TOC entry 4332 (class 0 OID 0)
 -- Dependencies: 484
 -- Name: FUNCTION halfvec_to_vector(public.halfvec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3138,7 +3150,7 @@ GRANT ALL ON FUNCTION public.halfvec_to_vector(public.halfvec, integer, boolean)
 
 
 --
--- TOC entry 4332 (class 0 OID 0)
+-- TOC entry 4333 (class 0 OID 0)
 -- Dependencies: 394
 -- Name: FUNCTION citext(inet); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3147,7 +3159,7 @@ GRANT ALL ON FUNCTION public.citext(inet) TO service_role;
 
 
 --
--- TOC entry 4333 (class 0 OID 0)
+-- TOC entry 4334 (class 0 OID 0)
 -- Dependencies: 302
 -- Name: FUNCTION sparsevec_to_halfvec(public.sparsevec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3156,7 +3168,7 @@ GRANT ALL ON FUNCTION public.sparsevec_to_halfvec(public.sparsevec, integer, boo
 
 
 --
--- TOC entry 4334 (class 0 OID 0)
+-- TOC entry 4335 (class 0 OID 0)
 -- Dependencies: 343
 -- Name: FUNCTION sparsevec(public.sparsevec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3165,7 +3177,7 @@ GRANT ALL ON FUNCTION public.sparsevec(public.sparsevec, integer, boolean) TO se
 
 
 --
--- TOC entry 4335 (class 0 OID 0)
+-- TOC entry 4336 (class 0 OID 0)
 -- Dependencies: 460
 -- Name: FUNCTION sparsevec_to_vector(public.sparsevec, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3174,7 +3186,7 @@ GRANT ALL ON FUNCTION public.sparsevec_to_vector(public.sparsevec, integer, bool
 
 
 --
--- TOC entry 4336 (class 0 OID 0)
+-- TOC entry 4337 (class 0 OID 0)
 -- Dependencies: 355
 -- Name: FUNCTION vector_to_float4(public.vector, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3183,7 +3195,7 @@ GRANT ALL ON FUNCTION public.vector_to_float4(public.vector, integer, boolean) T
 
 
 --
--- TOC entry 4337 (class 0 OID 0)
+-- TOC entry 4338 (class 0 OID 0)
 -- Dependencies: 510
 -- Name: FUNCTION vector_to_halfvec(public.vector, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3192,7 +3204,7 @@ GRANT ALL ON FUNCTION public.vector_to_halfvec(public.vector, integer, boolean) 
 
 
 --
--- TOC entry 4338 (class 0 OID 0)
+-- TOC entry 4339 (class 0 OID 0)
 -- Dependencies: 303
 -- Name: FUNCTION vector_to_sparsevec(public.vector, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3201,7 +3213,7 @@ GRANT ALL ON FUNCTION public.vector_to_sparsevec(public.vector, integer, boolean
 
 
 --
--- TOC entry 4339 (class 0 OID 0)
+-- TOC entry 4340 (class 0 OID 0)
 -- Dependencies: 372
 -- Name: FUNCTION vector(public.vector, integer, boolean); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3210,7 +3222,7 @@ GRANT ALL ON FUNCTION public.vector(public.vector, integer, boolean) TO service_
 
 
 --
--- TOC entry 4340 (class 0 OID 0)
+-- TOC entry 4341 (class 0 OID 0)
 -- Dependencies: 406
 -- Name: FUNCTION set_updated_at(); Type: ACL; Schema: core; Owner: postgres
 --
@@ -3219,7 +3231,7 @@ GRANT ALL ON FUNCTION core.set_updated_at() TO service_role;
 
 
 --
--- TOC entry 4341 (class 0 OID 0)
+-- TOC entry 4342 (class 0 OID 0)
 -- Dependencies: 481
 -- Name: FUNCTION tg_set_updated_at(); Type: ACL; Schema: core; Owner: postgres
 --
@@ -3228,7 +3240,7 @@ GRANT ALL ON FUNCTION core.tg_set_updated_at() TO service_role;
 
 
 --
--- TOC entry 4342 (class 0 OID 0)
+-- TOC entry 4343 (class 0 OID 0)
 -- Dependencies: 408
 -- Name: FUNCTION armor(bytea); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3237,7 +3249,7 @@ GRANT ALL ON FUNCTION public.armor(bytea) TO service_role;
 
 
 --
--- TOC entry 4343 (class 0 OID 0)
+-- TOC entry 4344 (class 0 OID 0)
 -- Dependencies: 356
 -- Name: FUNCTION armor(bytea, text[], text[]); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3246,7 +3258,7 @@ GRANT ALL ON FUNCTION public.armor(bytea, text[], text[]) TO service_role;
 
 
 --
--- TOC entry 4344 (class 0 OID 0)
+-- TOC entry 4345 (class 0 OID 0)
 -- Dependencies: 412
 -- Name: FUNCTION binary_quantize(public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3255,7 +3267,7 @@ GRANT ALL ON FUNCTION public.binary_quantize(public.halfvec) TO service_role;
 
 
 --
--- TOC entry 4345 (class 0 OID 0)
+-- TOC entry 4346 (class 0 OID 0)
 -- Dependencies: 497
 -- Name: FUNCTION binary_quantize(public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3264,7 +3276,7 @@ GRANT ALL ON FUNCTION public.binary_quantize(public.vector) TO service_role;
 
 
 --
--- TOC entry 4346 (class 0 OID 0)
+-- TOC entry 4347 (class 0 OID 0)
 -- Dependencies: 415
 -- Name: FUNCTION calculate_unit_economics(p_product_id uuid, p_sale_price numeric, p_cost_price numeric); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3273,7 +3285,7 @@ GRANT ALL ON FUNCTION public.calculate_unit_economics(p_product_id uuid, p_sale_
 
 
 --
--- TOC entry 4347 (class 0 OID 0)
+-- TOC entry 4348 (class 0 OID 0)
 -- Dependencies: 308
 -- Name: FUNCTION citext_cmp(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3282,7 +3294,7 @@ GRANT ALL ON FUNCTION public.citext_cmp(public.citext, public.citext) TO service
 
 
 --
--- TOC entry 4348 (class 0 OID 0)
+-- TOC entry 4349 (class 0 OID 0)
 -- Dependencies: 321
 -- Name: FUNCTION citext_eq(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3291,7 +3303,7 @@ GRANT ALL ON FUNCTION public.citext_eq(public.citext, public.citext) TO service_
 
 
 --
--- TOC entry 4349 (class 0 OID 0)
+-- TOC entry 4350 (class 0 OID 0)
 -- Dependencies: 396
 -- Name: FUNCTION citext_ge(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3300,7 +3312,7 @@ GRANT ALL ON FUNCTION public.citext_ge(public.citext, public.citext) TO service_
 
 
 --
--- TOC entry 4350 (class 0 OID 0)
+-- TOC entry 4351 (class 0 OID 0)
 -- Dependencies: 349
 -- Name: FUNCTION citext_gt(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3309,7 +3321,7 @@ GRANT ALL ON FUNCTION public.citext_gt(public.citext, public.citext) TO service_
 
 
 --
--- TOC entry 4351 (class 0 OID 0)
+-- TOC entry 4352 (class 0 OID 0)
 -- Dependencies: 466
 -- Name: FUNCTION citext_hash(public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3318,7 +3330,7 @@ GRANT ALL ON FUNCTION public.citext_hash(public.citext) TO service_role;
 
 
 --
--- TOC entry 4352 (class 0 OID 0)
+-- TOC entry 4353 (class 0 OID 0)
 -- Dependencies: 467
 -- Name: FUNCTION citext_hash_extended(public.citext, bigint); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3327,7 +3339,7 @@ GRANT ALL ON FUNCTION public.citext_hash_extended(public.citext, bigint) TO serv
 
 
 --
--- TOC entry 4353 (class 0 OID 0)
+-- TOC entry 4354 (class 0 OID 0)
 -- Dependencies: 526
 -- Name: FUNCTION citext_larger(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3336,7 +3348,7 @@ GRANT ALL ON FUNCTION public.citext_larger(public.citext, public.citext) TO serv
 
 
 --
--- TOC entry 4354 (class 0 OID 0)
+-- TOC entry 4355 (class 0 OID 0)
 -- Dependencies: 461
 -- Name: FUNCTION citext_le(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3345,7 +3357,7 @@ GRANT ALL ON FUNCTION public.citext_le(public.citext, public.citext) TO service_
 
 
 --
--- TOC entry 4355 (class 0 OID 0)
+-- TOC entry 4356 (class 0 OID 0)
 -- Dependencies: 516
 -- Name: FUNCTION citext_lt(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3354,7 +3366,7 @@ GRANT ALL ON FUNCTION public.citext_lt(public.citext, public.citext) TO service_
 
 
 --
--- TOC entry 4356 (class 0 OID 0)
+-- TOC entry 4357 (class 0 OID 0)
 -- Dependencies: 311
 -- Name: FUNCTION citext_ne(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3363,7 +3375,7 @@ GRANT ALL ON FUNCTION public.citext_ne(public.citext, public.citext) TO service_
 
 
 --
--- TOC entry 4357 (class 0 OID 0)
+-- TOC entry 4358 (class 0 OID 0)
 -- Dependencies: 360
 -- Name: FUNCTION citext_pattern_cmp(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3372,7 +3384,7 @@ GRANT ALL ON FUNCTION public.citext_pattern_cmp(public.citext, public.citext) TO
 
 
 --
--- TOC entry 4358 (class 0 OID 0)
+-- TOC entry 4359 (class 0 OID 0)
 -- Dependencies: 455
 -- Name: FUNCTION citext_pattern_ge(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3381,7 +3393,7 @@ GRANT ALL ON FUNCTION public.citext_pattern_ge(public.citext, public.citext) TO 
 
 
 --
--- TOC entry 4359 (class 0 OID 0)
+-- TOC entry 4360 (class 0 OID 0)
 -- Dependencies: 469
 -- Name: FUNCTION citext_pattern_gt(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3390,7 +3402,7 @@ GRANT ALL ON FUNCTION public.citext_pattern_gt(public.citext, public.citext) TO 
 
 
 --
--- TOC entry 4360 (class 0 OID 0)
+-- TOC entry 4361 (class 0 OID 0)
 -- Dependencies: 403
 -- Name: FUNCTION citext_pattern_le(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3399,7 +3411,7 @@ GRANT ALL ON FUNCTION public.citext_pattern_le(public.citext, public.citext) TO 
 
 
 --
--- TOC entry 4361 (class 0 OID 0)
+-- TOC entry 4362 (class 0 OID 0)
 -- Dependencies: 367
 -- Name: FUNCTION citext_pattern_lt(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3408,7 +3420,7 @@ GRANT ALL ON FUNCTION public.citext_pattern_lt(public.citext, public.citext) TO 
 
 
 --
--- TOC entry 4362 (class 0 OID 0)
+-- TOC entry 4363 (class 0 OID 0)
 -- Dependencies: 416
 -- Name: FUNCTION citext_smaller(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3417,7 +3429,7 @@ GRANT ALL ON FUNCTION public.citext_smaller(public.citext, public.citext) TO ser
 
 
 --
--- TOC entry 4363 (class 0 OID 0)
+-- TOC entry 4364 (class 0 OID 0)
 -- Dependencies: 402
 -- Name: FUNCTION cosine_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3426,7 +3438,7 @@ GRANT ALL ON FUNCTION public.cosine_distance(public.halfvec, public.halfvec) TO 
 
 
 --
--- TOC entry 4364 (class 0 OID 0)
+-- TOC entry 4365 (class 0 OID 0)
 -- Dependencies: 489
 -- Name: FUNCTION cosine_distance(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3435,7 +3447,7 @@ GRANT ALL ON FUNCTION public.cosine_distance(public.sparsevec, public.sparsevec)
 
 
 --
--- TOC entry 4365 (class 0 OID 0)
+-- TOC entry 4366 (class 0 OID 0)
 -- Dependencies: 456
 -- Name: FUNCTION cosine_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3444,7 +3456,7 @@ GRANT ALL ON FUNCTION public.cosine_distance(public.vector, public.vector) TO se
 
 
 --
--- TOC entry 4366 (class 0 OID 0)
+-- TOC entry 4367 (class 0 OID 0)
 -- Dependencies: 334
 -- Name: FUNCTION crypt(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3453,7 +3465,7 @@ GRANT ALL ON FUNCTION public.crypt(text, text) TO service_role;
 
 
 --
--- TOC entry 4367 (class 0 OID 0)
+-- TOC entry 4368 (class 0 OID 0)
 -- Dependencies: 330
 -- Name: FUNCTION dearmor(text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3462,7 +3474,7 @@ GRANT ALL ON FUNCTION public.dearmor(text) TO service_role;
 
 
 --
--- TOC entry 4368 (class 0 OID 0)
+-- TOC entry 4369 (class 0 OID 0)
 -- Dependencies: 445
 -- Name: FUNCTION decrypt(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3471,7 +3483,7 @@ GRANT ALL ON FUNCTION public.decrypt(bytea, bytea, text) TO service_role;
 
 
 --
--- TOC entry 4369 (class 0 OID 0)
+-- TOC entry 4370 (class 0 OID 0)
 -- Dependencies: 393
 -- Name: FUNCTION decrypt_iv(bytea, bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3480,7 +3492,7 @@ GRANT ALL ON FUNCTION public.decrypt_iv(bytea, bytea, bytea, text) TO service_ro
 
 
 --
--- TOC entry 4370 (class 0 OID 0)
+-- TOC entry 4371 (class 0 OID 0)
 -- Dependencies: 364
 -- Name: FUNCTION digest(bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3489,7 +3501,7 @@ GRANT ALL ON FUNCTION public.digest(bytea, text) TO service_role;
 
 
 --
--- TOC entry 4371 (class 0 OID 0)
+-- TOC entry 4372 (class 0 OID 0)
 -- Dependencies: 435
 -- Name: FUNCTION digest(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3498,7 +3510,7 @@ GRANT ALL ON FUNCTION public.digest(text, text) TO service_role;
 
 
 --
--- TOC entry 4372 (class 0 OID 0)
+-- TOC entry 4373 (class 0 OID 0)
 -- Dependencies: 340
 -- Name: FUNCTION encrypt(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3507,7 +3519,7 @@ GRANT ALL ON FUNCTION public.encrypt(bytea, bytea, text) TO service_role;
 
 
 --
--- TOC entry 4373 (class 0 OID 0)
+-- TOC entry 4374 (class 0 OID 0)
 -- Dependencies: 509
 -- Name: FUNCTION encrypt_iv(bytea, bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3516,7 +3528,7 @@ GRANT ALL ON FUNCTION public.encrypt_iv(bytea, bytea, bytea, text) TO service_ro
 
 
 --
--- TOC entry 4374 (class 0 OID 0)
+-- TOC entry 4375 (class 0 OID 0)
 -- Dependencies: 440
 -- Name: FUNCTION gen_random_bytes(integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3525,7 +3537,7 @@ GRANT ALL ON FUNCTION public.gen_random_bytes(integer) TO service_role;
 
 
 --
--- TOC entry 4375 (class 0 OID 0)
+-- TOC entry 4376 (class 0 OID 0)
 -- Dependencies: 500
 -- Name: FUNCTION gen_random_uuid(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3534,7 +3546,7 @@ GRANT ALL ON FUNCTION public.gen_random_uuid() TO service_role;
 
 
 --
--- TOC entry 4376 (class 0 OID 0)
+-- TOC entry 4377 (class 0 OID 0)
 -- Dependencies: 391
 -- Name: FUNCTION gen_salt(text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3543,7 +3555,7 @@ GRANT ALL ON FUNCTION public.gen_salt(text) TO service_role;
 
 
 --
--- TOC entry 4377 (class 0 OID 0)
+-- TOC entry 4378 (class 0 OID 0)
 -- Dependencies: 332
 -- Name: FUNCTION gen_salt(text, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3552,7 +3564,7 @@ GRANT ALL ON FUNCTION public.gen_salt(text, integer) TO service_role;
 
 
 --
--- TOC entry 4378 (class 0 OID 0)
+-- TOC entry 4379 (class 0 OID 0)
 -- Dependencies: 470
 -- Name: FUNCTION gin_extract_query_trgm(text, internal, smallint, internal, internal, internal, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3561,7 +3573,7 @@ GRANT ALL ON FUNCTION public.gin_extract_query_trgm(text, internal, smallint, in
 
 
 --
--- TOC entry 4379 (class 0 OID 0)
+-- TOC entry 4380 (class 0 OID 0)
 -- Dependencies: 352
 -- Name: FUNCTION gin_extract_value_trgm(text, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3570,7 +3582,7 @@ GRANT ALL ON FUNCTION public.gin_extract_value_trgm(text, internal) TO service_r
 
 
 --
--- TOC entry 4380 (class 0 OID 0)
+-- TOC entry 4381 (class 0 OID 0)
 -- Dependencies: 386
 -- Name: FUNCTION gin_trgm_consistent(internal, smallint, text, integer, internal, internal, internal, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3579,7 +3591,7 @@ GRANT ALL ON FUNCTION public.gin_trgm_consistent(internal, smallint, text, integ
 
 
 --
--- TOC entry 4381 (class 0 OID 0)
+-- TOC entry 4382 (class 0 OID 0)
 -- Dependencies: 468
 -- Name: FUNCTION gin_trgm_triconsistent(internal, smallint, text, integer, internal, internal, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3588,7 +3600,7 @@ GRANT ALL ON FUNCTION public.gin_trgm_triconsistent(internal, smallint, text, in
 
 
 --
--- TOC entry 4382 (class 0 OID 0)
+-- TOC entry 4383 (class 0 OID 0)
 -- Dependencies: 480
 -- Name: FUNCTION gtrgm_compress(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3597,7 +3609,7 @@ GRANT ALL ON FUNCTION public.gtrgm_compress(internal) TO service_role;
 
 
 --
--- TOC entry 4383 (class 0 OID 0)
+-- TOC entry 4384 (class 0 OID 0)
 -- Dependencies: 322
 -- Name: FUNCTION gtrgm_consistent(internal, text, smallint, oid, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3606,7 +3618,7 @@ GRANT ALL ON FUNCTION public.gtrgm_consistent(internal, text, smallint, oid, int
 
 
 --
--- TOC entry 4384 (class 0 OID 0)
+-- TOC entry 4385 (class 0 OID 0)
 -- Dependencies: 369
 -- Name: FUNCTION gtrgm_decompress(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3615,7 +3627,7 @@ GRANT ALL ON FUNCTION public.gtrgm_decompress(internal) TO service_role;
 
 
 --
--- TOC entry 4385 (class 0 OID 0)
+-- TOC entry 4386 (class 0 OID 0)
 -- Dependencies: 345
 -- Name: FUNCTION gtrgm_distance(internal, text, smallint, oid, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3624,7 +3636,7 @@ GRANT ALL ON FUNCTION public.gtrgm_distance(internal, text, smallint, oid, inter
 
 
 --
--- TOC entry 4386 (class 0 OID 0)
+-- TOC entry 4387 (class 0 OID 0)
 -- Dependencies: 350
 -- Name: FUNCTION gtrgm_options(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3633,7 +3645,7 @@ GRANT ALL ON FUNCTION public.gtrgm_options(internal) TO service_role;
 
 
 --
--- TOC entry 4387 (class 0 OID 0)
+-- TOC entry 4388 (class 0 OID 0)
 -- Dependencies: 429
 -- Name: FUNCTION gtrgm_penalty(internal, internal, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3642,7 +3654,7 @@ GRANT ALL ON FUNCTION public.gtrgm_penalty(internal, internal, internal) TO serv
 
 
 --
--- TOC entry 4388 (class 0 OID 0)
+-- TOC entry 4389 (class 0 OID 0)
 -- Dependencies: 280
 -- Name: FUNCTION gtrgm_picksplit(internal, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3651,7 +3663,7 @@ GRANT ALL ON FUNCTION public.gtrgm_picksplit(internal, internal) TO service_role
 
 
 --
--- TOC entry 4389 (class 0 OID 0)
+-- TOC entry 4390 (class 0 OID 0)
 -- Dependencies: 307
 -- Name: FUNCTION gtrgm_same(public.gtrgm, public.gtrgm, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3660,7 +3672,7 @@ GRANT ALL ON FUNCTION public.gtrgm_same(public.gtrgm, public.gtrgm, internal) TO
 
 
 --
--- TOC entry 4390 (class 0 OID 0)
+-- TOC entry 4391 (class 0 OID 0)
 -- Dependencies: 368
 -- Name: FUNCTION gtrgm_union(internal, internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3669,7 +3681,7 @@ GRANT ALL ON FUNCTION public.gtrgm_union(internal, internal) TO service_role;
 
 
 --
--- TOC entry 4391 (class 0 OID 0)
+-- TOC entry 4392 (class 0 OID 0)
 -- Dependencies: 382
 -- Name: FUNCTION halfvec_accum(double precision[], public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3678,7 +3690,7 @@ GRANT ALL ON FUNCTION public.halfvec_accum(double precision[], public.halfvec) T
 
 
 --
--- TOC entry 4392 (class 0 OID 0)
+-- TOC entry 4393 (class 0 OID 0)
 -- Dependencies: 335
 -- Name: FUNCTION halfvec_add(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3687,7 +3699,7 @@ GRANT ALL ON FUNCTION public.halfvec_add(public.halfvec, public.halfvec) TO serv
 
 
 --
--- TOC entry 4393 (class 0 OID 0)
+-- TOC entry 4394 (class 0 OID 0)
 -- Dependencies: 487
 -- Name: FUNCTION halfvec_avg(double precision[]); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3696,7 +3708,7 @@ GRANT ALL ON FUNCTION public.halfvec_avg(double precision[]) TO service_role;
 
 
 --
--- TOC entry 4394 (class 0 OID 0)
+-- TOC entry 4395 (class 0 OID 0)
 -- Dependencies: 344
 -- Name: FUNCTION halfvec_cmp(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3705,7 +3717,7 @@ GRANT ALL ON FUNCTION public.halfvec_cmp(public.halfvec, public.halfvec) TO serv
 
 
 --
--- TOC entry 4395 (class 0 OID 0)
+-- TOC entry 4396 (class 0 OID 0)
 -- Dependencies: 464
 -- Name: FUNCTION halfvec_combine(double precision[], double precision[]); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3714,7 +3726,7 @@ GRANT ALL ON FUNCTION public.halfvec_combine(double precision[], double precisio
 
 
 --
--- TOC entry 4396 (class 0 OID 0)
+-- TOC entry 4397 (class 0 OID 0)
 -- Dependencies: 292
 -- Name: FUNCTION halfvec_concat(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3723,7 +3735,7 @@ GRANT ALL ON FUNCTION public.halfvec_concat(public.halfvec, public.halfvec) TO s
 
 
 --
--- TOC entry 4397 (class 0 OID 0)
+-- TOC entry 4398 (class 0 OID 0)
 -- Dependencies: 379
 -- Name: FUNCTION halfvec_eq(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3732,7 +3744,7 @@ GRANT ALL ON FUNCTION public.halfvec_eq(public.halfvec, public.halfvec) TO servi
 
 
 --
--- TOC entry 4398 (class 0 OID 0)
+-- TOC entry 4399 (class 0 OID 0)
 -- Dependencies: 428
 -- Name: FUNCTION halfvec_ge(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3741,7 +3753,7 @@ GRANT ALL ON FUNCTION public.halfvec_ge(public.halfvec, public.halfvec) TO servi
 
 
 --
--- TOC entry 4399 (class 0 OID 0)
+-- TOC entry 4400 (class 0 OID 0)
 -- Dependencies: 286
 -- Name: FUNCTION halfvec_gt(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3750,7 +3762,7 @@ GRANT ALL ON FUNCTION public.halfvec_gt(public.halfvec, public.halfvec) TO servi
 
 
 --
--- TOC entry 4400 (class 0 OID 0)
+-- TOC entry 4401 (class 0 OID 0)
 -- Dependencies: 291
 -- Name: FUNCTION halfvec_l2_squared_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3759,7 +3771,7 @@ GRANT ALL ON FUNCTION public.halfvec_l2_squared_distance(public.halfvec, public.
 
 
 --
--- TOC entry 4401 (class 0 OID 0)
+-- TOC entry 4402 (class 0 OID 0)
 -- Dependencies: 472
 -- Name: FUNCTION halfvec_le(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3768,7 +3780,7 @@ GRANT ALL ON FUNCTION public.halfvec_le(public.halfvec, public.halfvec) TO servi
 
 
 --
--- TOC entry 4402 (class 0 OID 0)
+-- TOC entry 4403 (class 0 OID 0)
 -- Dependencies: 362
 -- Name: FUNCTION halfvec_lt(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3777,7 +3789,7 @@ GRANT ALL ON FUNCTION public.halfvec_lt(public.halfvec, public.halfvec) TO servi
 
 
 --
--- TOC entry 4403 (class 0 OID 0)
+-- TOC entry 4404 (class 0 OID 0)
 -- Dependencies: 478
 -- Name: FUNCTION halfvec_mul(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3786,7 +3798,7 @@ GRANT ALL ON FUNCTION public.halfvec_mul(public.halfvec, public.halfvec) TO serv
 
 
 --
--- TOC entry 4404 (class 0 OID 0)
+-- TOC entry 4405 (class 0 OID 0)
 -- Dependencies: 337
 -- Name: FUNCTION halfvec_ne(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3795,7 +3807,7 @@ GRANT ALL ON FUNCTION public.halfvec_ne(public.halfvec, public.halfvec) TO servi
 
 
 --
--- TOC entry 4405 (class 0 OID 0)
+-- TOC entry 4406 (class 0 OID 0)
 -- Dependencies: 427
 -- Name: FUNCTION halfvec_negative_inner_product(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3804,7 +3816,7 @@ GRANT ALL ON FUNCTION public.halfvec_negative_inner_product(public.halfvec, publ
 
 
 --
--- TOC entry 4406 (class 0 OID 0)
+-- TOC entry 4407 (class 0 OID 0)
 -- Dependencies: 441
 -- Name: FUNCTION halfvec_spherical_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3813,7 +3825,7 @@ GRANT ALL ON FUNCTION public.halfvec_spherical_distance(public.halfvec, public.h
 
 
 --
--- TOC entry 4407 (class 0 OID 0)
+-- TOC entry 4408 (class 0 OID 0)
 -- Dependencies: 411
 -- Name: FUNCTION halfvec_sub(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3822,7 +3834,7 @@ GRANT ALL ON FUNCTION public.halfvec_sub(public.halfvec, public.halfvec) TO serv
 
 
 --
--- TOC entry 4408 (class 0 OID 0)
+-- TOC entry 4409 (class 0 OID 0)
 -- Dependencies: 505
 -- Name: FUNCTION hamming_distance(bit, bit); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3831,7 +3843,7 @@ GRANT ALL ON FUNCTION public.hamming_distance(bit, bit) TO service_role;
 
 
 --
--- TOC entry 4409 (class 0 OID 0)
+-- TOC entry 4410 (class 0 OID 0)
 -- Dependencies: 383
 -- Name: FUNCTION hmac(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3840,7 +3852,7 @@ GRANT ALL ON FUNCTION public.hmac(bytea, bytea, text) TO service_role;
 
 
 --
--- TOC entry 4410 (class 0 OID 0)
+-- TOC entry 4411 (class 0 OID 0)
 -- Dependencies: 425
 -- Name: FUNCTION hmac(text, text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3849,7 +3861,7 @@ GRANT ALL ON FUNCTION public.hmac(text, text, text) TO service_role;
 
 
 --
--- TOC entry 4411 (class 0 OID 0)
+-- TOC entry 4412 (class 0 OID 0)
 -- Dependencies: 521
 -- Name: FUNCTION hnsw_bit_support(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3858,7 +3870,7 @@ GRANT ALL ON FUNCTION public.hnsw_bit_support(internal) TO service_role;
 
 
 --
--- TOC entry 4412 (class 0 OID 0)
+-- TOC entry 4413 (class 0 OID 0)
 -- Dependencies: 517
 -- Name: FUNCTION hnsw_halfvec_support(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3867,7 +3879,7 @@ GRANT ALL ON FUNCTION public.hnsw_halfvec_support(internal) TO service_role;
 
 
 --
--- TOC entry 4413 (class 0 OID 0)
+-- TOC entry 4414 (class 0 OID 0)
 -- Dependencies: 316
 -- Name: FUNCTION hnsw_sparsevec_support(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3876,7 +3888,7 @@ GRANT ALL ON FUNCTION public.hnsw_sparsevec_support(internal) TO service_role;
 
 
 --
--- TOC entry 4414 (class 0 OID 0)
+-- TOC entry 4415 (class 0 OID 0)
 -- Dependencies: 395
 -- Name: FUNCTION hnswhandler(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3885,7 +3897,7 @@ GRANT ALL ON FUNCTION public.hnswhandler(internal) TO service_role;
 
 
 --
--- TOC entry 4415 (class 0 OID 0)
+-- TOC entry 4416 (class 0 OID 0)
 -- Dependencies: 298
 -- Name: FUNCTION inner_product(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3894,7 +3906,7 @@ GRANT ALL ON FUNCTION public.inner_product(public.halfvec, public.halfvec) TO se
 
 
 --
--- TOC entry 4416 (class 0 OID 0)
+-- TOC entry 4417 (class 0 OID 0)
 -- Dependencies: 290
 -- Name: FUNCTION inner_product(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3903,7 +3915,7 @@ GRANT ALL ON FUNCTION public.inner_product(public.sparsevec, public.sparsevec) T
 
 
 --
--- TOC entry 4417 (class 0 OID 0)
+-- TOC entry 4418 (class 0 OID 0)
 -- Dependencies: 338
 -- Name: FUNCTION inner_product(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3912,7 +3924,7 @@ GRANT ALL ON FUNCTION public.inner_product(public.vector, public.vector) TO serv
 
 
 --
--- TOC entry 4418 (class 0 OID 0)
+-- TOC entry 4419 (class 0 OID 0)
 -- Dependencies: 413
 -- Name: FUNCTION ivfflat_bit_support(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3921,7 +3933,7 @@ GRANT ALL ON FUNCTION public.ivfflat_bit_support(internal) TO service_role;
 
 
 --
--- TOC entry 4419 (class 0 OID 0)
+-- TOC entry 4420 (class 0 OID 0)
 -- Dependencies: 374
 -- Name: FUNCTION ivfflat_halfvec_support(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3930,7 +3942,7 @@ GRANT ALL ON FUNCTION public.ivfflat_halfvec_support(internal) TO service_role;
 
 
 --
--- TOC entry 4420 (class 0 OID 0)
+-- TOC entry 4421 (class 0 OID 0)
 -- Dependencies: 282
 -- Name: FUNCTION ivfflathandler(internal); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3939,7 +3951,7 @@ GRANT ALL ON FUNCTION public.ivfflathandler(internal) TO service_role;
 
 
 --
--- TOC entry 4421 (class 0 OID 0)
+-- TOC entry 4422 (class 0 OID 0)
 -- Dependencies: 312
 -- Name: FUNCTION jaccard_distance(bit, bit); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3948,7 +3960,7 @@ GRANT ALL ON FUNCTION public.jaccard_distance(bit, bit) TO service_role;
 
 
 --
--- TOC entry 4422 (class 0 OID 0)
+-- TOC entry 4423 (class 0 OID 0)
 -- Dependencies: 281
 -- Name: FUNCTION l1_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3957,7 +3969,7 @@ GRANT ALL ON FUNCTION public.l1_distance(public.halfvec, public.halfvec) TO serv
 
 
 --
--- TOC entry 4423 (class 0 OID 0)
+-- TOC entry 4424 (class 0 OID 0)
 -- Dependencies: 390
 -- Name: FUNCTION l1_distance(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3966,7 +3978,7 @@ GRANT ALL ON FUNCTION public.l1_distance(public.sparsevec, public.sparsevec) TO 
 
 
 --
--- TOC entry 4424 (class 0 OID 0)
+-- TOC entry 4425 (class 0 OID 0)
 -- Dependencies: 502
 -- Name: FUNCTION l1_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3975,7 +3987,7 @@ GRANT ALL ON FUNCTION public.l1_distance(public.vector, public.vector) TO servic
 
 
 --
--- TOC entry 4425 (class 0 OID 0)
+-- TOC entry 4426 (class 0 OID 0)
 -- Dependencies: 474
 -- Name: FUNCTION l2_distance(public.halfvec, public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3984,7 +3996,7 @@ GRANT ALL ON FUNCTION public.l2_distance(public.halfvec, public.halfvec) TO serv
 
 
 --
--- TOC entry 4426 (class 0 OID 0)
+-- TOC entry 4427 (class 0 OID 0)
 -- Dependencies: 398
 -- Name: FUNCTION l2_distance(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -3993,7 +4005,7 @@ GRANT ALL ON FUNCTION public.l2_distance(public.sparsevec, public.sparsevec) TO 
 
 
 --
--- TOC entry 4427 (class 0 OID 0)
+-- TOC entry 4428 (class 0 OID 0)
 -- Dependencies: 525
 -- Name: FUNCTION l2_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4002,7 +4014,7 @@ GRANT ALL ON FUNCTION public.l2_distance(public.vector, public.vector) TO servic
 
 
 --
--- TOC entry 4428 (class 0 OID 0)
+-- TOC entry 4429 (class 0 OID 0)
 -- Dependencies: 506
 -- Name: FUNCTION l2_norm(public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4011,7 +4023,7 @@ GRANT ALL ON FUNCTION public.l2_norm(public.halfvec) TO service_role;
 
 
 --
--- TOC entry 4429 (class 0 OID 0)
+-- TOC entry 4430 (class 0 OID 0)
 -- Dependencies: 424
 -- Name: FUNCTION l2_norm(public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4020,7 +4032,7 @@ GRANT ALL ON FUNCTION public.l2_norm(public.sparsevec) TO service_role;
 
 
 --
--- TOC entry 4430 (class 0 OID 0)
+-- TOC entry 4431 (class 0 OID 0)
 -- Dependencies: 305
 -- Name: FUNCTION l2_normalize(public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4029,7 +4041,7 @@ GRANT ALL ON FUNCTION public.l2_normalize(public.halfvec) TO service_role;
 
 
 --
--- TOC entry 4431 (class 0 OID 0)
+-- TOC entry 4432 (class 0 OID 0)
 -- Dependencies: 462
 -- Name: FUNCTION l2_normalize(public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4038,7 +4050,7 @@ GRANT ALL ON FUNCTION public.l2_normalize(public.sparsevec) TO service_role;
 
 
 --
--- TOC entry 4432 (class 0 OID 0)
+-- TOC entry 4433 (class 0 OID 0)
 -- Dependencies: 387
 -- Name: FUNCTION l2_normalize(public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4047,7 +4059,7 @@ GRANT ALL ON FUNCTION public.l2_normalize(public.vector) TO service_role;
 
 
 --
--- TOC entry 4433 (class 0 OID 0)
+-- TOC entry 4434 (class 0 OID 0)
 -- Dependencies: 473
 -- Name: FUNCTION pgp_armor_headers(text, OUT key text, OUT value text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4056,7 +4068,7 @@ GRANT ALL ON FUNCTION public.pgp_armor_headers(text, OUT key text, OUT value tex
 
 
 --
--- TOC entry 4434 (class 0 OID 0)
+-- TOC entry 4435 (class 0 OID 0)
 -- Dependencies: 288
 -- Name: FUNCTION pgp_key_id(bytea); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4065,7 +4077,7 @@ GRANT ALL ON FUNCTION public.pgp_key_id(bytea) TO service_role;
 
 
 --
--- TOC entry 4435 (class 0 OID 0)
+-- TOC entry 4436 (class 0 OID 0)
 -- Dependencies: 414
 -- Name: FUNCTION pgp_pub_decrypt(bytea, bytea); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4074,7 +4086,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_decrypt(bytea, bytea) TO service_role;
 
 
 --
--- TOC entry 4436 (class 0 OID 0)
+-- TOC entry 4437 (class 0 OID 0)
 -- Dependencies: 328
 -- Name: FUNCTION pgp_pub_decrypt(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4083,7 +4095,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_decrypt(bytea, bytea, text) TO service_role
 
 
 --
--- TOC entry 4437 (class 0 OID 0)
+-- TOC entry 4438 (class 0 OID 0)
 -- Dependencies: 358
 -- Name: FUNCTION pgp_pub_decrypt(bytea, bytea, text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4092,7 +4104,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_decrypt(bytea, bytea, text, text) TO servic
 
 
 --
--- TOC entry 4438 (class 0 OID 0)
+-- TOC entry 4439 (class 0 OID 0)
 -- Dependencies: 423
 -- Name: FUNCTION pgp_pub_decrypt_bytea(bytea, bytea); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4101,7 +4113,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_decrypt_bytea(bytea, bytea) TO service_role
 
 
 --
--- TOC entry 4439 (class 0 OID 0)
+-- TOC entry 4440 (class 0 OID 0)
 -- Dependencies: 432
 -- Name: FUNCTION pgp_pub_decrypt_bytea(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4110,7 +4122,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_decrypt_bytea(bytea, bytea, text) TO servic
 
 
 --
--- TOC entry 4440 (class 0 OID 0)
+-- TOC entry 4441 (class 0 OID 0)
 -- Dependencies: 504
 -- Name: FUNCTION pgp_pub_decrypt_bytea(bytea, bytea, text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4119,7 +4131,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_decrypt_bytea(bytea, bytea, text, text) TO 
 
 
 --
--- TOC entry 4441 (class 0 OID 0)
+-- TOC entry 4442 (class 0 OID 0)
 -- Dependencies: 329
 -- Name: FUNCTION pgp_pub_encrypt(text, bytea); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4128,7 +4140,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_encrypt(text, bytea) TO service_role;
 
 
 --
--- TOC entry 4442 (class 0 OID 0)
+-- TOC entry 4443 (class 0 OID 0)
 -- Dependencies: 285
 -- Name: FUNCTION pgp_pub_encrypt(text, bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4137,7 +4149,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_encrypt(text, bytea, text) TO service_role;
 
 
 --
--- TOC entry 4443 (class 0 OID 0)
+-- TOC entry 4444 (class 0 OID 0)
 -- Dependencies: 336
 -- Name: FUNCTION pgp_pub_encrypt_bytea(bytea, bytea); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4146,7 +4158,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_encrypt_bytea(bytea, bytea) TO service_role
 
 
 --
--- TOC entry 4444 (class 0 OID 0)
+-- TOC entry 4445 (class 0 OID 0)
 -- Dependencies: 295
 -- Name: FUNCTION pgp_pub_encrypt_bytea(bytea, bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4155,7 +4167,7 @@ GRANT ALL ON FUNCTION public.pgp_pub_encrypt_bytea(bytea, bytea, text) TO servic
 
 
 --
--- TOC entry 4445 (class 0 OID 0)
+-- TOC entry 4446 (class 0 OID 0)
 -- Dependencies: 289
 -- Name: FUNCTION pgp_sym_decrypt(bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4164,7 +4176,7 @@ GRANT ALL ON FUNCTION public.pgp_sym_decrypt(bytea, text) TO service_role;
 
 
 --
--- TOC entry 4446 (class 0 OID 0)
+-- TOC entry 4447 (class 0 OID 0)
 -- Dependencies: 476
 -- Name: FUNCTION pgp_sym_decrypt(bytea, text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4173,7 +4185,7 @@ GRANT ALL ON FUNCTION public.pgp_sym_decrypt(bytea, text, text) TO service_role;
 
 
 --
--- TOC entry 4447 (class 0 OID 0)
+-- TOC entry 4448 (class 0 OID 0)
 -- Dependencies: 296
 -- Name: FUNCTION pgp_sym_decrypt_bytea(bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4182,7 +4194,7 @@ GRANT ALL ON FUNCTION public.pgp_sym_decrypt_bytea(bytea, text) TO service_role;
 
 
 --
--- TOC entry 4448 (class 0 OID 0)
+-- TOC entry 4449 (class 0 OID 0)
 -- Dependencies: 304
 -- Name: FUNCTION pgp_sym_decrypt_bytea(bytea, text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4191,7 +4203,7 @@ GRANT ALL ON FUNCTION public.pgp_sym_decrypt_bytea(bytea, text, text) TO service
 
 
 --
--- TOC entry 4449 (class 0 OID 0)
+-- TOC entry 4450 (class 0 OID 0)
 -- Dependencies: 300
 -- Name: FUNCTION pgp_sym_encrypt(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4200,7 +4212,7 @@ GRANT ALL ON FUNCTION public.pgp_sym_encrypt(text, text) TO service_role;
 
 
 --
--- TOC entry 4450 (class 0 OID 0)
+-- TOC entry 4451 (class 0 OID 0)
 -- Dependencies: 320
 -- Name: FUNCTION pgp_sym_encrypt(text, text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4209,7 +4221,7 @@ GRANT ALL ON FUNCTION public.pgp_sym_encrypt(text, text, text) TO service_role;
 
 
 --
--- TOC entry 4451 (class 0 OID 0)
+-- TOC entry 4452 (class 0 OID 0)
 -- Dependencies: 380
 -- Name: FUNCTION pgp_sym_encrypt_bytea(bytea, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4218,7 +4230,7 @@ GRANT ALL ON FUNCTION public.pgp_sym_encrypt_bytea(bytea, text) TO service_role;
 
 
 --
--- TOC entry 4452 (class 0 OID 0)
+-- TOC entry 4453 (class 0 OID 0)
 -- Dependencies: 371
 -- Name: FUNCTION pgp_sym_encrypt_bytea(bytea, text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4227,7 +4239,7 @@ GRANT ALL ON FUNCTION public.pgp_sym_encrypt_bytea(bytea, text, text) TO service
 
 
 --
--- TOC entry 4453 (class 0 OID 0)
+-- TOC entry 4454 (class 0 OID 0)
 -- Dependencies: 452
 -- Name: FUNCTION regexp_match(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4236,7 +4248,7 @@ GRANT ALL ON FUNCTION public.regexp_match(public.citext, public.citext) TO servi
 
 
 --
--- TOC entry 4454 (class 0 OID 0)
+-- TOC entry 4455 (class 0 OID 0)
 -- Dependencies: 333
 -- Name: FUNCTION regexp_match(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4245,7 +4257,7 @@ GRANT ALL ON FUNCTION public.regexp_match(public.citext, public.citext, text) TO
 
 
 --
--- TOC entry 4455 (class 0 OID 0)
+-- TOC entry 4456 (class 0 OID 0)
 -- Dependencies: 494
 -- Name: FUNCTION regexp_matches(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4254,7 +4266,7 @@ GRANT ALL ON FUNCTION public.regexp_matches(public.citext, public.citext) TO ser
 
 
 --
--- TOC entry 4456 (class 0 OID 0)
+-- TOC entry 4457 (class 0 OID 0)
 -- Dependencies: 519
 -- Name: FUNCTION regexp_matches(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4263,7 +4275,7 @@ GRANT ALL ON FUNCTION public.regexp_matches(public.citext, public.citext, text) 
 
 
 --
--- TOC entry 4457 (class 0 OID 0)
+-- TOC entry 4458 (class 0 OID 0)
 -- Dependencies: 437
 -- Name: FUNCTION regexp_replace(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4272,7 +4284,7 @@ GRANT ALL ON FUNCTION public.regexp_replace(public.citext, public.citext, text) 
 
 
 --
--- TOC entry 4458 (class 0 OID 0)
+-- TOC entry 4459 (class 0 OID 0)
 -- Dependencies: 306
 -- Name: FUNCTION regexp_replace(public.citext, public.citext, text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4281,7 +4293,7 @@ GRANT ALL ON FUNCTION public.regexp_replace(public.citext, public.citext, text, 
 
 
 --
--- TOC entry 4459 (class 0 OID 0)
+-- TOC entry 4460 (class 0 OID 0)
 -- Dependencies: 483
 -- Name: FUNCTION regexp_split_to_array(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4290,7 +4302,7 @@ GRANT ALL ON FUNCTION public.regexp_split_to_array(public.citext, public.citext)
 
 
 --
--- TOC entry 4460 (class 0 OID 0)
+-- TOC entry 4461 (class 0 OID 0)
 -- Dependencies: 346
 -- Name: FUNCTION regexp_split_to_array(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4299,7 +4311,7 @@ GRANT ALL ON FUNCTION public.regexp_split_to_array(public.citext, public.citext,
 
 
 --
--- TOC entry 4461 (class 0 OID 0)
+-- TOC entry 4462 (class 0 OID 0)
 -- Dependencies: 323
 -- Name: FUNCTION regexp_split_to_table(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4308,7 +4320,7 @@ GRANT ALL ON FUNCTION public.regexp_split_to_table(public.citext, public.citext)
 
 
 --
--- TOC entry 4462 (class 0 OID 0)
+-- TOC entry 4463 (class 0 OID 0)
 -- Dependencies: 301
 -- Name: FUNCTION regexp_split_to_table(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4317,7 +4329,7 @@ GRANT ALL ON FUNCTION public.regexp_split_to_table(public.citext, public.citext,
 
 
 --
--- TOC entry 4463 (class 0 OID 0)
+-- TOC entry 4464 (class 0 OID 0)
 -- Dependencies: 331
 -- Name: FUNCTION replace(public.citext, public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4326,7 +4338,7 @@ GRANT ALL ON FUNCTION public.replace(public.citext, public.citext, public.citext
 
 
 --
--- TOC entry 4464 (class 0 OID 0)
+-- TOC entry 4465 (class 0 OID 0)
 -- Dependencies: 326
 -- Name: FUNCTION search_similar_products(query_embedding public.vector, match_threshold double precision, match_count integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4335,7 +4347,7 @@ GRANT ALL ON FUNCTION public.search_similar_products(query_embedding public.vect
 
 
 --
--- TOC entry 4465 (class 0 OID 0)
+-- TOC entry 4466 (class 0 OID 0)
 -- Dependencies: 401
 -- Name: FUNCTION set_limit(real); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4344,7 +4356,7 @@ GRANT ALL ON FUNCTION public.set_limit(real) TO service_role;
 
 
 --
--- TOC entry 4466 (class 0 OID 0)
+-- TOC entry 4467 (class 0 OID 0)
 -- Dependencies: 493
 -- Name: FUNCTION show_limit(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4353,7 +4365,7 @@ GRANT ALL ON FUNCTION public.show_limit() TO service_role;
 
 
 --
--- TOC entry 4467 (class 0 OID 0)
+-- TOC entry 4468 (class 0 OID 0)
 -- Dependencies: 475
 -- Name: FUNCTION show_trgm(text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4362,7 +4374,7 @@ GRANT ALL ON FUNCTION public.show_trgm(text) TO service_role;
 
 
 --
--- TOC entry 4468 (class 0 OID 0)
+-- TOC entry 4469 (class 0 OID 0)
 -- Dependencies: 419
 -- Name: FUNCTION similarity(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4371,7 +4383,7 @@ GRANT ALL ON FUNCTION public.similarity(text, text) TO service_role;
 
 
 --
--- TOC entry 4469 (class 0 OID 0)
+-- TOC entry 4470 (class 0 OID 0)
 -- Dependencies: 313
 -- Name: FUNCTION similarity_dist(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4380,7 +4392,7 @@ GRANT ALL ON FUNCTION public.similarity_dist(text, text) TO service_role;
 
 
 --
--- TOC entry 4470 (class 0 OID 0)
+-- TOC entry 4471 (class 0 OID 0)
 -- Dependencies: 315
 -- Name: FUNCTION similarity_op(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4389,7 +4401,7 @@ GRANT ALL ON FUNCTION public.similarity_op(text, text) TO service_role;
 
 
 --
--- TOC entry 4471 (class 0 OID 0)
+-- TOC entry 4472 (class 0 OID 0)
 -- Dependencies: 418
 -- Name: FUNCTION sparsevec_cmp(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4398,7 +4410,7 @@ GRANT ALL ON FUNCTION public.sparsevec_cmp(public.sparsevec, public.sparsevec) T
 
 
 --
--- TOC entry 4472 (class 0 OID 0)
+-- TOC entry 4473 (class 0 OID 0)
 -- Dependencies: 357
 -- Name: FUNCTION sparsevec_eq(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4407,7 +4419,7 @@ GRANT ALL ON FUNCTION public.sparsevec_eq(public.sparsevec, public.sparsevec) TO
 
 
 --
--- TOC entry 4473 (class 0 OID 0)
+-- TOC entry 4474 (class 0 OID 0)
 -- Dependencies: 495
 -- Name: FUNCTION sparsevec_ge(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4416,7 +4428,7 @@ GRANT ALL ON FUNCTION public.sparsevec_ge(public.sparsevec, public.sparsevec) TO
 
 
 --
--- TOC entry 4474 (class 0 OID 0)
+-- TOC entry 4475 (class 0 OID 0)
 -- Dependencies: 351
 -- Name: FUNCTION sparsevec_gt(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4425,7 +4437,7 @@ GRANT ALL ON FUNCTION public.sparsevec_gt(public.sparsevec, public.sparsevec) TO
 
 
 --
--- TOC entry 4475 (class 0 OID 0)
+-- TOC entry 4476 (class 0 OID 0)
 -- Dependencies: 422
 -- Name: FUNCTION sparsevec_l2_squared_distance(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4434,7 +4446,7 @@ GRANT ALL ON FUNCTION public.sparsevec_l2_squared_distance(public.sparsevec, pub
 
 
 --
--- TOC entry 4476 (class 0 OID 0)
+-- TOC entry 4477 (class 0 OID 0)
 -- Dependencies: 513
 -- Name: FUNCTION sparsevec_le(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4443,7 +4455,7 @@ GRANT ALL ON FUNCTION public.sparsevec_le(public.sparsevec, public.sparsevec) TO
 
 
 --
--- TOC entry 4477 (class 0 OID 0)
+-- TOC entry 4478 (class 0 OID 0)
 -- Dependencies: 482
 -- Name: FUNCTION sparsevec_lt(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4452,7 +4464,7 @@ GRANT ALL ON FUNCTION public.sparsevec_lt(public.sparsevec, public.sparsevec) TO
 
 
 --
--- TOC entry 4478 (class 0 OID 0)
+-- TOC entry 4479 (class 0 OID 0)
 -- Dependencies: 284
 -- Name: FUNCTION sparsevec_ne(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4461,7 +4473,7 @@ GRANT ALL ON FUNCTION public.sparsevec_ne(public.sparsevec, public.sparsevec) TO
 
 
 --
--- TOC entry 4479 (class 0 OID 0)
+-- TOC entry 4480 (class 0 OID 0)
 -- Dependencies: 520
 -- Name: FUNCTION sparsevec_negative_inner_product(public.sparsevec, public.sparsevec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4470,7 +4482,7 @@ GRANT ALL ON FUNCTION public.sparsevec_negative_inner_product(public.sparsevec, 
 
 
 --
--- TOC entry 4480 (class 0 OID 0)
+-- TOC entry 4481 (class 0 OID 0)
 -- Dependencies: 363
 -- Name: FUNCTION split_part(public.citext, public.citext, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4479,7 +4491,7 @@ GRANT ALL ON FUNCTION public.split_part(public.citext, public.citext, integer) T
 
 
 --
--- TOC entry 4481 (class 0 OID 0)
+-- TOC entry 4482 (class 0 OID 0)
 -- Dependencies: 339
 -- Name: FUNCTION strict_word_similarity(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4488,7 +4500,7 @@ GRANT ALL ON FUNCTION public.strict_word_similarity(text, text) TO service_role;
 
 
 --
--- TOC entry 4482 (class 0 OID 0)
+-- TOC entry 4483 (class 0 OID 0)
 -- Dependencies: 409
 -- Name: FUNCTION strict_word_similarity_commutator_op(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4497,7 +4509,7 @@ GRANT ALL ON FUNCTION public.strict_word_similarity_commutator_op(text, text) TO
 
 
 --
--- TOC entry 4483 (class 0 OID 0)
+-- TOC entry 4484 (class 0 OID 0)
 -- Dependencies: 375
 -- Name: FUNCTION strict_word_similarity_dist_commutator_op(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4506,7 +4518,7 @@ GRANT ALL ON FUNCTION public.strict_word_similarity_dist_commutator_op(text, tex
 
 
 --
--- TOC entry 4484 (class 0 OID 0)
+-- TOC entry 4485 (class 0 OID 0)
 -- Dependencies: 385
 -- Name: FUNCTION strict_word_similarity_dist_op(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4515,7 +4527,7 @@ GRANT ALL ON FUNCTION public.strict_word_similarity_dist_op(text, text) TO servi
 
 
 --
--- TOC entry 4485 (class 0 OID 0)
+-- TOC entry 4486 (class 0 OID 0)
 -- Dependencies: 370
 -- Name: FUNCTION strict_word_similarity_op(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4524,7 +4536,7 @@ GRANT ALL ON FUNCTION public.strict_word_similarity_op(text, text) TO service_ro
 
 
 --
--- TOC entry 4486 (class 0 OID 0)
+-- TOC entry 4487 (class 0 OID 0)
 -- Dependencies: 348
 -- Name: FUNCTION strpos(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4533,7 +4545,7 @@ GRANT ALL ON FUNCTION public.strpos(public.citext, public.citext) TO service_rol
 
 
 --
--- TOC entry 4487 (class 0 OID 0)
+-- TOC entry 4488 (class 0 OID 0)
 -- Dependencies: 451
 -- Name: FUNCTION subvector(public.halfvec, integer, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4542,7 +4554,7 @@ GRANT ALL ON FUNCTION public.subvector(public.halfvec, integer, integer) TO serv
 
 
 --
--- TOC entry 4488 (class 0 OID 0)
+-- TOC entry 4489 (class 0 OID 0)
 -- Dependencies: 314
 -- Name: FUNCTION subvector(public.vector, integer, integer); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4551,7 +4563,7 @@ GRANT ALL ON FUNCTION public.subvector(public.vector, integer, integer) TO servi
 
 
 --
--- TOC entry 4489 (class 0 OID 0)
+-- TOC entry 4490 (class 0 OID 0)
 -- Dependencies: 530
 -- Name: FUNCTION texticlike(public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4560,7 +4572,7 @@ GRANT ALL ON FUNCTION public.texticlike(public.citext, text) TO service_role;
 
 
 --
--- TOC entry 4490 (class 0 OID 0)
+-- TOC entry 4491 (class 0 OID 0)
 -- Dependencies: 397
 -- Name: FUNCTION texticlike(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4569,7 +4581,7 @@ GRANT ALL ON FUNCTION public.texticlike(public.citext, public.citext) TO service
 
 
 --
--- TOC entry 4491 (class 0 OID 0)
+-- TOC entry 4492 (class 0 OID 0)
 -- Dependencies: 400
 -- Name: FUNCTION texticnlike(public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4578,7 +4590,7 @@ GRANT ALL ON FUNCTION public.texticnlike(public.citext, text) TO service_role;
 
 
 --
--- TOC entry 4492 (class 0 OID 0)
+-- TOC entry 4493 (class 0 OID 0)
 -- Dependencies: 490
 -- Name: FUNCTION texticnlike(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4587,7 +4599,7 @@ GRANT ALL ON FUNCTION public.texticnlike(public.citext, public.citext) TO servic
 
 
 --
--- TOC entry 4493 (class 0 OID 0)
+-- TOC entry 4494 (class 0 OID 0)
 -- Dependencies: 511
 -- Name: FUNCTION texticregexeq(public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4596,7 +4608,7 @@ GRANT ALL ON FUNCTION public.texticregexeq(public.citext, text) TO service_role;
 
 
 --
--- TOC entry 4494 (class 0 OID 0)
+-- TOC entry 4495 (class 0 OID 0)
 -- Dependencies: 426
 -- Name: FUNCTION texticregexeq(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4605,7 +4617,7 @@ GRANT ALL ON FUNCTION public.texticregexeq(public.citext, public.citext) TO serv
 
 
 --
--- TOC entry 4495 (class 0 OID 0)
+-- TOC entry 4496 (class 0 OID 0)
 -- Dependencies: 433
 -- Name: FUNCTION texticregexne(public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4614,7 +4626,7 @@ GRANT ALL ON FUNCTION public.texticregexne(public.citext, text) TO service_role;
 
 
 --
--- TOC entry 4496 (class 0 OID 0)
+-- TOC entry 4497 (class 0 OID 0)
 -- Dependencies: 366
 -- Name: FUNCTION texticregexne(public.citext, public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4623,7 +4635,7 @@ GRANT ALL ON FUNCTION public.texticregexne(public.citext, public.citext) TO serv
 
 
 --
--- TOC entry 4497 (class 0 OID 0)
+-- TOC entry 4498 (class 0 OID 0)
 -- Dependencies: 279
 -- Name: FUNCTION translate(public.citext, public.citext, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4632,7 +4644,7 @@ GRANT ALL ON FUNCTION public.translate(public.citext, public.citext, text) TO se
 
 
 --
--- TOC entry 4498 (class 0 OID 0)
+-- TOC entry 4499 (class 0 OID 0)
 -- Dependencies: 377
 -- Name: FUNCTION update_updated_at_column(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4641,7 +4653,7 @@ GRANT ALL ON FUNCTION public.update_updated_at_column() TO service_role;
 
 
 --
--- TOC entry 4499 (class 0 OID 0)
+-- TOC entry 4500 (class 0 OID 0)
 -- Dependencies: 529
 -- Name: FUNCTION uuid_generate_v1(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4650,7 +4662,7 @@ GRANT ALL ON FUNCTION public.uuid_generate_v1() TO service_role;
 
 
 --
--- TOC entry 4500 (class 0 OID 0)
+-- TOC entry 4501 (class 0 OID 0)
 -- Dependencies: 457
 -- Name: FUNCTION uuid_generate_v1mc(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4659,7 +4671,7 @@ GRANT ALL ON FUNCTION public.uuid_generate_v1mc() TO service_role;
 
 
 --
--- TOC entry 4501 (class 0 OID 0)
+-- TOC entry 4502 (class 0 OID 0)
 -- Dependencies: 515
 -- Name: FUNCTION uuid_generate_v3(namespace uuid, name text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4668,7 +4680,7 @@ GRANT ALL ON FUNCTION public.uuid_generate_v3(namespace uuid, name text) TO serv
 
 
 --
--- TOC entry 4502 (class 0 OID 0)
+-- TOC entry 4503 (class 0 OID 0)
 -- Dependencies: 503
 -- Name: FUNCTION uuid_generate_v4(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4677,7 +4689,7 @@ GRANT ALL ON FUNCTION public.uuid_generate_v4() TO service_role;
 
 
 --
--- TOC entry 4503 (class 0 OID 0)
+-- TOC entry 4504 (class 0 OID 0)
 -- Dependencies: 324
 -- Name: FUNCTION uuid_generate_v5(namespace uuid, name text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4686,7 +4698,7 @@ GRANT ALL ON FUNCTION public.uuid_generate_v5(namespace uuid, name text) TO serv
 
 
 --
--- TOC entry 4504 (class 0 OID 0)
+-- TOC entry 4505 (class 0 OID 0)
 -- Dependencies: 384
 -- Name: FUNCTION uuid_nil(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4695,7 +4707,7 @@ GRANT ALL ON FUNCTION public.uuid_nil() TO service_role;
 
 
 --
--- TOC entry 4505 (class 0 OID 0)
+-- TOC entry 4506 (class 0 OID 0)
 -- Dependencies: 434
 -- Name: FUNCTION uuid_ns_dns(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4704,7 +4716,7 @@ GRANT ALL ON FUNCTION public.uuid_ns_dns() TO service_role;
 
 
 --
--- TOC entry 4506 (class 0 OID 0)
+-- TOC entry 4507 (class 0 OID 0)
 -- Dependencies: 518
 -- Name: FUNCTION uuid_ns_oid(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4713,7 +4725,7 @@ GRANT ALL ON FUNCTION public.uuid_ns_oid() TO service_role;
 
 
 --
--- TOC entry 4507 (class 0 OID 0)
+-- TOC entry 4508 (class 0 OID 0)
 -- Dependencies: 507
 -- Name: FUNCTION uuid_ns_url(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4722,7 +4734,7 @@ GRANT ALL ON FUNCTION public.uuid_ns_url() TO service_role;
 
 
 --
--- TOC entry 4508 (class 0 OID 0)
+-- TOC entry 4509 (class 0 OID 0)
 -- Dependencies: 450
 -- Name: FUNCTION uuid_ns_x500(); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4731,7 +4743,7 @@ GRANT ALL ON FUNCTION public.uuid_ns_x500() TO service_role;
 
 
 --
--- TOC entry 4509 (class 0 OID 0)
+-- TOC entry 4510 (class 0 OID 0)
 -- Dependencies: 417
 -- Name: FUNCTION vector_accum(double precision[], public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4740,7 +4752,7 @@ GRANT ALL ON FUNCTION public.vector_accum(double precision[], public.vector) TO 
 
 
 --
--- TOC entry 4510 (class 0 OID 0)
+-- TOC entry 4511 (class 0 OID 0)
 -- Dependencies: 449
 -- Name: FUNCTION vector_add(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4749,7 +4761,7 @@ GRANT ALL ON FUNCTION public.vector_add(public.vector, public.vector) TO service
 
 
 --
--- TOC entry 4511 (class 0 OID 0)
+-- TOC entry 4512 (class 0 OID 0)
 -- Dependencies: 359
 -- Name: FUNCTION vector_avg(double precision[]); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4758,7 +4770,7 @@ GRANT ALL ON FUNCTION public.vector_avg(double precision[]) TO service_role;
 
 
 --
--- TOC entry 4512 (class 0 OID 0)
+-- TOC entry 4513 (class 0 OID 0)
 -- Dependencies: 294
 -- Name: FUNCTION vector_cmp(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4767,7 +4779,7 @@ GRANT ALL ON FUNCTION public.vector_cmp(public.vector, public.vector) TO service
 
 
 --
--- TOC entry 4513 (class 0 OID 0)
+-- TOC entry 4514 (class 0 OID 0)
 -- Dependencies: 458
 -- Name: FUNCTION vector_combine(double precision[], double precision[]); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4776,7 +4788,7 @@ GRANT ALL ON FUNCTION public.vector_combine(double precision[], double precision
 
 
 --
--- TOC entry 4514 (class 0 OID 0)
+-- TOC entry 4515 (class 0 OID 0)
 -- Dependencies: 454
 -- Name: FUNCTION vector_concat(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4785,7 +4797,7 @@ GRANT ALL ON FUNCTION public.vector_concat(public.vector, public.vector) TO serv
 
 
 --
--- TOC entry 4515 (class 0 OID 0)
+-- TOC entry 4516 (class 0 OID 0)
 -- Dependencies: 524
 -- Name: FUNCTION vector_dims(public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4794,7 +4806,7 @@ GRANT ALL ON FUNCTION public.vector_dims(public.halfvec) TO service_role;
 
 
 --
--- TOC entry 4516 (class 0 OID 0)
+-- TOC entry 4517 (class 0 OID 0)
 -- Dependencies: 442
 -- Name: FUNCTION vector_dims(public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4803,7 +4815,7 @@ GRANT ALL ON FUNCTION public.vector_dims(public.vector) TO service_role;
 
 
 --
--- TOC entry 4517 (class 0 OID 0)
+-- TOC entry 4518 (class 0 OID 0)
 -- Dependencies: 453
 -- Name: FUNCTION vector_eq(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4812,7 +4824,7 @@ GRANT ALL ON FUNCTION public.vector_eq(public.vector, public.vector) TO service_
 
 
 --
--- TOC entry 4518 (class 0 OID 0)
+-- TOC entry 4519 (class 0 OID 0)
 -- Dependencies: 341
 -- Name: FUNCTION vector_ge(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4821,7 +4833,7 @@ GRANT ALL ON FUNCTION public.vector_ge(public.vector, public.vector) TO service_
 
 
 --
--- TOC entry 4519 (class 0 OID 0)
+-- TOC entry 4520 (class 0 OID 0)
 -- Dependencies: 523
 -- Name: FUNCTION vector_gt(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4830,7 +4842,7 @@ GRANT ALL ON FUNCTION public.vector_gt(public.vector, public.vector) TO service_
 
 
 --
--- TOC entry 4520 (class 0 OID 0)
+-- TOC entry 4521 (class 0 OID 0)
 -- Dependencies: 479
 -- Name: FUNCTION vector_l2_squared_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4839,7 +4851,7 @@ GRANT ALL ON FUNCTION public.vector_l2_squared_distance(public.vector, public.ve
 
 
 --
--- TOC entry 4521 (class 0 OID 0)
+-- TOC entry 4522 (class 0 OID 0)
 -- Dependencies: 447
 -- Name: FUNCTION vector_le(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4848,7 +4860,7 @@ GRANT ALL ON FUNCTION public.vector_le(public.vector, public.vector) TO service_
 
 
 --
--- TOC entry 4522 (class 0 OID 0)
+-- TOC entry 4523 (class 0 OID 0)
 -- Dependencies: 405
 -- Name: FUNCTION vector_lt(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4857,7 +4869,7 @@ GRANT ALL ON FUNCTION public.vector_lt(public.vector, public.vector) TO service_
 
 
 --
--- TOC entry 4523 (class 0 OID 0)
+-- TOC entry 4524 (class 0 OID 0)
 -- Dependencies: 373
 -- Name: FUNCTION vector_mul(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4866,7 +4878,7 @@ GRANT ALL ON FUNCTION public.vector_mul(public.vector, public.vector) TO service
 
 
 --
--- TOC entry 4524 (class 0 OID 0)
+-- TOC entry 4525 (class 0 OID 0)
 -- Dependencies: 381
 -- Name: FUNCTION vector_ne(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4875,7 +4887,7 @@ GRANT ALL ON FUNCTION public.vector_ne(public.vector, public.vector) TO service_
 
 
 --
--- TOC entry 4525 (class 0 OID 0)
+-- TOC entry 4526 (class 0 OID 0)
 -- Dependencies: 486
 -- Name: FUNCTION vector_negative_inner_product(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4884,7 +4896,7 @@ GRANT ALL ON FUNCTION public.vector_negative_inner_product(public.vector, public
 
 
 --
--- TOC entry 4526 (class 0 OID 0)
+-- TOC entry 4527 (class 0 OID 0)
 -- Dependencies: 297
 -- Name: FUNCTION vector_norm(public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4893,7 +4905,7 @@ GRANT ALL ON FUNCTION public.vector_norm(public.vector) TO service_role;
 
 
 --
--- TOC entry 4527 (class 0 OID 0)
+-- TOC entry 4528 (class 0 OID 0)
 -- Dependencies: 438
 -- Name: FUNCTION vector_spherical_distance(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4902,7 +4914,7 @@ GRANT ALL ON FUNCTION public.vector_spherical_distance(public.vector, public.vec
 
 
 --
--- TOC entry 4528 (class 0 OID 0)
+-- TOC entry 4529 (class 0 OID 0)
 -- Dependencies: 287
 -- Name: FUNCTION vector_sub(public.vector, public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4911,7 +4923,7 @@ GRANT ALL ON FUNCTION public.vector_sub(public.vector, public.vector) TO service
 
 
 --
--- TOC entry 4529 (class 0 OID 0)
+-- TOC entry 4530 (class 0 OID 0)
 -- Dependencies: 347
 -- Name: FUNCTION word_similarity(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4920,7 +4932,7 @@ GRANT ALL ON FUNCTION public.word_similarity(text, text) TO service_role;
 
 
 --
--- TOC entry 4530 (class 0 OID 0)
+-- TOC entry 4531 (class 0 OID 0)
 -- Dependencies: 389
 -- Name: FUNCTION word_similarity_commutator_op(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4929,7 +4941,7 @@ GRANT ALL ON FUNCTION public.word_similarity_commutator_op(text, text) TO servic
 
 
 --
--- TOC entry 4531 (class 0 OID 0)
+-- TOC entry 4532 (class 0 OID 0)
 -- Dependencies: 319
 -- Name: FUNCTION word_similarity_dist_commutator_op(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4938,7 +4950,7 @@ GRANT ALL ON FUNCTION public.word_similarity_dist_commutator_op(text, text) TO s
 
 
 --
--- TOC entry 4532 (class 0 OID 0)
+-- TOC entry 4533 (class 0 OID 0)
 -- Dependencies: 501
 -- Name: FUNCTION word_similarity_dist_op(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4947,7 +4959,7 @@ GRANT ALL ON FUNCTION public.word_similarity_dist_op(text, text) TO service_role
 
 
 --
--- TOC entry 4533 (class 0 OID 0)
+-- TOC entry 4534 (class 0 OID 0)
 -- Dependencies: 407
 -- Name: FUNCTION word_similarity_op(text, text); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4956,7 +4968,7 @@ GRANT ALL ON FUNCTION public.word_similarity_op(text, text) TO service_role;
 
 
 --
--- TOC entry 4534 (class 0 OID 0)
+-- TOC entry 4535 (class 0 OID 0)
 -- Dependencies: 1290
 -- Name: FUNCTION avg(public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4965,7 +4977,7 @@ GRANT ALL ON FUNCTION public.avg(public.halfvec) TO service_role;
 
 
 --
--- TOC entry 4535 (class 0 OID 0)
+-- TOC entry 4536 (class 0 OID 0)
 -- Dependencies: 1288
 -- Name: FUNCTION avg(public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4974,7 +4986,7 @@ GRANT ALL ON FUNCTION public.avg(public.vector) TO service_role;
 
 
 --
--- TOC entry 4536 (class 0 OID 0)
+-- TOC entry 4537 (class 0 OID 0)
 -- Dependencies: 1293
 -- Name: FUNCTION max(public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4983,7 +4995,7 @@ GRANT ALL ON FUNCTION public.max(public.citext) TO service_role;
 
 
 --
--- TOC entry 4537 (class 0 OID 0)
+-- TOC entry 4538 (class 0 OID 0)
 -- Dependencies: 1292
 -- Name: FUNCTION min(public.citext); Type: ACL; Schema: public; Owner: postgres
 --
@@ -4992,7 +5004,7 @@ GRANT ALL ON FUNCTION public.min(public.citext) TO service_role;
 
 
 --
--- TOC entry 4538 (class 0 OID 0)
+-- TOC entry 4539 (class 0 OID 0)
 -- Dependencies: 1291
 -- Name: FUNCTION sum(public.halfvec); Type: ACL; Schema: public; Owner: postgres
 --
@@ -5001,7 +5013,7 @@ GRANT ALL ON FUNCTION public.sum(public.halfvec) TO service_role;
 
 
 --
--- TOC entry 4539 (class 0 OID 0)
+-- TOC entry 4540 (class 0 OID 0)
 -- Dependencies: 1289
 -- Name: FUNCTION sum(public.vector); Type: ACL; Schema: public; Owner: postgres
 --
@@ -5010,7 +5022,79 @@ GRANT ALL ON FUNCTION public.sum(public.vector) TO service_role;
 
 
 --
+-- TOC entry 4542 (class 0 OID 0)
+-- Dependencies: 255
+-- Name: TABLE blob_objects; Type: ACL; Schema: content; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE content.blob_objects TO n8n;
+
+
+--
+-- TOC entry 4544 (class 0 OID 0)
+-- Dependencies: 254
+-- Name: SEQUENCE blob_objects_id_seq; Type: ACL; Schema: content; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE content.blob_objects_id_seq TO n8n;
+
+
+--
 -- TOC entry 4545 (class 0 OID 0)
+-- Dependencies: 257
+-- Name: TABLE documents; Type: ACL; Schema: content; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE content.documents TO n8n;
+
+
+--
+-- TOC entry 4547 (class 0 OID 0)
+-- Dependencies: 256
+-- Name: SEQUENCE documents_id_seq; Type: ACL; Schema: content; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE content.documents_id_seq TO n8n;
+
+
+--
+-- TOC entry 4548 (class 0 OID 0)
+-- Dependencies: 253
+-- Name: TABLE url_fetches; Type: ACL; Schema: content; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE content.url_fetches TO n8n;
+
+
+--
+-- TOC entry 4550 (class 0 OID 0)
+-- Dependencies: 252
+-- Name: SEQUENCE url_fetches_id_seq; Type: ACL; Schema: content; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE content.url_fetches_id_seq TO n8n;
+
+
+--
+-- TOC entry 4551 (class 0 OID 0)
+-- Dependencies: 251
+-- Name: TABLE urls; Type: ACL; Schema: content; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE content.urls TO n8n;
+
+
+--
+-- TOC entry 4553 (class 0 OID 0)
+-- Dependencies: 250
+-- Name: SEQUENCE urls_id_seq; Type: ACL; Schema: content; Owner: postgres
+--
+
+GRANT ALL ON SEQUENCE content.urls_id_seq TO n8n;
+
+
+--
+-- TOC entry 4554 (class 0 OID 0)
 -- Dependencies: 273
 -- Name: TABLE bot_transport_config; Type: ACL; Schema: core; Owner: postgres
 --
@@ -5019,7 +5103,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.bot_transport_config TO service_
 
 
 --
--- TOC entry 4546 (class 0 OID 0)
+-- TOC entry 4555 (class 0 OID 0)
 -- Dependencies: 274
 -- Name: TABLE bot_transport_state; Type: ACL; Schema: core; Owner: postgres
 --
@@ -5028,7 +5112,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.bot_transport_state TO service_r
 
 
 --
--- TOC entry 4547 (class 0 OID 0)
+-- TOC entry 4556 (class 0 OID 0)
 -- Dependencies: 230
 -- Name: TABLE bots; Type: ACL; Schema: core; Owner: postgres
 --
@@ -5037,7 +5121,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.bots TO service_role;
 
 
 --
--- TOC entry 4548 (class 0 OID 0)
+-- TOC entry 4557 (class 0 OID 0)
 -- Dependencies: 233
 -- Name: TABLE chat_policies; Type: ACL; Schema: core; Owner: postgres
 --
@@ -5046,7 +5130,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.chat_policies TO service_role;
 
 
 --
--- TOC entry 4549 (class 0 OID 0)
+-- TOC entry 4558 (class 0 OID 0)
 -- Dependencies: 232
 -- Name: TABLE tenant_chats; Type: ACL; Schema: core; Owner: postgres
 --
@@ -5055,7 +5139,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.tenant_chats TO service_role;
 
 
 --
--- TOC entry 4550 (class 0 OID 0)
+-- TOC entry 4559 (class 0 OID 0)
 -- Dependencies: 231
 -- Name: TABLE tenant_users; Type: ACL; Schema: core; Owner: postgres
 --
@@ -5064,7 +5148,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.tenant_users TO service_role;
 
 
 --
--- TOC entry 4551 (class 0 OID 0)
+-- TOC entry 4560 (class 0 OID 0)
 -- Dependencies: 229
 -- Name: TABLE tenants; Type: ACL; Schema: core; Owner: postgres
 --
@@ -5073,7 +5157,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE core.tenants TO service_role;
 
 
 --
--- TOC entry 4554 (class 0 OID 0)
+-- TOC entry 4563 (class 0 OID 0)
 -- Dependencies: 278
 -- Name: TABLE bot_transport_events; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5083,7 +5167,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.bot_transport_events TO n8n;
 
 
 --
--- TOC entry 4556 (class 0 OID 0)
+-- TOC entry 4565 (class 0 OID 0)
 -- Dependencies: 277
 -- Name: SEQUENCE bot_transport_events_id_seq; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5093,7 +5177,7 @@ GRANT ALL ON SEQUENCE ops.bot_transport_events_id_seq TO n8n;
 
 
 --
--- TOC entry 4557 (class 0 OID 0)
+-- TOC entry 4566 (class 0 OID 0)
 -- Dependencies: 268
 -- Name: TABLE errors; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5103,7 +5187,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.errors TO service_role;
 
 
 --
--- TOC entry 4559 (class 0 OID 0)
+-- TOC entry 4568 (class 0 OID 0)
 -- Dependencies: 267
 -- Name: SEQUENCE errors_id_seq; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5113,7 +5197,7 @@ GRANT ALL ON SEQUENCE ops.errors_id_seq TO service_role;
 
 
 --
--- TOC entry 4560 (class 0 OID 0)
+-- TOC entry 4569 (class 0 OID 0)
 -- Dependencies: 266
 -- Name: TABLE job_runs; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5123,7 +5207,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.job_runs TO service_role;
 
 
 --
--- TOC entry 4562 (class 0 OID 0)
+-- TOC entry 4571 (class 0 OID 0)
 -- Dependencies: 265
 -- Name: SEQUENCE job_runs_id_seq; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5133,7 +5217,7 @@ GRANT ALL ON SEQUENCE ops.job_runs_id_seq TO service_role;
 
 
 --
--- TOC entry 4563 (class 0 OID 0)
+-- TOC entry 4572 (class 0 OID 0)
 -- Dependencies: 264
 -- Name: TABLE jobs; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5143,7 +5227,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.jobs TO service_role;
 
 
 --
--- TOC entry 4565 (class 0 OID 0)
+-- TOC entry 4574 (class 0 OID 0)
 -- Dependencies: 263
 -- Name: SEQUENCE jobs_id_seq; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5153,7 +5237,7 @@ GRANT ALL ON SEQUENCE ops.jobs_id_seq TO service_role;
 
 
 --
--- TOC entry 4566 (class 0 OID 0)
+-- TOC entry 4575 (class 0 OID 0)
 -- Dependencies: 276
 -- Name: TABLE webhook_health_snapshots; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5163,7 +5247,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE ops.webhook_health_snapshots TO n8n;
 
 
 --
--- TOC entry 4568 (class 0 OID 0)
+-- TOC entry 4577 (class 0 OID 0)
 -- Dependencies: 275
 -- Name: SEQUENCE webhook_health_snapshots_id_seq; Type: ACL; Schema: ops; Owner: postgres
 --
@@ -5173,7 +5257,7 @@ GRANT ALL ON SEQUENCE ops.webhook_health_snapshots_id_seq TO n8n;
 
 
 --
--- TOC entry 4569 (class 0 OID 0)
+-- TOC entry 4578 (class 0 OID 0)
 -- Dependencies: 235
 -- Name: TABLE telegram_update_keys; Type: ACL; Schema: raw; Owner: postgres
 --
@@ -5182,7 +5266,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE raw.telegram_update_keys TO service_r
 
 
 --
--- TOC entry 4570 (class 0 OID 0)
+-- TOC entry 4579 (class 0 OID 0)
 -- Dependencies: 234
 -- Name: TABLE telegram_updates; Type: ACL; Schema: raw; Owner: postgres
 --
@@ -5191,7 +5275,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE raw.telegram_updates TO service_role;
 
 
 --
--- TOC entry 4571 (class 0 OID 0)
+-- TOC entry 4580 (class 0 OID 0)
 -- Dependencies: 236
 -- Name: TABLE telegram_updates_default; Type: ACL; Schema: raw; Owner: postgres
 --
@@ -5200,7 +5284,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE raw.telegram_updates_default TO servi
 
 
 --
--- TOC entry 4572 (class 0 OID 0)
+-- TOC entry 4581 (class 0 OID 0)
 -- Dependencies: 248
 -- Name: TABLE chat_member_events; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5209,7 +5293,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.chat_member_events TO service_role
 
 
 --
--- TOC entry 4574 (class 0 OID 0)
+-- TOC entry 4583 (class 0 OID 0)
 -- Dependencies: 247
 -- Name: SEQUENCE chat_member_events_id_seq; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5218,7 +5302,7 @@ GRANT ALL ON SEQUENCE tg.chat_member_events_id_seq TO service_role;
 
 
 --
--- TOC entry 4575 (class 0 OID 0)
+-- TOC entry 4584 (class 0 OID 0)
 -- Dependencies: 249
 -- Name: TABLE chat_memberships_current; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5227,7 +5311,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.chat_memberships_current TO servic
 
 
 --
--- TOC entry 4576 (class 0 OID 0)
+-- TOC entry 4585 (class 0 OID 0)
 -- Dependencies: 238
 -- Name: TABLE chats; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5236,7 +5320,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.chats TO service_role;
 
 
 --
--- TOC entry 4577 (class 0 OID 0)
+-- TOC entry 4586 (class 0 OID 0)
 -- Dependencies: 246
 -- Name: TABLE file_instances; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5245,7 +5329,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.file_instances TO service_role;
 
 
 --
--- TOC entry 4578 (class 0 OID 0)
+-- TOC entry 4587 (class 0 OID 0)
 -- Dependencies: 245
 -- Name: TABLE files; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5254,7 +5338,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.files TO service_role;
 
 
 --
--- TOC entry 4579 (class 0 OID 0)
+-- TOC entry 4588 (class 0 OID 0)
 -- Dependencies: 244
 -- Name: TABLE message_attachments; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5263,7 +5347,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.message_attachments TO service_rol
 
 
 --
--- TOC entry 4581 (class 0 OID 0)
+-- TOC entry 4590 (class 0 OID 0)
 -- Dependencies: 243
 -- Name: SEQUENCE message_attachments_id_seq; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5272,7 +5356,7 @@ GRANT ALL ON SEQUENCE tg.message_attachments_id_seq TO service_role;
 
 
 --
--- TOC entry 4582 (class 0 OID 0)
+-- TOC entry 4591 (class 0 OID 0)
 -- Dependencies: 242
 -- Name: TABLE message_versions; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5281,7 +5365,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.message_versions TO service_role;
 
 
 --
--- TOC entry 4584 (class 0 OID 0)
+-- TOC entry 4593 (class 0 OID 0)
 -- Dependencies: 241
 -- Name: SEQUENCE message_versions_id_seq; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5290,7 +5374,7 @@ GRANT ALL ON SEQUENCE tg.message_versions_id_seq TO service_role;
 
 
 --
--- TOC entry 4585 (class 0 OID 0)
+-- TOC entry 4594 (class 0 OID 0)
 -- Dependencies: 240
 -- Name: TABLE messages; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5299,7 +5383,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE tg.messages TO service_role;
 
 
 --
--- TOC entry 4587 (class 0 OID 0)
+-- TOC entry 4596 (class 0 OID 0)
 -- Dependencies: 239
 -- Name: SEQUENCE messages_id_seq; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5308,7 +5392,7 @@ GRANT ALL ON SEQUENCE tg.messages_id_seq TO service_role;
 
 
 --
--- TOC entry 4588 (class 0 OID 0)
+-- TOC entry 4597 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: TABLE users; Type: ACL; Schema: tg; Owner: postgres
 --
@@ -5463,11 +5547,11 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA tg GRANT ALL ON FUNCTIONS T
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA tg GRANT SELECT,INSERT,DELETE,UPDATE ON TABLES TO service_role;
 
 
--- Completed on 2026-02-01 21:31:58 UTC
+-- Completed on 2026-02-08 14:18:51 UTC
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict LF31CCDeBltsb99np2G3jrEwUS8jSoXkgxxc4q7Fnd7WSh3KhM3PviNW9hQUKBl
+\unrestrict NaA1ZNwhAB3STV0Kfkm4iqXUuA0EZR9cDiHphszsutEd07AKagFuf2r2621314s
 
