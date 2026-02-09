@@ -518,8 +518,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -31952,
-        5552
+        -31408,
+        7488
       ],
       "notes": "Prepare non-retryable error when raw update not found.\nInput: Base item with _ctx.\nOutput: Error context for WF99.\nWHY: Missing raw update means data was deleted or pointer is wrong — not retryable."
     },
@@ -4488,7 +4488,7 @@
             {
               "id": "msg-tenant",
               "name": "tenant_id",
-              "value": "={{ $json.tenant_id }}",
+              "value": "={{ $json._ctx.tenant_id }}",
               "type": "string"
             },
             {
@@ -6759,9 +6759,9 @@
       "main": [
         [
           {
-            "node": "Execute Workflow — WF99",
+            "node": "Merge — All Error Paths",
             "type": "main",
-            "index": 0
+            "index": 15
           }
         ]
       ]
@@ -7708,7 +7708,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6"
   },
-  "versionId": "f4507e04-bb9a-4073-a404-f577ff51a82b",
+  "versionId": "ba287a44-8f90-4ac9-9c3b-241c9eb43eaf",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
