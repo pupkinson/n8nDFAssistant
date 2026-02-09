@@ -1,0 +1,111 @@
+{
+  "name": "ExtractFromFile",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        0
+      ],
+      "id": "fcf28540-7198-4968-8f56-a06cf6641e68",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {},
+      "type": "@mazix/n8n-nodes-converter-documents.convertFileToJson",
+      "typeVersion": 5,
+      "position": [
+        96,
+        176
+      ],
+      "id": "85ff46c3-6404-45a4-9bd2-a7e9f514d5e2",
+      "name": "Convert File to JSON",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "bucketName": "dfassistant",
+        "fileKey": "test/media/sample_document.docx"
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        0
+      ],
+      "id": "55b20853-1f0e-476e-b369-38f3dd63a89c",
+      "name": "Download a file",
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        -160
+      ],
+      "id": "a16a13a9-2526-4747-b47f-56abcd3bc133",
+      "name": "Extract from File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "Convert File to JSON",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0818156e-728c-4507-adce-47809c9c5f14",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "MYGMhRhZi1d8gCIb1mueT",
+  "tags": []
+}
