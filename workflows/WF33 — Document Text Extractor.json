@@ -780,6 +780,12 @@
               "name": "job",
               "value": "={{ $json.job }}",
               "type": "object"
+            },
+            {
+              "id": "msg-meta",
+              "name": "extracted_meta.source",
+              "value": "message_text",
+              "type": "string"
             }
           ]
         },
@@ -795,11 +801,11 @@
       ],
       "id": "1b2c3d4e-f506-1728-3949-a5b6c7d8e9f0",
       "name": "Set — Message: Extract Existing Text",
-      "notes": "For message doc: use existing text field as extracted_text. Preserve ctx/job/document_id. Input: document + ctx + job. Output: extracted_text + document_id + ctx + job. WHY: message docs already have text."
+      "notes": "For message doc: map content.documents.text into unified extraction payload. Input: document + ctx + job. Output: extracted_text + extracted_meta + document_id + ctx + job."
     },
     {
       "parameters": {
-        "notice": "NOTE: SQL.txt must be updated to include content.documents.description column (already exists in DB per task spec)."
+        "notice": "WF33 file extraction path uses SQL-backed chain: content.documents.file_unique_id -> tg.files.sha256 -> content.blob_objects.storage_key -> S3 download, then Extract From File with Convert File To Json fallback."
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -808,7 +814,8 @@
         480
       ],
       "id": "2c3d4e5f-0617-2839-49a5-b6c7d8e9f001",
-      "name": "Note — SQL.txt Update Required"
+      "name": "Note — SQL.txt Update Required",
+      "notes": "Reference note: documents file extraction chain and constraints taken from SQL.txt/workflow contracts."
     },
     {
       "parameters": {
@@ -858,25 +865,25 @@
             {
               "id": "60718293-49a5-b6c7-d8e9-f00112233445",
               "name": "ctx",
-              "value": "={{ $('Set — Message: Extract Existing Text').item.json.ctx }}",
+              "value": "={{ $json.ctx }}",
               "type": "object"
             },
             {
               "id": "718293a4-a5b6-c7d8-e9f0-011223344556",
               "name": "job",
-              "value": "={{ $('Set — Message: Extract Existing Text').item.json.job }}",
+              "value": "={{ $json.job }}",
               "type": "object"
             },
             {
               "id": "8293a4b5-b6c7-d8e9-f001-122334455667",
               "name": "document_id",
-              "value": "={{ $('Set — Message: Extract Existing Text').item.json.document_id }}",
+              "value": "={{ $json.document_id }}",
               "type": "number"
             },
             {
               "id": "93a4b5c6-c7d8-e9f0-0112-233445566778",
               "name": "extracted_text",
-              "value": "={{ $('Set — Message: Extract Existing Text').item.json.extracted_text }}",
+              "value": "={{ $json.extracted_text }}",
               "type": "string"
             }
           ]
@@ -1012,25 +1019,25 @@
             {
               "id": "8293a4b5-b6c7-d8e9-f001-122334455667",
               "name": "extracted_text",
-              "value": "={{ $('Set — Message: Extract Existing Text').item.json.extracted_text }}",
+              "value": "={{ $json.extracted_text }}",
               "type": "string"
             },
             {
               "id": "93a4b5c6-c7d8-e9f0-0112-233445566778",
               "name": "document_id",
-              "value": "={{ $('Set — Message: Extract Existing Text').item.json.document_id }}",
+              "value": "={{ $json.document_id }}",
               "type": "number"
             },
             {
               "id": "a4b5c6d7-d8e9-f001-1223-344556677889",
               "name": "ctx",
-              "value": "={{ $('Set — Message: Extract Existing Text').item.json.ctx }}",
+              "value": "={{ $json.ctx }}",
               "type": "object"
             },
             {
               "id": "b5c6d7e8-e9f0-0112-2334-45566778899a",
               "name": "job",
-              "value": "={{ $('Set — Message: Extract Existing Text').item.json.job }}",
+              "value": "={{ $json.job }}",
               "type": "object"
             }
           ]
@@ -1078,31 +1085,31 @@
             {
               "id": "a4b5c6d7-d8e9-f001-1223-344556677889",
               "name": "description",
-              "value": "={{ $('Set — Extract Description from AI Response').item.json.description }}",
+              "value": "={{ $json.description }}",
               "type": "string"
             },
             {
               "id": "b5c6d7e8-e9f0-0112-2334-45566778899a",
               "name": "extracted_text",
-              "value": "={{ $('Set — Extract Description from AI Response').item.json.extracted_text }}",
+              "value": "={{ $json.extracted_text }}",
               "type": "string"
             },
             {
               "id": "c6d7e8f9-f001-1223-3445-56677889a0b1",
               "name": "document_id",
-              "value": "={{ $('Set — Extract Description from AI Response').item.json.document_id }}",
+              "value": "={{ $json.document_id }}",
               "type": "number"
             },
             {
               "id": "d7e8f9a0-0112-2334-4556-6778899a0b1c2",
               "name": "ctx",
-              "value": "={{ $('Set — Extract Description from AI Response').item.json.ctx }}",
+              "value": "={{ $json.ctx }}",
               "type": "object"
             },
             {
               "id": "e8f9a0b1-1223-3445-5667-78899a0b1c2d3",
               "name": "job",
-              "value": "={{ $('Set — Extract Description from AI Response').item.json.job }}",
+              "value": "={{ $json.job }}",
               "type": "object"
             }
           ]
@@ -1261,19 +1268,19 @@
             {
               "id": "e8f9a0b1-1223-3445-5667-78899a0b1c2d3",
               "name": "ctx",
-              "value": "={{ $('Set — Prepare Bytea Format').item.json.ctx }}",
+              "value": "={{ $json.ctx }}",
               "type": "object"
             },
             {
               "id": "f9a0b1c2-2334-4556-6778-899a0b1c2d3e4",
               "name": "job",
-              "value": "={{ $('Set — Prepare Bytea Format').item.json.job }}",
+              "value": "={{ $json.job }}",
               "type": "object"
             },
             {
               "id": "0a1b2c3d-3445-5667-7889-9a0b1c2d3e4f5",
               "name": "document_id",
-              "value": "={{ $('Set — Prepare Bytea Format').item.json.document_id }}",
+              "value": "={{ $json.document_id }}",
               "type": "number"
             }
           ]
@@ -1425,19 +1432,19 @@
             {
               "id": "f9a0b1c2-2334-4556-6778-899a0b1c2d3e4",
               "name": "enqueue_payload.document_id",
-              "value": "={{ $('Set — Prepare Bytea Format').item.json.document_id }}",
+              "value": "={{ $json.document_id }}",
               "type": "number"
             },
             {
               "id": "0a1b2c3d-3445-5667-7889-9a0b1c2d3e4f5",
               "name": "ctx",
-              "value": "={{ $('Set — Prepare Bytea Format').item.json.ctx }}",
+              "value": "={{ $json.ctx }}",
               "type": "object"
             },
             {
               "id": "1b2c3d4e-4556-6778-899a-0b1c2d3e4f506",
               "name": "job",
-              "value": "={{ $('Set — Prepare Bytea Format').item.json.job }}",
+              "value": "={{ $json.job }}",
               "type": "object"
             }
           ]
@@ -1790,7 +1797,7 @@
         "mode": "combine",
         "combineBy": "passThrough",
         "options": {
-          "numberInputs": 7
+          "numberInputs": 9
         }
       },
       "type": "n8n-nodes-base.merge",
@@ -1808,10 +1815,28 @@
         "assignments": {
           "assignments": [
             {
-              "id": "718293a4b-b1c2-d3e4-f506-1728394a5b6c7",
-              "name": "placeholder",
-              "value": "file/url extraction not implemented yet",
+              "id": "file-doc",
+              "name": "document_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "file-fuid",
+              "name": "file_unique_id",
+              "value": "={{ $json.file_unique_id }}",
               "type": "string"
+            },
+            {
+              "id": "file-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "file-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
             }
           ]
         },
@@ -1826,17 +1851,41 @@
         1008
       ],
       "id": "718293a4b-b1c2-d3e4-f506-1728394a5b6c7",
-      "name": "Set — FILE Extraction Placeholder",
-      "notes": "Placeholder for file doc extraction (WF33 v2). For now, returns placeholder. Input: document + ctx + job. Output: placeholder. WHY: file/url extraction is complex, implement in phase 2."
+      "name": "Set — File Ref from Document",
+      "notes": "Build file reference and unified carry fields from content.documents row. Input: document + ctx + job. Output: file_unique_id + document_id + ctx + job."
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "8293a4b5c-c2d3-e4f5-0617-28394a5b6c7d8",
-              "name": "placeholder",
-              "value": "url extraction not implemented yet",
+              "id": "url-doc",
+              "name": "document_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "url-text",
+              "name": "extracted_text",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "url-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "url-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            },
+            {
+              "id": "url-meta",
+              "name": "extracted_meta.reason",
+              "value": "url_not_implemented",
               "type": "string"
             }
           ]
@@ -1852,8 +1901,8 @@
         1200
       ],
       "id": "8293a4b5c-c2d3-e4f5-0617-28394a5b6c7d8",
-      "name": "Set — URL Extraction Placeholder",
-      "notes": "Placeholder for url doc extraction (WF33 v2). For now, returns placeholder. Input: document + ctx + job. Output: placeholder. WHY: file/url extraction is complex, implement in phase 2."
+      "name": "Set — URL Placeholder Unified",
+      "notes": "URL extraction placeholder unified output: extracted_text empty with reason marker. Keeps pipeline deterministic until URL extractor workflow is implemented."
     },
     {
       "parameters": {},
@@ -1864,11 +1913,12 @@
         1920
       ],
       "id": "93a4b5c6d-d3e4-f506-1728-394a5b6c7d8e9",
-      "name": "TEST — Manual Trigger"
+      "name": "TEST — Manual Trigger",
+      "notes": "Manual test entrypoint for T1/T2/T3 fixture seeding and execution through production path."
     },
     {
       "parameters": {
-        "jsCode": "return [\n  {\n    json: {\n      test_case: 'T1',\n      ctx: {\n        tenant_id: '00000000-0000-0000-0000-000000000001',\n        correlation_id: 't1t1t1t1-1111-1111-1111-111111111111',\n        job_id: 1000001,\n        workflow: 'WF33-TEST',\n        contracts: { errorpipe: 1 }\n      },\n      job: {\n        id: 1000001,\n        tenant_id: '00000000-0000-0000-0000-000000000001',\n        job_type: 'extract_text',\n        correlation_id: 't1t1t1t1-1111-1111-1111-111111111111',\n        payload: {\n          document_id: -1\n        }\n      }\n    }\n  },\n  {\n    json: {\n      test_case: 'T2',\n      ctx: {\n        tenant_id: '00000000-0000-0000-0000-000000000002',\n        correlation_id: 't2t2t2t2-2222-2222-2222-222222222222',\n        job_id: 1000002,\n        workflow: 'WF33-TEST',\n        contracts: { errorpipe: 1 }\n      },\n      job: {\n        id: 1000002,\n        tenant_id: '00000000-0000-0000-0000-000000000002',\n        job_type: 'extract_text',\n        correlation_id: 't2t2t2t2-2222-2222-2222-222222222222',\n        payload: {\n          document_id: -2\n        }\n      }\n    }\n  },\n  {\n    json: {\n      test_case: 'T3',\n      ctx: {\n        tenant_id: '00000000-0000-0000-0000-000000000003',\n        correlation_id: 't3t3t3t3-3333-3333-3333-333333333333',\n        job_id: 1000003,\n        workflow: 'WF33-TEST',\n        contracts: { errorpipe: 1 }\n      },\n      job: {\n        id: 1000003,\n        tenant_id: '00000000-0000-0000-0000-000000000003',\n        job_type: 'extract_text',\n        correlation_id: 't3t3t3t3-3333-3333-3333-333333333333',\n        payload: {\n          document_id: -999\n        }\n      }\n    }\n  }\n];"
+        "jsCode": "return [\n  {\n    json: {\n      test_case: 'T1',\n      ctx: {\n        tenant_id: '00000000-0000-0000-0000-000000000331',\n        correlation_id: '33111111-1111-1111-1111-111111111111',\n        job_id: 331001,\n        workflow: 'WF33-TEST',\n        contracts: { errorpipe: 1 }\n      },\n      job: {\n        id: 331001,\n        tenant_id: '00000000-0000-0000-0000-000000000331',\n        job_type: 'extract_text',\n        correlation_id: '33111111-1111-1111-1111-111111111111',\n        payload: { document_id: 331001 }\n      }\n    }\n  },\n  {\n    json: {\n      test_case: 'T2',\n      ctx: {\n        tenant_id: '00000000-0000-0000-0000-000000000331',\n        correlation_id: '33222222-2222-2222-2222-222222222222',\n        job_id: 331002,\n        workflow: 'WF33-TEST',\n        contracts: { errorpipe: 1 }\n      },\n      job: {\n        id: 331002,\n        tenant_id: '00000000-0000-0000-0000-000000000331',\n        job_type: 'extract_text',\n        correlation_id: '33222222-2222-2222-2222-222222222222',\n        payload: { document_id: 331002 }\n      }\n    }\n  },\n  {\n    json: {\n      test_case: 'T3',\n      ctx: {\n        tenant_id: '00000000-0000-0000-0000-000000000331',\n        correlation_id: '33333333-3333-3333-3333-333333333333',\n        job_id: 331003,\n        workflow: 'WF33-TEST',\n        contracts: { errorpipe: 1 }\n      },\n      job: {\n        id: 331003,\n        tenant_id: '00000000-0000-0000-0000-000000000331',\n        job_type: 'extract_text',\n        correlation_id: '33333333-3333-3333-3333-333333333333',\n        payload: { document_id: 999999999 }\n      }\n    }\n  }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1877,12 +1927,12 @@
         1920
       ],
       "id": "a4b5c6d7e-e4f5-0617-2839-4a5b6c7d8e9f0",
-      "name": "TEST — Generate Test Cases",
-      "notes": "Code node (exception: test setup). Generate 3 test items with fixed correlation IDs for T1/T2/T3. T1: happy path (message doc). T2: edge case (empty text). T3: fail case (document not found). WHY Code: generate multiple test items in one node."
+      "name": "TEST — Build Worker Requests",
+      "notes": "Build 3 WF33 requests after fixture seed. T1 docx via Extract From File, T2 pptx via Convert fallback, T3 missing document managed error."
     },
     {
       "parameters": {
-        "notice": "TEST SECTION:\n\nT1: HAPPY PATH (message doc with text)\n- Insert tenant, document (doc_type=message, text=sample)\n- Run pipeline\n- Verify: status=succeeded, text_sha256 not null, description not null, chunk_document job created\n- Cleanup\n\nT2: EDGE CASE (message doc with empty text)\n- Insert document with empty text\n- Run pipeline\n- Verify: ops.errors row exists with correlation_id, status=failed\n- Cleanup\n\nT3: FAIL CASE (document_id not found)\n- Provide non-existing document_id (-999)\n- Verify: ops.errors row exists with correlation_id\n- Cleanup\n\nNOTE: Tests use placeholder document_ids (-1, -2, -999) for now. In production, create real test documents."
+        "notice": "TEST SECTION (real DB writes through same core pipeline):\nT1 Happy ExtractFromFile: seeds tenant+tg.files+blob+document(docx), runs WF33, verify update/enqueue, then cleanup test rows.\nT2 Happy Convert fallback: seeds pptx-like document/metadata and routes through converter path.\nT3 Fail: non-existing document_id=999999999 expects WF99 ErrorEnvelope + ops.errors row by correlation_id.\nFixtures use S3 keys test/media/*. Cleanup should delete only wf33_test rows by fixed ids/correlation_ids."
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -1891,7 +1941,1227 @@
         1680
       ],
       "id": "b5c6d7e8f-f506-1728-3949-a5b6c7d8e9f01",
-      "name": "Note — Test Plan"
+      "name": "Note — Test Plan",
+      "notes": "Human-readable QA checklist for WF33 DB-backed tests and cleanup expectations."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "tg",
+          "mode": "list",
+          "cachedResultName": "tg"
+        },
+        "table": {
+          "__rl": true,
+          "value": "files",
+          "mode": "list",
+          "cachedResultName": "files"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "file_unique_id",
+              "value": "={{ $json.file_unique_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2800,
+        1008
+      ],
+      "id": "wf33-file-db-files",
+      "name": "DB — Select tg.files by file_unique_id",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Load tg.files by file_unique_id to resolve sha256/mime/file_name for blob lookup."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -2560,
+        1008
+      ],
+      "id": "wf33-file-merge-files",
+      "name": "Merge — Restore CTX after tg.files",
+      "notes": "Carry/restore after tg.files select overwrite."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf33-file-has-sha",
+              "leftValue": "={{ $json.sha256 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2320,
+        1008
+      ],
+      "id": "wf33-file-if-sha",
+      "name": "GUARD — File Has sha256",
+      "notes": "Require sha256 in tg.files to locate blob object."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "blob_objects",
+          "mode": "list",
+          "cachedResultName": "blob_objects"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "sha256",
+              "value": "={{ $json.sha256 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -2080,
+        944
+      ],
+      "id": "wf33-file-db-blob",
+      "name": "DB — Select blob_objects by sha256",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Lookup blob object by sha256 to get storage_key."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -1840,
+        944
+      ],
+      "id": "wf33-file-merge-blob",
+      "name": "Merge — Restore CTX after blob lookup",
+      "notes": "Carry/restore after blob_objects select overwrite."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf33-file-has-key",
+              "leftValue": "={{ $json.storage_key }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1600,
+        944
+      ],
+      "id": "wf33-file-if-key",
+      "name": "GUARD — Blob Has storage_key",
+      "notes": "Require blob storage_key before S3 download."
+    },
+    {
+      "parameters": {
+        "bucketName": "dfassistant",
+        "fileKey": "={{ $json.storage_key }}"
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        880
+      ],
+      "id": "wf33-file-s3-download",
+      "name": "S3 — Download Source File",
+      "credentials": {
+        "s3": {
+          "id": "hjNqGx5slcq2dEGk",
+          "name": "S3 account"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Download source file binary from S3 using storage_key."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -1120,
+        880
+      ],
+      "id": "wf33-file-merge-s3",
+      "name": "Merge — Restore CTX after S3",
+      "notes": "Carry/restore after S3 download overwrite."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-file-ext",
+              "name": "file_ext",
+              "value": "={{ (($json.file_name || $json.storage_key || \"\").split(\".\").pop() || \"\").toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "wf33-file-mime",
+              "name": "file_mime",
+              "value": "={{ ($json.mime_type || \"\").toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "wf33-file-docid",
+              "name": "document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf33-file-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-file-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -896,
+        880
+      ],
+      "id": "wf33-file-set-detect",
+      "name": "Set — Detect File Type",
+      "notes": "Compute file_ext/file_mime for pptx router."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf33-is-pptx",
+              "leftValue": "={{ $json.file_ext === \"pptx\" || $json.file_mime.includes(\"presentation\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -672,
+        880
+      ],
+      "id": "wf33-file-if-pptx",
+      "name": "IF — Route PPTX to Converter",
+      "notes": "pptx/presentation files go straight to converter; others try Extract From File first."
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        736
+      ],
+      "id": "wf33-file-extract",
+      "name": "Extract — Extract From File",
+      "onError": "continueErrorOutput",
+      "notes": "Primary extraction path using core Extract From File."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-extract-txt",
+              "name": "extracted_text",
+              "value": "={{ typeof $json.text === \"string\" ? $json.text : (typeof $json.data === \"string\" ? $json.data : \"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "wf33-extract-meta",
+              "name": "extracted_meta.extract_source",
+              "value": "extract_from_file",
+              "type": "string"
+            },
+            {
+              "id": "wf33-extract-docid",
+              "name": "document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf33-extract-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-extract-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        736
+      ],
+      "id": "wf33-file-set-extract",
+      "name": "Set — Unified from Extract",
+      "notes": "Map Extract From File output into unified extraction payload."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-exterr-node",
+              "name": "_err.node",
+              "value": "Extract — Extract From File",
+              "type": "string"
+            },
+            {
+              "id": "wf33-exterr-op",
+              "name": "_err.operation",
+              "value": "extract",
+              "type": "string"
+            },
+            {
+              "id": "wf33-exterr-table",
+              "name": "_err.table",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "wf33-exterr-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-exterr-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-exterr-docid",
+              "name": "document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        1040
+      ],
+      "id": "wf33-file-err-extract",
+      "name": "ERR — Source Extract File",
+      "notes": "Capture extractor error details for unsupported/fatal routing."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf33-unsupported",
+              "leftValue": "={{ ((($json.error?.message||\"\")+\" \"+($json.error?.description||\"\")).toLowerCase().includes(\"unsupported\") || (($json.error?.message||\"\")+\" \"+($json.error?.description||\"\")).toLowerCase().includes(\"not support\")) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        1040
+      ],
+      "id": "wf33-file-if-unsupported",
+      "name": "IF — Extract Error Is Unsupported",
+      "notes": "Expected unsupported-type errors route to converter; other errors go to WF99."
+    },
+    {
+      "parameters": {},
+      "type": "@mazix/n8n-nodes-converter-documents.convertFileToJson",
+      "typeVersion": 5,
+      "position": [
+        -224,
+        880
+      ],
+      "id": "wf33-file-convert",
+      "name": "Convert — File To Json",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput",
+      "notes": "Fallback extraction for pptx and unsupported formats via converter community node."
+    },
+    {
+      "parameters": {
+        "jsCode": "const out=[];\nfor (const item of $input.all()) {\n  const src=item.json;\n  const clone=JSON.parse(JSON.stringify(src));\n  out.push({json:{\n    extracted_text: JSON.stringify(clone),\n    extracted_meta:{extract_source:'convert_file_to_json',converted_json:clone},\n    document_id: src.document_id,\n    ctx: src.ctx,\n    job: src.job\n  }});\n}\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        880
+      ],
+      "id": "wf33-file-code-convert",
+      "name": "CODE — Flatten Converted JSON",
+      "notes": "Small deterministic transformer: converter JSON -> extracted_text string + extracted_meta.converted_json."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-conv-node",
+              "name": "_err.node",
+              "value": "Convert — File To Json",
+              "type": "string"
+            },
+            {
+              "id": "wf33-conv-op",
+              "name": "_err.operation",
+              "value": "convert",
+              "type": "string"
+            },
+            {
+              "id": "wf33-conv-table",
+              "name": "_err.table",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "wf33-conv-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-conv-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-conv-doc",
+              "name": "document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        880
+      ],
+      "id": "wf33-file-err-convert",
+      "name": "ERR — Source Convert File",
+      "notes": "Capture converter errors for ErrorPipe."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "passThrough",
+        "options": {
+          "numberInputs": 2
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        224,
+        736
+      ],
+      "id": "wf33-file-merge-extract",
+      "name": "Merge — File Extract Unified",
+      "notes": "Join Extract and Convert success branches into unified extraction payload."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-fileio-kind",
+              "name": "error_context.kind",
+              "value": "={{ $json._err?.operation === \"validate_file_ref\" ? \"business\" : \"io\" }}",
+              "type": "string"
+            },
+            {
+              "id": "wf33-fileio-msg",
+              "name": "error_context.message",
+              "value": "={{ $json.error?.message || ($json._err?.operation === \"validate_file_ref\" ? \"File/blob reference missing\" : \"File extraction I/O failed\") }}",
+              "type": "string"
+            },
+            {
+              "id": "wf33-fileio-status",
+              "name": "error_context.status_code",
+              "value": "={{ $json._err?.operation === \"validate_file_ref\" ? 404 : 500 }}",
+              "type": "number"
+            },
+            {
+              "id": "wf33-fileio-retry",
+              "name": "error_context.retryable",
+              "value": "={{ $json._err?.operation === \"validate_file_ref\" ? false : true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "wf33-fileio-node",
+              "name": "error_context.details.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "wf33-fileio-op",
+              "name": "error_context.details.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "wf33-fileio-table",
+              "name": "error_context.details.table",
+              "value": "={{ $json._err?.table }}",
+              "type": "string"
+            },
+            {
+              "id": "wf33-fileio-doc",
+              "name": "error_context.details.document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf33-fileio-ctx",
+              "name": "error_context.ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-fileio-job",
+              "name": "error_context.job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        976
+      ],
+      "id": "wf33-file-err-prepare",
+      "name": "ERR — Prepare ErrorPipe v1 (File I/O)",
+      "notes": "Prepare ErrorPipe payload for all file path DB/S3/extractor/converter errors."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        976
+      ],
+      "id": "wf33-file-err-exec",
+      "name": "Execute WF99 (File I/O)",
+      "notes": "Call WF99 for file extraction failures and return ErrorEnvelope."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-dbf-node",
+              "name": "_err.node",
+              "value": "DB — Select tg.files by file_unique_id",
+              "type": "string"
+            },
+            {
+              "id": "wf33-dbf-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "wf33-dbf-table",
+              "name": "_err.table",
+              "value": "tg.files",
+              "type": "string"
+            },
+            {
+              "id": "wf33-dbf-ctx",
+              "name": "ctx",
+              "value": "={{ $('Set — File Ref from Document').item.json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-dbf-job",
+              "name": "job",
+              "value": "={{ $('Set — File Ref from Document').item.json.job }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-dbf-doc",
+              "name": "document_id",
+              "value": "={{ $('Set — File Ref from Document').item.json.document_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2320,
+        1232
+      ],
+      "id": "wf33-err-db-file",
+      "name": "ERR — Source DB File Ref",
+      "notes": "Error source for tg.files lookup failure."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-dbb-node",
+              "name": "_err.node",
+              "value": "DB — Select blob_objects by sha256",
+              "type": "string"
+            },
+            {
+              "id": "wf33-dbb-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "wf33-dbb-table",
+              "name": "_err.table",
+              "value": "content.blob_objects",
+              "type": "string"
+            },
+            {
+              "id": "wf33-dbb-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-dbb-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-dbb-doc",
+              "name": "document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1600,
+        1232
+      ],
+      "id": "wf33-err-db-blob",
+      "name": "ERR — Source DB Blob Ref",
+      "notes": "Error source for blob_objects lookup failure."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-miss-node",
+              "name": "_err.node",
+              "value": "GUARD — File Has sha256 / Blob Has storage_key",
+              "type": "string"
+            },
+            {
+              "id": "wf33-miss-op",
+              "name": "_err.operation",
+              "value": "validate_file_ref",
+              "type": "string"
+            },
+            {
+              "id": "wf33-miss-table",
+              "name": "_err.table",
+              "value": "tg.files/content.blob_objects",
+              "type": "string"
+            },
+            {
+              "id": "wf33-miss-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-miss-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-miss-doc",
+              "name": "document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1840,
+        1232
+      ],
+      "id": "wf33-err-missing-file",
+      "name": "ERR — Source Missing File Ref",
+      "notes": "Managed error source when file/blob references are absent."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-s3-node",
+              "name": "_err.node",
+              "value": "S3 — Download Source File",
+              "type": "string"
+            },
+            {
+              "id": "wf33-s3-op",
+              "name": "_err.operation",
+              "value": "download",
+              "type": "string"
+            },
+            {
+              "id": "wf33-s3-table",
+              "name": "_err.table",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "wf33-s3-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-s3-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-s3-doc",
+              "name": "document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1200,
+        1232
+      ],
+      "id": "wf33-err-s3-download",
+      "name": "ERR — Source S3 Download",
+      "notes": "Error source for S3 download failure."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "passThrough",
+        "options": {
+          "numberInputs": 3
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -16,
+        576
+      ],
+      "id": "wf33-merge-unified",
+      "name": "Merge — Unified Extracted Text",
+      "notes": "Join message/file/url branches into unified extraction item shape."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf33-if-extracted",
+              "leftValue": "={{ ($json.extracted_text || \"\").trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        576
+      ],
+      "id": "wf33-if-extracted",
+      "name": "GUARD — Extracted Text NonEmpty",
+      "notes": "Proceed to AI only when extracted_text is non-empty; otherwise return deterministic skipped success."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-skip-ok",
+              "name": "ok",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "wf33-skip-code",
+              "name": "status_code",
+              "value": 200,
+              "type": "number"
+            },
+            {
+              "id": "wf33-skip-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-skip-doc",
+              "name": "result.document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf33-skip-ext",
+              "name": "result.extracted",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "wf33-skip-r",
+              "name": "result.skipped_reason",
+              "value": "empty_extracted_text",
+              "type": "string"
+            },
+            {
+              "id": "wf33-skip-enq",
+              "name": "result.enqueued_chunk_job",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        416
+      ],
+      "id": "wf33-out-skip",
+      "name": "OUT — Success Envelope (Skipped Empty)",
+      "notes": "Return deterministic success when extracted_text is empty (message/file/url) and skip enqueue."
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      tenant_id: '00000000-0000-0000-0000-000000000331',\n      file_unique_id: 'wf33_t1_file_unique_id',\n      file_name: 'sample_document.docx',\n      mime_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',\n      sha256_bytea: '\\x1111111111111111111111111111111111111111111111111111111111111111',\n      storage_key: 'test/media/sample_document.docx',\n      document_id: 331001\n    }\n  },\n  {\n    json: {\n      tenant_id: '00000000-0000-0000-0000-000000000331',\n      file_unique_id: 'wf33_t2_file_unique_id',\n      file_name: 'sample_presentation.pptx',\n      mime_type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',\n      sha256_bytea: '\\x2222222222222222222222222222222222222222222222222222222222222222',\n      storage_key: 'test/media/sample_presentation.pptx',\n      document_id: 331002\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "id": "wf33-test-fixtures",
+      "name": "TEST — Build Fixtures",
+      "position": [
+        -4240,
+        1824
+      ],
+      "notes": "Create fixture rows for T1/T2 tests: tenant, tg.files identity, blob storage mapping, and content.documents ids. WHY: real DB-backed tests through production path."
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "core",
+          "mode": "list",
+          "cachedResultName": "core"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tenants",
+          "mode": "list",
+          "cachedResultName": "tenants"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.tenant_id }}",
+            "name": "WF33_TEST_TENANT",
+            "is_active": true,
+            "meta": {}
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "id": "wf33-test-upsert-tenant",
+      "name": "TEST — DB Upsert Tenant",
+      "position": [
+        -4016,
+        1824
+      ],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Ensure test tenant exists for FK constraints. Input: fixture item. Output: tenant row upsert result."
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "tg",
+          "mode": "list",
+          "cachedResultName": "tg"
+        },
+        "table": {
+          "__rl": true,
+          "value": "files",
+          "mode": "list",
+          "cachedResultName": "files"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "file_unique_id": "={{ $json.file_unique_id }}",
+            "file_type": "document",
+            "mime_type": "={{ $json.mime_type }}",
+            "file_name": "={{ $json.file_name }}",
+            "file_size": 1024,
+            "sha256": "={{ $json.sha256_bytea }}",
+            "meta": {}
+          },
+          "matchingColumns": [
+            "file_unique_id"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "id": "wf33-test-upsert-files",
+      "name": "TEST — DB Upsert tg.files",
+      "position": [
+        -3792,
+        1824
+      ],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Seed tg.files rows used by content.documents.file_unique_id FK and sha256->blob mapping."
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "blob_objects",
+          "mode": "list",
+          "cachedResultName": "blob_objects"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sha256": "={{ $json.sha256_bytea }}",
+            "byte_size": 1024,
+            "storage_kind": "s3",
+            "storage_key": "={{ $json.storage_key }}",
+            "meta": {}
+          },
+          "matchingColumns": [
+            "sha256"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "id": "wf33-test-upsert-blob",
+      "name": "TEST — DB Upsert blob_objects",
+      "position": [
+        -3568,
+        1824
+      ],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Seed content.blob_objects with S3 storage_key for extractor file download."
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "content",
+          "mode": "list",
+          "cachedResultName": "content"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.document_id }}",
+            "tenant_id": "={{ $json.tenant_id }}",
+            "doc_type": "file",
+            "file_unique_id": "={{ $json.file_unique_id }}",
+            "status": "pending",
+            "title": "WF33_TEST"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "id": "wf33-test-upsert-doc",
+      "name": "TEST — DB Upsert content.documents",
+      "position": [
+        -3344,
+        1824
+      ],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "notes": "Seed file documents for T1/T2 extraction tests. Output document_ids are fed into worker requests."
     }
   ],
   "connections": {
@@ -2059,14 +3329,14 @@
       "main": [
         [
           {
-            "node": "Set — FILE Extraction Placeholder",
+            "node": "Set — File Ref from Document",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Set — URL Extraction Placeholder",
+            "node": "Set — URL Placeholder Unified",
             "type": "main",
             "index": 0
           }
@@ -2128,7 +3398,7 @@
       "main": [
         [
           {
-            "node": "AI — Generate Description (Gemini)",
+            "node": "Merge — Unified Extracted Text",
             "type": "main",
             "index": 0
           }
@@ -2400,7 +3670,523 @@
       "main": [
         [
           {
-            "node": "TEST — Generate Test Cases",
+            "node": "TEST — Build Fixtures",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — URL Placeholder Unified": {
+      "main": [
+        [
+          {
+            "node": "Merge — Unified Extracted Text",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Set — File Ref from Document": {
+      "main": [
+        [
+          {
+            "node": "DB — Select tg.files by file_unique_id",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after tg.files",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "DB — Select tg.files by file_unique_id": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore CTX after tg.files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "ERR — Source DB File Ref",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Restore CTX after tg.files": {
+      "main": [
+        [
+          {
+            "node": "GUARD — File Has sha256",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GUARD — File Has sha256": {
+      "main": [
+        [
+          {
+            "node": "DB — Select blob_objects by sha256",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after blob lookup",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Missing File Ref",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Select blob_objects by sha256": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore CTX after blob lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "ERR — Source DB Blob Ref",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Restore CTX after blob lookup": {
+      "main": [
+        [
+          {
+            "node": "GUARD — Blob Has storage_key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GUARD — Blob Has storage_key": {
+      "main": [
+        [
+          {
+            "node": "S3 — Download Source File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after S3",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Missing File Ref",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S3 — Download Source File": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore CTX after S3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "ERR — Source S3 Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Restore CTX after S3": {
+      "main": [
+        [
+          {
+            "node": "Set — Detect File Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Detect File Type": {
+      "main": [
+        [
+          {
+            "node": "IF — Route PPTX to Converter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Route PPTX to Converter": {
+      "main": [
+        [
+          {
+            "node": "Convert — File To Json",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract — Extract From File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract — Extract From File": {
+      "main": [
+        [
+          {
+            "node": "Set — Unified from Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "ERR — Source Extract File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Unified from Extract": {
+      "main": [
+        [
+          {
+            "node": "Merge — File Extract Unified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Extract File": {
+      "main": [
+        [
+          {
+            "node": "IF — Extract Error Is Unsupported",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Extract Error Is Unsupported": {
+      "main": [
+        [
+          {
+            "node": "Convert — File To Json",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (File I/O)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert — File To Json": {
+      "main": [
+        [
+          {
+            "node": "CODE — Flatten Converted JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "ERR — Source Convert File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE — Flatten Converted JSON": {
+      "main": [
+        [
+          {
+            "node": "Merge — File Extract Unified",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ERR — Source Convert File": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (File I/O)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — File Extract Unified": {
+      "main": [
+        [
+          {
+            "node": "Merge — Unified Extracted Text",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB File Ref": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (File I/O)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Blob Ref": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (File I/O)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Missing File Ref": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (File I/O)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source S3 Download": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (File I/O)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe v1 (File I/O)": {
+      "main": [
+        [
+          {
+            "node": "Execute WF99 (File I/O)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute WF99 (File I/O)": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Success + All Errors)",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Merge — Unified Extracted Text": {
+      "main": [
+        [
+          {
+            "node": "GUARD — Extracted Text NonEmpty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GUARD — Extracted Text NonEmpty": {
+      "main": [
+        [
+          {
+            "node": "AI — Generate Description (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OUT — Success Envelope (Skipped Empty)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OUT — Success Envelope (Skipped Empty)": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Success + All Errors)",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "TEST — Build Fixtures": {
+      "main": [
+        [
+          {
+            "node": "TEST — DB Upsert Tenant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — DB Upsert Tenant": {
+      "main": [
+        [
+          {
+            "node": "TEST — DB Upsert tg.files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "ERR — Source Input Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — DB Upsert tg.files": {
+      "main": [
+        [
+          {
+            "node": "TEST — DB Upsert blob_objects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "ERR — Source Input Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — DB Upsert blob_objects": {
+      "main": [
+        [
+          {
+            "node": "TEST — DB Upsert content.documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "ERR — Source Input Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — DB Upsert content.documents": {
+      "main": [
+        [
+          {
+            "node": "TEST — Build Worker Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "ERR — Source Input Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TEST — Build Worker Requests": {
+      "main": [
+        [
+          {
+            "node": "Set — Normalize Input",
             "type": "main",
             "index": 0
           }
