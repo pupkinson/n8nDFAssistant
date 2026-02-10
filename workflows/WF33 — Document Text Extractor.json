@@ -2611,17 +2611,59 @@
     },
     {
       "parameters": {
-        "jsCode": "const out=[];\nfor (const item of $input.all()) {\n  const src=item.json || {};\n  const converted = src.converted_json ?? src.convertedJson ?? src.data ?? src.result ?? src.content ?? src;\n  const clone=JSON.parse(JSON.stringify(converted));\n  out.push({json:{\n    extracted_text: typeof clone === 'string' ? clone : JSON.stringify(clone),\n    extracted_meta:{extract_source:'convert_file_to_json',converted_json:clone},\n    document_id: src.document_id ?? $('Carry — Pre Convert File').item.json.document_id,\n    ctx: src.ctx ?? $('Carry — Pre Convert File').item.json.ctx,\n    job: src.job ?? $('Carry — Pre Convert File').item.json.job\n  }});\n}\nreturn out;"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf33-conv-unified-text",
+              "name": "extracted_text",
+              "value": "={{ typeof $json === \"string\" ? $json : JSON.stringify($json) }}",
+              "type": "string"
+            },
+            {
+              "id": "wf33-conv-unified-meta-src",
+              "name": "extracted_meta.extract_source",
+              "value": "convert_file_to_json",
+              "type": "string"
+            },
+            {
+              "id": "wf33-conv-unified-meta-json",
+              "name": "extracted_meta.converted_json",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-conv-unified-doc",
+              "name": "document_id",
+              "value": "={{ $json.document_id || $(\"Carry — Pre Convert File\").item.json.document_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf33-conv-unified-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $(\"Carry — Pre Convert File\").item.json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf33-conv-unified-job",
+              "name": "job",
+              "value": "={{ $json.job || $(\"Carry — Pre Convert File\").item.json.job }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         8160,
         10416
       ],
       "id": "b53bc748-7de7-457c-a800-d3d353e9f393",
-      "name": "CODE — Flatten Converted JSON",
-      "notes": "Small deterministic transformer: converter JSON -> extracted_text string + extracted_meta.converted_json."
+      "name": "Set — Unified from Convert",
+      "notes": "Map Convert File To Json output to unified extraction contract without Code. Input: converted JSON + restored ctx/job/document_id. Output: extracted_text JSON string + extracted_meta.converted_json + context fields."
     },
     {
       "parameters": {
@@ -4985,17 +5027,6 @@
         ]
       ]
     },
-    "CODE — Flatten Converted JSON": {
-      "main": [
-        [
-          {
-            "node": "Merge — File Extract Unified",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
     "Merge — File Extract Unified": {
       "main": [
         [
@@ -5569,7 +5600,7 @@
       "main": [
         [
           {
-            "node": "CODE — Flatten Converted JSON",
+            "node": "Set — Unified from Convert",
             "type": "main",
             "index": 0
           }
@@ -5594,6 +5625,17 @@
             "node": "GUARD — Extracted Text NonEmpty",
             "type": "main",
             "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Unified from Convert": {
+      "main": [
+        [
+          {
+            "node": "Merge — File Extract Unified",
+            "type": "main",
+            "index": 1
           }
         ]
       ]
