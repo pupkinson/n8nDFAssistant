@@ -62,20 +62,26 @@
           "assignments": [
             {
               "id": "a4f9f3a5-c342-4aa7-8618-24f33f4a02b2",
-              "name": "req",
-              "value": "={{ $json.req ?? {} }}",
+              "name": "req.ctx",
+              "value": "={{ $json.req?.ctx ?? $json.ctx ?? {} }}",
+              "type": "object"
+            },
+            {
+              "id": "a4f9f3a5-c342-4aa7-8618-24f33f4a02b3",
+              "name": "req.job",
+              "value": "={{ $json.req?.job ?? $json.job ?? {} }}",
               "type": "object"
             },
             {
               "id": "8c7f7f9a-12d9-4c21-ac3a-8253126ea7f6",
               "name": "ctx",
-              "value": "={{ $json.req?.ctx ?? {} }}",
+              "value": "={{ $json.req?.ctx ?? $json.ctx ?? {} }}",
               "type": "object"
             },
             {
               "id": "3a36975b-87dd-4708-af79-7377e2b66d75",
               "name": "job",
-              "value": "={{ $json.req?.job ?? {} }}",
+              "value": "={{ $json.req?.job ?? $json.job ?? {} }}",
               "type": "object"
             },
             {
@@ -104,7 +110,7 @@
         -1440,
         480
       ],
-      "notes": "PURPOSE: Normalize WF90 request contract for worker execution. INPUT: req{ctx,job}. OUTPUT: req + ctx + job canonical fields. WHY: all downstream nodes expect stable structure."
+      "notes": "PURPOSE: Normalize WF90 request contract for worker execution. INPUT: either {req:{ctx,job}} or {ctx,job} (both forms accepted). OUTPUT: req.ctx + req.job + ctx + job canonical fields. WHY: all downstream nodes expect stable $json.req.* structure; dual input format for caller flexibility."
     },
     {
       "parameters": {
@@ -1653,25 +1659,19 @@
             {
               "id": "5cf67bde-0f44-42ca-8e6a-60151366cae7",
               "name": "data.document_id",
-              "value": "={{ $json.req.job.payload.document_id }}",
+              "value": "={{ $('Set — Prepare Embed Context').first().json.req.job.payload.document_id }}",
               "type": "number"
             },
             {
               "id": "260f8c0a-67eb-4f90-b6db-04d5ac277f8a",
               "name": "data.embedding_model_id",
-              "value": "={{ $json.req.job.payload.embedding_model_id }}",
+              "value": "={{ $('Set — Prepare Embed Context').first().json.embed_model_id }}",
               "type": "number"
             },
             {
               "id": "38ad9a01-6a2d-4728-a6a2-ab51f4201d23",
               "name": "data.embedded_count",
-              "value": 0,
-              "type": "number"
-            },
-            {
-              "id": "f2808eb8-994d-444e-b3ca-9bad76ee55a1",
-              "name": "data.skipped_existing_count",
-              "value": 0,
+              "value": "={{ $('DB — Upsert Embedding').all().length }}",
               "type": "number"
             },
             {
@@ -1695,31 +1695,31 @@
             {
               "id": "d8dcaec6-d99e-4598-aa28-f4f9f5f66034",
               "name": "meta.correlation.correlation_id",
-              "value": "={{ $json.req.ctx.correlation_id }}",
+              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.correlation_id }}",
               "type": "string"
             },
             {
               "id": "9af21071-fb2e-406a-b8be-edb6d6ad3e1d",
               "name": "meta.correlation.trace_id",
-              "value": "={{ $json.req.ctx.trace_id || null }}",
+              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.trace_id || null }}",
               "type": "string"
             },
             {
               "id": "b5eb5e64-21ff-4ec2-8f60-bfbb7c66ac9a",
               "name": "meta.correlation.tenant_id",
-              "value": "={{ $json.req.ctx.tenant_id || null }}",
+              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.tenant_id || null }}",
               "type": "string"
             },
             {
               "id": "30b3af56-58cc-4833-9dc4-b13f8c4bc6f8",
               "name": "meta.correlation.chat_id",
-              "value": "={{ $json.req.ctx.chat_id || null }}",
+              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.chat_id || null }}",
               "type": "number"
             },
             {
               "id": "82439f34-a1a7-4fd7-af93-8c2f5e416111",
               "name": "meta.correlation.message_id",
-              "value": "={{ $json.req.ctx.message_id || null }}",
+              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.message_id || null }}",
               "type": "number"
             },
             {
@@ -1731,7 +1731,7 @@
             {
               "id": "d8e66531-f28a-4d08-a258-0c4d85239c2d",
               "name": "meta.correlation.node",
-              "value": "DB — Select Chunks For Embed",
+              "value": "OUT — Success Embed",
               "type": "string"
             }
           ]
@@ -1745,10 +1745,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        848,
-        1136
+        2060,
+        1200
       ],
-      "notes": "PURPOSE: Return SuccessEnvelope for embed_chunks path. INPUT: chunks/model validation path. OUTPUT: contract envelope with embedding counters. WHY: worker output for embed job."
+      "notes": "PURPOSE: Return SuccessEnvelope for embed_chunks happy path with real stats. INPUT: first upsert result (limited to 1 item). OUTPUT: ok=true, embedded_count from all upserts, document_id, embedding_model_id. WHY: worker output contract for embed job."
     }
   ],
   "pinData": {},
