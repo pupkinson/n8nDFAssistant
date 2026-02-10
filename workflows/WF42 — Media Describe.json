@@ -8,10 +8,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -3840,
-        192
+        48,
+        208
       ],
-      "id": "fa76b31e-e9af-4f00-9238-d7ebbe7e4b0d",
+      "id": "9c15a6ad-6c2e-4364-af3b-c2129dda8323",
       "name": "Execute Workflow Trigger",
       "notes": "Triggered by WF90 (Job Runner) with req/ctx containing job payload"
     },
@@ -110,10 +110,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3600,
-        192
+        288,
+        208
       ],
-      "id": "e0083d5b-68c4-4e6a-a6e6-fc5d2a0dc047",
+      "id": "be4baa85-6ff5-44bc-95e1-ec45bdf3d843",
       "name": "Set — Normalize Input",
       "notes": "Extract req/ctx from trigger. Preserve all input fields. Input: trigger item. Output: req.* + ctx.*. WHY includeOtherFields=false: clean namespace for downstream"
     },
@@ -125,10 +125,10 @@
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        -3360,
-        192
+        528,
+        208
       ],
-      "id": "6567c569-1f52-4d23-9232-1930fb447530",
+      "id": "9983709a-15b3-494a-bcd2-e29799afd247",
       "name": "Crypto — Generate Correlation ID",
       "notes": "Generate UUID v4 for correlation_id if missing. Input: req/ctx. Output: generated_correlation_id. WHY: ensures every execution has traceable correlation_id"
     },
@@ -179,10 +179,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3072,
-        256
+        816,
+        272
       ],
-      "id": "b8daceef-7c37-4934-bb21-84106ae05344",
+      "id": "97d5baef-0b61-43a0-ac48-68a094d64e79",
       "name": "Set — Build CTX",
       "notes": "Build canonical ctx with correlation_id (generated or from input). Input: normalized req + generated UUID. Output: ctx.* + req.*. WHY includeOtherFields=false: clean structure"
     },
@@ -232,10 +232,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -2880,
-        80
+        1008,
+        96
       ],
-      "id": "8ab282f9-26f1-411e-8442-e65eb2be694d",
+      "id": "142ac2f6-223a-4e6e-89c0-c09ee26aa34b",
       "name": "IF — Input Guard",
       "notes": "Validate required inputs: tenant_id, document_id, and either storage_url OR blob_object_id. TRUE=valid. FALSE=invalid. Input: ctx + req. Output: same. WHY version=3: n8n v2.6.3 IF schema"
     },
@@ -281,10 +281,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2208,
-        1344
+        1680,
+        1360
       ],
-      "id": "844c2016-de35-4bc1-ad6f-377c77f30309",
+      "id": "456e5901-2d25-4998-acf8-65f692143c10",
       "name": "ERR — Source Input Guard",
       "notes": "Capture error source metadata for Input Guard failure. Input: failed guard item. Output: _err.* + ctx + req + original. WHY includeOtherFields=true: preserve failure data"
     },
@@ -347,10 +347,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1968,
-        1344
+        1920,
+        1360
       ],
-      "id": "d24ab20e-8693-48a2-a398-1ad5b1ea1a50",
+      "id": "8c188a04-1998-4a93-ad91-afdb105ab0ba",
       "name": "ERR — Prepare ErrorPipe v1 (Input)",
       "notes": "Build error_context for WF99 (validation failure). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean error envelope"
     },
@@ -376,10 +376,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -1728,
-        1344
+        2160,
+        1360
       ],
-      "id": "eae5da0a-1bc5-475f-afca-c468a1fb80c7",
+      "id": "b7cd5715-bb08-47bc-802d-d7b7c77c2e31",
       "name": "Execute WF99 (Input)",
       "notes": "Call WF99 Global ERR Handler for input validation failure. Input: error_context. Output: ErrorEnvelope. WHY: centralized error logging per ErrorPipe v1"
     },
@@ -411,10 +411,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -2656,
-        80
+        1232,
+        96
       ],
-      "id": "171e1710-0d30-4060-8302-784848d3e4b2",
+      "id": "73701e34-a38c-403c-be99-4548019c9518",
       "name": "DB — Select Document",
       "credentials": {
         "postgres": {
@@ -434,10 +434,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -2368,
-        256
+        1520,
+        272
       ],
-      "id": "1c7876a0-f54a-4511-a488-3742b154715f",
+      "id": "727e2a08-3311-42fb-9aaa-3e97e5310b9f",
       "name": "Merge — Restore CTX after DB Select",
       "notes": "Restore ctx/req after DB Select Document (Carry pattern C1). Input1: DB result, Input2: ctx/req from Set Build CTX. Output: db.document.* + ctx + req. WHY: Postgres overwrites item"
     },
@@ -483,10 +483,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2192,
-        1152
+        1696,
+        1168
       ],
-      "id": "b4ced7de-8c16-4617-b1de-dbfaf012b8ce",
+      "id": "81d0078f-d9f1-4fa4-b26a-7002d5551d81",
       "name": "ERR — Source DB Document",
       "notes": "Capture error source for DB Select Document failure (404 or DB error). Input: error output. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve error details"
     },
@@ -555,10 +555,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1968,
-        1152
+        1920,
+        1168
       ],
-      "id": "6763472a-2d84-453a-95c8-f9b8c735efb3",
+      "id": "ae3ddf9d-3d5f-48fe-a4cb-6dce992d8120",
       "name": "ERR — Prepare ErrorPipe v1 (DB Doc)",
       "notes": "Build error_context for DB Document failure (404=business, else db error). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope"
     },
@@ -584,10 +584,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -1728,
-        1152
+        2160,
+        1168
       ],
-      "id": "8e9100e7-4081-4d0c-b012-178138b5f0a7",
+      "id": "b8adfd4a-76c5-4f89-a5b1-5faf5a4e0465",
       "name": "Execute WF99 (DB Doc)",
       "notes": "Call WF99 for DB Document failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 pattern for centralized logging"
     },
@@ -615,10 +615,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -2160,
-        224
+        1728,
+        240
       ],
-      "id": "a9ea30e9-cb3f-462f-a145-572cd1d77a6b",
+      "id": "570fd4c6-1714-449a-bfcf-9591a5663185",
       "name": "IF — Has Storage URL",
       "notes": "Check if storage_url provided (skip blob_objects lookup). TRUE=use storage_url. FALSE=query blob_objects. Input: ctx + req + db.document. Output: same. WHY: optimize DB queries"
     },
@@ -642,10 +642,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -2000,
-        416
+        1888,
+        432
       ],
-      "id": "e0e05c65-5652-44a3-8d2c-7b3fc1c3edfa",
+      "id": "f2bea961-4d11-41c1-89cd-14d678ac1430",
       "name": "DB — Select Blob Object",
       "credentials": {
         "postgres": {
@@ -665,10 +665,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1792,
-        368
+        2096,
+        384
       ],
-      "id": "2382162f-d7cf-4bcc-a3eb-31005297bf99",
+      "id": "472bec13-4ca4-4834-b73c-b555a51a8d09",
       "name": "Merge — Restore CTX after Blob",
       "notes": "Restore ctx/req after DB Select Blob (Carry C1). Input1: DB blob, Input2: ctx from IF. Output: db.blob.* + ctx + req + db.document.*. WHY: preserve context through DB I/O"
     },
@@ -714,10 +714,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1456,
-        752
+        2432,
+        768
       ],
-      "id": "d9379f55-60dc-4f61-ada1-2c62bb3ec430",
+      "id": "b4e544da-824d-4947-831c-ddb1a524e286",
       "name": "ERR — Source DB Blob",
       "notes": "Capture error source for DB Blob lookup (404 or DB error). Input: error output. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve DB error"
     },
@@ -786,10 +786,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1216,
-        752
+        2672,
+        768
       ],
-      "id": "a149876b-28ba-4297-8390-f5d06faa752c",
+      "id": "128545e8-1304-4e22-aae5-e293cc78e5c5",
       "name": "ERR — Prepare ErrorPipe v1 (DB Blob)",
       "notes": "Build error_context for Blob lookup failure. Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope for WF99"
     },
@@ -815,10 +815,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -976,
-        752
+        2912,
+        768
       ],
-      "id": "7331d6cf-abf2-453f-b41f-d3554565ba07",
+      "id": "965a400a-110d-4414-94c8-139e6dfa1e01",
       "name": "Execute WF99 (DB Blob)",
       "notes": "Call WF99 for Blob lookup failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized error logging"
     },
@@ -827,10 +827,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1616,
-        256
+        2272,
+        272
       ],
-      "id": "41d6d075-43a9-4e5d-8adf-f7206992b530",
+      "id": "8375b8d4-b357-4034-a6f9-1150da2021d8",
       "name": "Merge — Join Storage Paths",
       "notes": "Join TRUE (has storage_url) and FALSE (blob loaded) branches. Input1: storage_url path, Input2: blob path. Output: unified item with storage locator. WHY mode=append: combine both branches"
     },
@@ -881,10 +881,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1440,
-        304
+        2448,
+        320
       ],
-      "id": "d6ee60ac-56d5-4feb-9b38-72e009e5c105",
+      "id": "d2806b83-b585-4386-9aff-e958dd717484",
       "name": "Set — Prepare S3 Locator",
       "notes": "Build S3 bucket/key from storage_url or blob row. Extract mime_type. Input: merged storage paths. Output: s3.bucket, s3.key, mime_type, ctx, req. WHY includeOtherFields=false: clean"
     },
@@ -929,10 +929,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1168,
-        288
+        2720,
+        304
       ],
-      "id": "b8e5c830-a753-4e81-8a8a-bdde0d8f97cb",
+      "id": "a8999139-9d85-47e7-9310-83e93c20c9bc",
       "name": "Set — Determine Media Kind",
       "notes": "Infer media_kind from hint or mime_type (image/video/audio). Input: s3 locator + mime_type. Output: media_kind + s3.* + ctx + req. WHY: route to correct AI node"
     },
@@ -944,10 +944,10 @@
       "type": "n8n-nodes-base.s3",
       "typeVersion": 1,
       "position": [
-        -960,
-        192
+        2928,
+        208
       ],
-      "id": "231ca575-0a11-4d9f-b49c-582fe21fabde",
+      "id": "1fb7a346-89e2-458d-8829-c2a8bb259fda",
       "name": "S3 — Download Media",
       "retryOnFail": true,
       "credentials": {
@@ -968,10 +968,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -720,
-        304
+        3168,
+        320
       ],
-      "id": "ff1d0a55-3add-4b31-9e74-6ea19e8eb464",
+      "id": "ca03f18c-f78d-474c-9df8-b2ad1c87fdf4",
       "name": "Merge — Restore CTX after S3",
       "notes": "Restore ctx/req/media_kind after S3 Download (Carry C1). Input1: S3 binary, Input2: ctx from Determine Media. Output: binary + media_kind + ctx + req. WHY: S3 overwrites item"
     },
@@ -1023,10 +1023,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        480,
-        1744
+        4368,
+        1760
       ],
-      "id": "b758e8c2-f728-4f28-b54b-8e8bf8430fe6",
+      "id": "27935d49-bfee-4943-9cee-6d836fe47fef",
       "name": "ERR — Source S3",
       "notes": "Capture error source for S3 download failure. Input: S3 error output. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve S3 error details"
     },
@@ -1048,10 +1048,10 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        -48,
-        176
+        3840,
+        192
       ],
-      "id": "9c63b683-8265-4e7c-a70b-58b49900b9bd",
+      "id": "9b68dea1-94d3-4647-9356-cca147195dab",
       "name": "AI — Analyze Image",
       "credentials": {
         "googlePalmApi": {
@@ -1110,10 +1110,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        496,
-        832
+        4384,
+        848
       ],
-      "id": "f7fd522c-83fb-4e46-894c-411df84872aa",
+      "id": "6391dae5-8305-40fe-8015-bc966041cc19",
       "name": "ERR — Source AI Image",
       "notes": "Capture error source for AI Image analysis failure. Input: AI error. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve AI error details"
     },
@@ -1135,10 +1135,10 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        -48,
-        544
+        3840,
+        560
       ],
-      "id": "768aaaa5-4345-4c71-8ab0-a4602f307e5c",
+      "id": "41d1e711-e73c-42c7-8979-bb0154833e95",
       "name": "AI — Analyze Video",
       "credentials": {
         "googlePalmApi": {
@@ -1197,10 +1197,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        496,
-        1072
+        4384,
+        1088
       ],
-      "id": "84c5e4bb-baa5-455d-9b24-6d5b7e2c21c1",
+      "id": "b6fe04d8-d33c-42f0-81ff-8fa671e51fbd",
       "name": "ERR — Source AI Video",
       "notes": "Capture error source for AI Video analysis failure. Input: AI error. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve error"
     },
@@ -1252,24 +1252,22 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        480,
-        1264
+        4368,
+        1280
       ],
-      "id": "9c2784fe-1414-45cb-8aa3-e75f5f8cfc4c",
+      "id": "c15d556b-d336-43d8-ba9d-bdab14987a0a",
       "name": "ERR — Source AI Transcribe",
       "notes": "Capture error source for AI Transcribe failure. Input: AI error. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve error"
     },
     {
-      "parameters": {
-        "numberInputs": 5
-      },
+      "parameters": {},
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1024,
-        352
+        4912,
+        416
       ],
-      "id": "a3097ad5-211a-49a4-8dcf-3fffcbe5f0e9",
+      "id": "9f845fea-a11e-42fe-8657-35982fb38a66",
       "name": "Merge — Join All AI Branches",
       "notes": "Merge image/video/audio analysis results into single stream. Input1: image AI, Input2: video AI, Input3: audio AI. Output: ai.* + ctx + req + media_kind. WHY numberInputs=3: 3 branches"
     },
@@ -1356,10 +1354,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1328,
-        352
+        5216,
+        368
       ],
-      "id": "d6305125-d10e-4407-b12e-41ce8dd0ae02",
+      "id": "dd9274d5-37ec-47fa-994d-750bfa276351",
       "name": "Set — Parse AI Results",
       "notes": "Extract description_text, transcript_text (if audio), build analysis_meta object. Input: ai.* + ctx + req. Output: parsed fields + analysis_meta.* + ctx + req. WHY: structure for DB update"
     },
@@ -1660,10 +1658,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1712,
-        448
+        5600,
+        464
       ],
-      "id": "b3d695b4-a135-46a1-afad-c3bb0b6a97f8",
+      "id": "f3727e1c-96ab-4463-969e-6a62de72224c",
       "name": "DB — Update Document",
       "credentials": {
         "postgres": {
@@ -1683,10 +1681,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2032,
-        288
+        5920,
+        304
       ],
-      "id": "e07c521f-8361-4bff-86af-e73cdd8dd348",
+      "id": "273ca161-f495-4f7b-9516-75f1dac1be4b",
       "name": "Merge — Restore CTX after Update",
       "notes": "Restore ctx/req/analysis after DB Update (Carry C1). Input1: DB result, Input2: parsed AI from Set. Output: db.update + parsed + ctx + req. WHY: preserve analysis for response"
     },
@@ -1738,10 +1736,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2032,
-        736
+        5920,
+        752
       ],
-      "id": "7ef70381-b807-4854-ac76-e545a5442617",
+      "id": "f9e8b697-06c0-4d9b-a7b5-8a84f9263ebe",
       "name": "ERR — Source DB Update",
       "notes": "Capture error source for DB Update failure. Input: DB error. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve DB error details"
     },
@@ -1810,10 +1808,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2352,
-        960
+        6240,
+        976
       ],
-      "id": "9ae58a2f-47d9-407c-94a0-d215efc99ae3",
+      "id": "07fabf68-b8b6-4d0e-9915-feb1db550a32",
       "name": "ERR — Prepare ErrorPipe v1 (DB Upd)",
       "notes": "Build error_context for DB Update failure (retryable DB error). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope"
     },
@@ -1839,10 +1837,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2592,
-        960
+        6480,
+        976
       ],
-      "id": "4ab338ce-22b6-43b8-92fe-d258e404dbe7",
+      "id": "b115c851-6a9d-4cd2-bced-b4ca17a9e3b5",
       "name": "Execute WF99 (DB Upd)",
       "notes": "Call WF99 for DB Update failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1"
     },
@@ -1923,10 +1921,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2528,
-        288
+        6416,
+        304
       ],
-      "id": "50f0de82-2392-4e29-b0dd-cbe788754f87",
+      "id": "de5c5cab-190d-472b-8f8c-66089f8cbbb9",
       "name": "Set — Success Envelope",
       "notes": "Build SuccessEnvelope: ok=true, status_code=200, ctx, data (document_id, description, transcript, meta). Input: merged update + parsed. Output: SuccessEnvelope. WHY: WF42 contract"
     },
@@ -1935,10 +1933,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -4032,
-        1392
+        -144,
+        1408
       ],
-      "id": "9a173dfc-5d3e-4521-9362-83dd63e8f731",
+      "id": "9ffc4ffb-5bdb-4941-8a26-e1e2b8c0e1e8",
       "name": "Manual Trigger TEST",
       "notes": "Test branch: creates fixture document + blob_object, runs workflow, verifies results, cleanup. Use for QA before deploy. WHY: real DB tests per project rules"
     },
@@ -1983,10 +1981,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3584,
-        1184
+        304,
+        1200
       ],
-      "id": "404309c7-a8e9-4365-8145-c782909d1d04",
+      "id": "139f77a1-1645-407d-8dd7-3f9d38b80a53",
       "name": "Set — Test Config",
       "notes": "Configure test: tenant_id, storage_url (REPLACE with real S3 key in your env), mime_type, media_kind. Input: trigger. Output: test_config.*. WHY: user-editable test params"
     },
@@ -2064,10 +2062,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -3376,
-        1056
+        512,
+        1072
       ],
-      "id": "5af1c307-1ce0-4c43-90a5-a68d382c3ee9",
+      "id": "a251ed74-82fe-420b-a72c-e4f7e7aab5f9",
       "name": "TEST — DB Insert Document Fixture",
       "credentials": {
         "postgres": {
@@ -2086,10 +2084,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -3072,
-        1136
+        816,
+        1152
       ],
-      "id": "f16fc568-35b0-4198-8548-74979ee368d3",
+      "id": "1c0f30c2-8ba3-4af8-b75f-fc028ac9be8d",
       "name": "TEST — Merge Config with Document ID",
       "notes": "Merge test_config + new document_id. Input1: DB insert (document_id), Input2: test_config. Output: test_config.* + document_id. WHY: build test req payload"
     },
@@ -2164,10 +2162,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2880,
-        1152
+        1008,
+        1168
       ],
-      "id": "2a163034-9963-4529-a7a9-18685af75dd4",
+      "id": "e1664d28-be89-4c8a-afbc-0c29e339bc36",
       "name": "TEST — Build Req/Ctx",
       "notes": "Build test req/ctx matching WF90 input contract. Input: merged config + document_id. Output: req.* + ctx.*. WHY: simulate WF90 call to main workflow"
     },
@@ -2203,10 +2201,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3120,
-        336
+        7008,
+        352
       ],
-      "id": "6ee1ecd6-0d09-44e4-8211-40419e792481",
+      "id": "042d42a4-113d-411c-80b0-6ff22c7bb5c1",
       "name": "TEST — DB Verify Updated Document",
       "credentials": {
         "postgres": {
@@ -2235,10 +2233,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3360,
-        336
+        7248,
+        352
       ],
-      "id": "2d41cb81-a6ef-483f-bb1b-d1897afc4722",
+      "id": "95270d70-5f62-4e2e-bb00-f37895bf64ad",
       "name": "TEST — DB Cleanup",
       "credentials": {
         "postgres": {
@@ -2289,10 +2287,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3600,
-        1488
+        288,
+        1504
       ],
-      "id": "9dcf576b-3c09-4314-abed-722cf95848a9",
+      "id": "d5ee83a1-ba64-429d-810d-362785089491",
       "name": "Set — Test Config1",
       "notes": "Configure test: tenant_id, storage_url (REPLACE with real S3 key in your env), mime_type, media_kind. Input: trigger. Output: test_config.*. WHY: user-editable test params"
     },
@@ -2337,10 +2335,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3600,
-        1744
+        288,
+        1760
       ],
-      "id": "d229edd8-7a1d-4f66-9795-60487d684951",
+      "id": "42301843-1a0a-40ec-8fea-491679be04e5",
       "name": "Set — Test Config2",
       "notes": "Configure test: tenant_id, storage_url (REPLACE with real S3 key in your env), mime_type, media_kind. Input: trigger. Output: test_config.*. WHY: user-editable test params"
     },
@@ -2362,10 +2360,10 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        -48,
-        784
+        3840,
+        800
       ],
-      "id": "de6c3010-5315-4d4a-8184-379a5cf61621",
+      "id": "a5732260-1286-4214-a3f0-3715875d9c1b",
       "name": "Analyze audio",
       "retryOnFail": false,
       "credentials": {
@@ -2417,10 +2415,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3616,
-        2032
+        272,
+        2048
       ],
-      "id": "a812960f-f099-46a0-b186-b7d62da32ebf",
+      "id": "31840094-6681-4827-8353-1d0190bb161b",
       "name": "Set — Test Config3",
       "notes": "Configure test: tenant_id, storage_url (REPLACE with real S3 key in your env), mime_type, media_kind. Input: trigger. Output: test_config.*. WHY: user-editable test params"
     },
@@ -2472,10 +2470,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        480,
-        1504
+        4368,
+        1520
       ],
-      "id": "bc9ec3db-4b5d-4833-98e5-20e874e8eced",
+      "id": "11375ba2-32d2-45e6-8498-775bff2f9f8b",
       "name": "ERR — Source AI Document",
       "notes": "Capture error source for AI Image analysis failure. Input: AI error. Output: _err.* + ctx + req + error. WHY includeOtherFields=true: preserve AI error details"
     },
@@ -2496,10 +2494,10 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        -48,
-        1056
+        3840,
+        1072
       ],
-      "id": "e049df8e-f329-4f05-ba20-3c4c503cce60",
+      "id": "7fc6d869-5b64-4465-b6c0-728a95b69d53",
       "name": "Analyze document",
       "credentials": {
         "googlePalmApi": {
@@ -2518,10 +2516,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        560,
-        352
+        4448,
+        368
       ],
-      "id": "58e6dfa8-eb79-4845-b778-e430d660ac96",
+      "id": "c4269aa9-d02d-45a7-a470-9e94b01dd30b",
       "name": "Merge — Restore CTX after AI",
       "notes": "Restore ctx/req/media_kind after AI Video analysis (Carry C1). Input1: AI result, Input2: ctx from Is Video. Output: ai.* + media_kind + ctx + req. WHY: preserve context"
     },
@@ -2632,10 +2630,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -480,
-        304
+        3408,
+        320
       ],
-      "id": "4b1b108e-1683-4a79-b116-1997faaad2ae",
+      "id": "3fb46f96-44e5-4254-a49f-03e2418ff211",
       "name": "Switch - Media Kind Router"
     }
   ],
@@ -3080,11 +3078,6 @@
         ]
       ]
     },
-    "Set — Success Envelope": {
-      "main": [
-        []
-      ]
-    },
     "Manual Trigger TEST": {
       "main": [
         [
@@ -3257,7 +3250,7 @@
           {
             "node": "Merge — Join All AI Branches",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ]
       ]
@@ -3316,7 +3309,7 @@
           {
             "node": "Merge — Join All AI Branches",
             "type": "main",
-            "index": 3
+            "index": 1
           }
         ]
       ]
@@ -3331,7 +3324,7 @@
     "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "8b20994a-b04c-4fca-ab4f-26e14f3d4eea",
+  "versionId": "de493643-14a5-4d89-a76e-431b56f4bc74",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
