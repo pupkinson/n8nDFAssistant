@@ -5,25 +5,25 @@
       "parameters": {
         "inputSource": "passthrough"
       },
-      "id": "0f7d8f45-726a-4ffa-b297-cddf9ea59601",
+      "id": "3d08b45d-f2a2-4634-a21d-52e82bbfcf3b",
       "name": "IN — Execute Workflow Trigger",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -4560,
-        560
+        -2160,
+        480
       ],
       "notes": "PURPOSE: Worker entry from WF90 Execute Workflow. INPUT: single item with req{ctx,job}. OUTPUT: raw worker request. WHY: canonical worker trigger."
     },
     {
       "parameters": {},
-      "id": "85f65aa5-c44f-4993-b50c-e8ed50fcbde6",
+      "id": "c3ab7174-6fee-44e1-8716-d8f6ff2ae1ef",
       "name": "TEST — Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -4560,
-        992
+        -2160,
+        912
       ],
       "notes": "PURPOSE: Run DB-backed T1/T2/T3 tests inside WF41. INPUT: manual click. OUTPUT: test requests merged into main pipeline. WHY: required regression checks."
     },
@@ -31,31 +31,28 @@
       "parameters": {
         "jsCode": "return [\n  {\n    json: {\n      req: {\n        ctx: {\n          tenant_id: '00000000-0000-0000-0000-000000000041',\n          correlation_id: '41000000-0000-0000-0000-000000000001',\n          trace_id: null,\n          chat_id: null,\n          message_id: null,\n          workflow: 'WF90',\n          job_id: 410001\n        },\n        job: {\n          id: 410001,\n          job_type: 'chunk_document',\n          payload: {\n            document_id: 410001,\n            strategy: 'default'\n          }\n        }\n      },\n      _test: { id: 'T1', expect: 'happy' }\n    }\n  },\n  {\n    json: {\n      req: {\n        ctx: {\n          tenant_id: '00000000-0000-0000-0000-000000000041',\n          correlation_id: '41000000-0000-0000-0000-000000000002',\n          trace_id: null,\n          chat_id: null,\n          message_id: null,\n          workflow: 'WF90',\n          job_id: 410002\n        },\n        job: {\n          id: 410002,\n          job_type: 'chunk_document',\n          payload: {\n            document_id: 410002,\n            strategy: 'default'\n          }\n        }\n      },\n      _test: { id: 'T2', expect: 'empty_text' }\n    }\n  },\n  {\n    json: {\n      req: {\n        ctx: {\n          tenant_id: '00000000-0000-0000-0000-000000000041',\n          correlation_id: '41000000-0000-0000-0000-000000000003',\n          trace_id: null,\n          chat_id: null,\n          message_id: null,\n          workflow: 'WF90',\n          job_id: 410003\n        },\n        job: {\n          id: 410003,\n          job_type: 'chunk_document',\n          payload: {\n            document_id: 999999999\n          }\n        }\n      },\n      _test: { id: 'T3', expect: 'wf99_error' }\n    }\n  }\n];"
       },
-      "id": "2600f3b4-c9d9-4ca9-9f7f-11997c74f302",
+      "id": "2915e85d-38d4-4474-b61a-bc2c94e50e1a",
       "name": "TEST — Build Requests",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -4320,
-        992
+        -1920,
+        912
       ],
       "notes": "PURPOSE: Emit three required test requests (T1/T2/T3) that reuse production pipeline. INPUT: manual trigger. OUTPUT: items with req.ctx/req.job. WHY: deterministic test harness."
     },
     {
       "parameters": {
         "mode": "combine",
-        "combineBy": "passThrough",
-        "options": {
-          "numberInputs": 2
-        }
+        "combineBy": "passThrough"
       },
-      "id": "17d21eca-5841-412d-88f3-af3a497a20fd",
+      "id": "07304278-1d49-4efa-81bb-9b8cdd73f9a3",
       "name": "Merge — IN (WF90 + TEST)",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -4080,
-        560
+        -1680,
+        480
       ],
       "notes": "PURPOSE: Unify WF90 runtime input and manual test input. INPUT1: trigger. INPUT2: test requests. OUTPUT: one canonical stream. WHY: tests must reuse core logic, no mock branch."
     },
@@ -99,13 +96,13 @@
           "dotNotation": true
         }
       },
-      "id": "95a68ead-eb44-47ed-8e55-b4f4b3ccb051",
+      "id": "c0ca8160-e6ba-4927-946c-110945168b0c",
       "name": "Set — Normalize Input",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3840,
-        560
+        -1440,
+        480
       ],
       "notes": "PURPOSE: Normalize WF90 request contract for worker execution. INPUT: req{ctx,job}. OUTPUT: req + ctx + job canonical fields. WHY: all downstream nodes expect stable structure."
     },
@@ -148,13 +145,13 @@
         },
         "options": {}
       },
-      "id": "2ab8c848-b7fa-4ed8-88a2-1a97d53e8f5d",
+      "id": "ec83cfee-bf76-44d7-bdf4-5370305fe338",
       "name": "GUARD — Preflight Input",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -3600,
-        560
+        -1184,
+        640
       ],
       "notes": "PURPOSE: Validate req.ctx, req.job, and payload.document_id before routing. INPUT: normalized request. OUTPUT TRUE: valid; FALSE: managed validation error. WHY: Step 0 preflight requirement."
     },
@@ -210,13 +207,13 @@
           "fallbackOutput": "extra"
         }
       },
-      "id": "3344254d-f2ef-4f8d-9f5d-f46fcf85aa1e",
+      "id": "4af4e669-d183-4cd8-b8cb-3ab84b1872a4",
       "name": "SWITCH — Route job_type",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -3360,
-        416
+        -944,
+        432
       ],
       "notes": "PURPOSE: Route execution to chunk_document or embed_chunks path. INPUT: validated req/job. OUTPUTS: chunk_document, embed_chunks, fallback. WHY: strict worker dispatch by ops.job_type."
     },
@@ -249,13 +246,13 @@
         },
         "options": {}
       },
-      "id": "f4f7a270-44f9-48fc-8c69-7ae3663b254d",
+      "id": "e17d8f5b-a6f8-4d4c-994f-b1e687919ff2",
       "name": "DB — Select Document",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -3120,
-        256
+        -672,
+        336
       ],
       "credentials": {
         "postgres": {
@@ -272,13 +269,13 @@
         "combineBy": "combineAll",
         "options": {}
       },
-      "id": "1302ca6a-429d-4fe8-9c0f-11eeae75bf8d",
+      "id": "0b9ace06-9166-4b0a-9fcc-710098b4a934",
       "name": "Merge — Restore CTX after DB Document",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -2880,
-        256
+        -480,
+        176
       ],
       "notes": "PURPOSE: Carry/restore req, ctx, and job after Postgres select overwrite. INPUT1: DB row. INPUT2: pre-DB item. OUTPUT: document + req/ctx/job. WHY: mandatory carry pattern after I/O."
     },
@@ -286,9 +283,11 @@
       "parameters": {
         "conditions": {
           "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
             "version": 3
           },
-          "combinator": "and",
           "conditions": [
             {
               "id": "25727870-40e3-49c2-ae54-5c916d3a4221",
@@ -299,17 +298,18 @@
                 "operation": "notEmpty"
               }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
-      "id": "78285352-55ea-4275-ac70-a7fef640aa76",
+      "id": "bbddb6b7-5d9b-4d00-87e5-8866de8e247c",
       "name": "GUARD — Document Has Text",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -2640,
-        176
+        -240,
+        96
       ],
       "notes": "PURPOSE: Skip chunking when document text is empty/whitespace. INPUT: loaded document. OUTPUT TRUE: chunkable text; FALSE: success skipped empty_text. WHY: required Step A.2 guard."
     },
@@ -413,29 +413,28 @@
           "dotNotation": true
         }
       },
-      "id": "cba6f6c5-aa5d-44a1-8bdd-4e1f4c4510d8",
+      "id": "af5ba358-d01e-4fe1-aa39-de1ea62cfce7",
       "name": "OUT — Success Empty Text",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2400,
-        464
+        720,
+        432
       ],
       "notes": "PURPOSE: Return SuccessEnvelope for empty text without enqueueing embed job. INPUT: text guard false. OUTPUT: ok=true skipped=empty_text. WHY: required non-error skip behavior."
     },
     {
       "parameters": {
-        "operation": "hash",
-        "dataPropertyName": "text",
-        "encoding": "hex"
+        "value": "={{ $json.text }}",
+        "dataPropertyName": "text"
       },
-      "id": "bd434bca-8f7f-40f8-a87b-eaa31cfa790f",
+      "id": "46f63523-519c-4942-b033-25409e266b5a",
       "name": "Crypto — Hash Document Text",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        -2400,
-        80
+        0,
+        0
       ],
       "notes": "PURPOSE: Compute SHA256 for current document text. INPUT: document.text. OUTPUT: hash hex. WHY: idempotency and document.text_sha256 maintenance."
     },
@@ -465,13 +464,13 @@
         },
         "options": {}
       },
-      "id": "26338ce3-96cb-4ff7-b2ec-c8cc79a46e6e",
+      "id": "a480f9a5-9741-48e8-a4c1-8ad9f680e8d5",
       "name": "DB — Probe Existing Chunks",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -2160,
-        80
+        240,
+        0
       ],
       "credentials": {
         "postgres": {
@@ -546,13 +545,13 @@
           "dotNotation": true
         }
       },
-      "id": "fbc4be90-b544-4d8c-90a8-81022cf9b291",
+      "id": "a901f4c7-8673-48c6-a5ab-3203c305590c",
       "name": "Set — Decide Rechunk",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1920,
-        80
+        480,
+        -64
       ],
       "notes": "PURPOSE: Build hash/idempotency state and carry context. INPUT: hash + chunk probe + document row. OUTPUT: needs_rechunk, hashes, req/ctx/job/text. WHY: controlled branch for stale/fresh chunks."
     },
@@ -577,13 +576,13 @@
         },
         "options": {}
       },
-      "id": "70bc102f-99e1-4798-bae7-60d26ae7d668",
+      "id": "9e7e6ef1-5bd6-4442-a593-082c3bbc1719",
       "name": "IF — Needs Rechunk",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1680,
-        80
+        720,
+        -32
       ],
       "notes": "PURPOSE: Skip expensive rechunk when current hash already chunked. INPUT: idempotency state. OUTPUT TRUE: rechunk; FALSE: already_chunked success. WHY: idempotent worker behavior."
     },
@@ -601,24 +600,15 @@
           "value": "chunks",
           "mode": "list",
           "cachedResultName": "chunks"
-        },
-        "where": {
-          "values": [
-            {
-              "column": "document_id",
-              "value": "={{ $json.req.job.payload.document_id }}"
-            }
-          ]
-        },
-        "options": {}
+        }
       },
-      "id": "41d12369-bcb3-4e2c-9191-3a8f75a3858f",
+      "id": "92826c8b-5093-4fac-be63-5c0b5a48b003",
       "name": "DB — Delete Old Chunks",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1440,
-        80
+        960,
+        0
       ],
       "credentials": {
         "postgres": {
@@ -633,29 +623,28 @@
       "parameters": {
         "jsCode": "const txt = ($json.text || '').toString();\nconst strategy = ($json.req?.job?.payload?.strategy || 'default').toLowerCase();\nlet size = 1200;\nlet overlap = 120;\nif (strategy === 'small') { size = 700; overlap = 80; }\nif (strategy === 'large') { size = 1800; overlap = 180; }\nconst out = [];\nif (!txt.trim()) return [];\nlet i = 0;\nlet no = 0;\nwhile (i < txt.length) {\n  const end = Math.min(txt.length, i + size);\n  const chunkText = txt.slice(i, end);\n  out.push({ json: {\n    req: $json.req,\n    ctx: $json.ctx,\n    job: $json.job,\n    document_id: $json.req.job.payload.document_id,\n    embedding_model_id: $json.req.job.payload.embedding_model_id || null,\n    doc_hash_hex: $json.doc_hash_hex,\n    doc_hash_bytea: $json.doc_hash_bytea,\n    chunk_no: no,\n    char_start: i,\n    char_end: end,\n    chunk_text: chunkText\n  }});\n  if (end >= txt.length) break;\n  i = Math.max(end - overlap, i + 1);\n  no += 1;\n}\nreturn out;"
       },
-      "id": "a88e0608-758c-4381-a70c-b714d6ca9ae6",
+      "id": "65ac864d-c5c8-4c16-b777-67af6727b561",
       "name": "CODE — Build Chunks",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1200,
-        80
+        1216,
+        -64
       ],
       "notes": "PURPOSE: Split text into chunk items with strategy-aware size/overlap. INPUT: text + req + hash state. OUTPUT: one item per chunk with positions. WHY: no splitter node in repo examples; controlled deterministic chunking."
     },
     {
       "parameters": {
-        "operation": "hash",
-        "dataPropertyName": "chunk_text",
-        "encoding": "hex"
+        "value": "={{ $json.chunk_text }}",
+        "dataPropertyName": "chunk_text"
       },
-      "id": "f58ea344-ce90-458a-971d-3716600f93d4",
+      "id": "5553f5a4-694b-4a9c-9b61-382f29750a4f",
       "name": "Crypto — Hash Chunk",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        -960,
-        80
+        1440,
+        0
       ],
       "notes": "PURPOSE: Compute SHA256 for each chunk text. INPUT: chunk_text. OUTPUT: hash hex. WHY: chunk-level idempotency metadata."
     },
@@ -682,13 +671,13 @@
           "dotNotation": true
         }
       },
-      "id": "22de0900-8db4-4c67-aab3-75bc79d4fdab",
+      "id": "eaaaea8a-dee3-4416-a4e1-1c74f13d9a5b",
       "name": "Set — Prepare Chunk Row",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -720,
-        80
+        1680,
+        0
       ],
       "notes": "PURPOSE: Build kg.chunks row payload with meta hashes. INPUT: hashed chunk item. OUTPUT: chunk fields + meta.*. WHY: align with SQL schema and upsert key."
     },
@@ -780,13 +769,13 @@
         },
         "options": {}
       },
-      "id": "3f3439ea-04b4-4c2b-96c6-0f89f89726f9",
+      "id": "d1207be2-728d-416b-b0e2-e9d39c322af5",
       "name": "DB — Upsert Chunk",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -480,
-        80
+        1920,
+        0
       ],
       "credentials": {
         "postgres": {
@@ -867,13 +856,13 @@
         },
         "options": {}
       },
-      "id": "77bb4dbf-5469-42c2-8ec1-a1c8e72e3ea8",
+      "id": "bdf6c38d-323c-4e6e-8e28-71317b989e42",
       "name": "DB — Enqueue embed_chunks Job",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        240,
-        80
+        2640,
+        0
       ],
       "credentials": {
         "postgres": {
@@ -901,13 +890,13 @@
           "dotNotation": true
         }
       },
-      "id": "fdfb8bc9-c413-4e17-aeda-fd3743b3f6af",
+      "id": "2e2c3035-6b7e-423b-bc92-da29aea3e619",
       "name": "Set — Select Embedding Model",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        0,
-        80
+        2464,
+        0
       ],
       "notes": "PURPOSE: Resolve embedding_model_id from payload override or default model lookup. INPUT: payload and/or default model row. OUTPUT: embedding_model_id. WHY: deterministic model resolution for enqueue."
     },
@@ -944,13 +933,13 @@
         },
         "options": {}
       },
-      "id": "ae9b571d-859e-4320-91c7-06ca05efea71",
+      "id": "9e703d6d-35d8-4198-9026-8d1d0cca76c5",
       "name": "DB — Select Default Embedding Model",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -240,
-        224
+        2304,
+        112
       ],
       "credentials": {
         "postgres": {
@@ -982,13 +971,13 @@
         },
         "options": {}
       },
-      "id": "cfb4f64c-f7e4-4996-b1de-a4bf9156ed4f",
+      "id": "81d248f0-0077-4c67-befd-86545a3ea78d",
       "name": "IF — Payload Has Embedding Model",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -240,
-        80
+        2112,
+        0
       ],
       "notes": "PURPOSE: Branch model resolution based on payload.embedding_model_id. INPUT: chunk state. OUTPUT TRUE: use payload model; FALSE: load default model. WHY: required enqueue model selection rule."
     },
@@ -1098,13 +1087,13 @@
           "dotNotation": true
         }
       },
-      "id": "f6234b36-fe7f-44ac-9f4d-c4976f32b294",
+      "id": "e65a1a76-1584-4f13-972d-40e42e9ef94f",
       "name": "OUT — Success Chunk",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        480,
-        80
+        2880,
+        -16
       ],
       "notes": "PURPOSE: Build SuccessEnvelope for chunk_document happy path. INPUT: enqueue result + resolved model + chunk stats. OUTPUT: contract envelope. WHY: required WF41 success contract."
     },
@@ -1208,13 +1197,13 @@
           "dotNotation": true
         }
       },
-      "id": "b1d3aa00-fdff-46be-b002-05cb98ce491f",
+      "id": "6f0a7e63-b68c-44e3-b0ab-7a6c02108614",
       "name": "OUT — Success Already Chunked",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1440,
-        464
+        1200,
+        560
       ],
       "notes": "PURPOSE: Return SuccessEnvelope when chunks are up-to-date and no rechunk needed. INPUT: idempotency false branch. OUTPUT: skipped already_chunked envelope. WHY: idempotent short-circuit."
     },
@@ -1253,13 +1242,13 @@
           "dotNotation": true
         }
       },
-      "id": "d9a5a2e8-47cb-46ee-8eba-4d85e988772f",
+      "id": "680f97d9-54ad-4daf-91fb-2dcfd4ec12fb",
       "name": "ERR — Source Input Guard",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3360,
-        944
+        2880,
+        1168
       ],
       "notes": "PURPOSE: Mark validation source metadata for ErrorPipe. INPUT: guard false branch. OUTPUT: _err.* + ctx/req for WF99. WHY: managed validation error handling."
     },
@@ -1321,13 +1310,13 @@
           "dotNotation": true
         }
       },
-      "id": "e211ff08-e370-4ab5-afd0-a1de920642fd",
+      "id": "f7e3906f-7bd6-4c5b-93db-d03b29edb922",
       "name": "ERR — Prepare ErrorPipe v1 (Input)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3120,
-        944
+        3152,
+        1168
       ],
       "notes": "PURPOSE: Build ErrorPipe v1 payload for validation failures. INPUT: err source item. OUTPUT: error_context.* for WF99. WHY: WF41 must delegate envelope creation to WF99."
     },
@@ -1352,47 +1341,30 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "ec4a1de9-b6b4-4a67-a014-cbce1e41544f",
+      "id": "78341204-616b-4d1f-8d8d-c5d9a67e523a",
       "name": "Execute WF99 (Input)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        -2880,
-        944
+        3392,
+        1168
       ],
       "notes": "PURPOSE: Delegate managed validation errors to WF99 and return its ErrorEnvelope. INPUT: error_context. OUTPUT: WF99 envelope. WHY: centralized error pipeline."
     },
     {
       "parameters": {
         "mode": "combine",
-        "combineBy": "passThrough",
-        "options": {
-          "numberInputs": 6
-        }
+        "combineBy": "passThrough"
       },
-      "id": "4dcbff10-b8d8-4df5-9a03-ccae8f95a2c2",
+      "id": "661432f7-a58b-4741-acbd-d86c328883d6",
       "name": "Merge — Final (Success + WF99)",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        960,
-        336
+        3808,
+        368
       ],
       "notes": "PURPOSE: Return first completed path (success or WF99 error) as workflow output. INPUTS: all terminal envelopes. OUTPUT: single envelope item. WHY: unified worker contract output."
-    },
-    {
-      "parameters": {
-        "notice": "TESTS (DB-backed, reuse production pipeline via Merge — IN):\nT1 Happy: document_id=410001 chunk_document -> expect kg.chunks + ops.jobs(embed_chunks).\nT2 Edge: document_id=410002 empty text -> expect SuccessEnvelope skipped empty_text and no embed job.\nT3 Fail: document_id=999999999 -> expect WF99 ErrorEnvelope and ops.errors row by correlation_id.\nCleanup: run delete by tenant/correlation in test DB after assertions."
-      },
-      "id": "7345ec44-a43d-4cf7-ba86-bf9ec0730d4e",
-      "name": "Note — Tests",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -4560,
-        1216
-      ],
-      "notes": "PURPOSE: Document mandatory T1/T2/T3 test protocol and cleanup expectations. INPUT/OUTPUT: none. WHY: preserve QA contract in workflow graph."
     },
     {
       "parameters": {
@@ -1415,13 +1387,13 @@
         },
         "options": {}
       },
-      "id": "99e45bf6-02ff-4d3f-abf3-88db7fbdc3e2",
+      "id": "5174b6c4-39e0-442f-8775-178895970fb4",
       "name": "GUARD — Embed Has Model ID",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -3120,
-        672
+        -720,
+        592
       ],
       "notes": "PURPOSE: Validate embed_chunks payload has embedding_model_id. INPUT: embed request. OUTPUT TRUE: proceed, FALSE: managed validation error via WF99. WHY: required embed preflight."
     },
@@ -1455,13 +1427,13 @@
         },
         "options": {}
       },
-      "id": "572b8d7f-fd32-4a43-ab27-76f67d4ab17e",
+      "id": "f5bf6b72-55b3-421b-9f29-601d75a5e45a",
       "name": "DB — Select Embedding Model",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -2880,
-        672
+        -400,
+        944
       ],
       "credentials": {
         "postgres": {
@@ -1497,13 +1469,13 @@
         },
         "options": {}
       },
-      "id": "70bc70f0-f093-4f4a-84ee-2ca01153f0af",
+      "id": "7ac855dd-82fb-42de-84bf-87be1ff6f427",
       "name": "DB — Select Chunks For Embed",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -2640,
-        672
+        -224,
+        816
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -1536,13 +1508,13 @@
         },
         "options": {}
       },
-      "id": "bde4f59b-b7f2-4a6e-a0fb-1cf36ddd7f11",
+      "id": "26715dfc-5659-4da4-a688-2115c494049a",
       "name": "GUARD — Has Chunks For Embed",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -2400,
-        672
+        0,
+        688
       ],
       "notes": "PURPOSE: Branch embed flow when chunk set is empty. INPUT: chunk query output. OUTPUT TRUE: embed path, FALSE: skipped no_chunks success. WHY: required edge behavior."
     },
@@ -1652,13 +1624,13 @@
           "dotNotation": true
         }
       },
-      "id": "f92ec79d-feb5-4d29-8e4d-11e95f4a1e65",
+      "id": "f8d41f27-97e8-47e4-af2b-6ec3fa135fd6",
       "name": "OUT — Success No Chunks",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2160,
-        848
+        400,
+        1136
       ],
       "notes": "PURPOSE: Return SuccessEnvelope skipped=no_chunks for embed path. INPUT: no chunk branch. OUTPUT: contract envelope. WHY: required embed edge case."
     },
@@ -1768,17 +1740,18 @@
           "dotNotation": true
         }
       },
-      "id": "245eb47f-6399-4063-bdca-354fc3d77ef8",
+      "id": "43a83f3c-c93a-424e-823f-b39a1bb6e320",
       "name": "OUT — Success Embed",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2160,
-        640
+        848,
+        1136
       ],
       "notes": "PURPOSE: Return SuccessEnvelope for embed_chunks path. INPUT: chunks/model validation path. OUTPUT: contract envelope with embedding counters. WHY: worker output for embed job."
     }
   ],
+  "pinData": {},
   "connections": {
     "IN — Execute Workflow Trigger": {
       "main": [
@@ -1891,9 +1864,7 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ],
-      "error": [
+        ],
         [
           {
             "node": "ERR — Source Input Guard",
@@ -1951,9 +1922,7 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ],
-      "error": [
+        ],
         [
           {
             "node": "ERR — Source Input Guard",
@@ -2000,9 +1969,7 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ],
-      "error": [
+        ],
         [
           {
             "node": "ERR — Source Input Guard",
@@ -2053,9 +2020,7 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ],
-      "error": [
+        ],
         [
           {
             "node": "ERR — Source Input Guard",
@@ -2091,9 +2056,7 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ],
-      "error": [
+        ],
         [
           {
             "node": "ERR — Source Input Guard",
@@ -2122,9 +2085,7 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ],
-      "error": [
+        ],
         [
           {
             "node": "ERR — Source Input Guard",
@@ -2178,28 +2139,6 @@
         ]
       ]
     },
-    "OUT — Success Already Chunked": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Success + WF99)",
-            "type": "main",
-            "index": 2
-          }
-        ]
-      ]
-    },
-    "OUT — Success Chunk": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Success + WF99)",
-            "type": "main",
-            "index": 3
-          }
-        ]
-      ]
-    },
     "GUARD — Embed Has Model ID": {
       "main": [
         [
@@ -2226,9 +2165,7 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ],
-      "error": [
+        ],
         [
           {
             "node": "ERR — Source Input Guard",
@@ -2246,9 +2183,7 @@
             "type": "main",
             "index": 0
           }
-        ]
-      ],
-      "error": [
+        ],
         [
           {
             "node": "ERR — Source Input Guard",
@@ -2275,42 +2210,18 @@
           }
         ]
       ]
-    },
-    "OUT — Success Embed": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Success + WF99)",
-            "type": "main",
-            "index": 4
-          }
-        ]
-      ]
-    },
-    "OUT — Success No Chunks": {
-      "main": [
-        [
-          {
-            "node": "Merge — Final (Success + WF99)",
-            "type": "main",
-            "index": 5
-          }
-        ]
-      ]
     }
   },
-  "pinData": {},
+  "active": false,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": false,
-    "timeSavedMode": "fixed",
-    "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "staticData": null,
-  "tags": [],
-  "triggerCount": 0,
-  "updatedAt": "2026-02-10T00:00:00.000Z",
-  "versionId": "00000000-0000-0000-0000-000000000041"
+  "versionId": "0f9afc69-edf6-4ae4-b551-56df0e5663d7",
+  "meta": {
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "mRsYUkeg_hP-L6kzvpjis",
+  "tags": []
 }
