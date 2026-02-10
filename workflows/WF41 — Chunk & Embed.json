@@ -886,8 +886,32 @@
             {
               "id": "bd4bfce4-b360-4fa7-a38d-74dbf01cc0f5",
               "name": "embedding_model_id",
-              "value": "={{ $json.req.job.payload.embedding_model_id || $json.id }}",
+              "value": "={{ $json.req?.job?.payload?.embedding_model_id || $json.id || $json.embedding_model_id || null }}",
               "type": "number"
+            },
+            {
+              "id": "wf41-setsel-req-model",
+              "name": "req.job.payload.embedding_model_id",
+              "value": "={{ $json.req?.job?.payload?.embedding_model_id || $json.id || $json.embedding_model_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "wf41-setsel-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-setsel-job",
+              "name": "job",
+              "value": "={{ $json.job || $json.req?.job || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-setsel-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
             }
           ]
         },
@@ -904,7 +928,7 @@
         2464,
         0
       ],
-      "notes": "PURPOSE: Resolve embedding_model_id from payload override or default model lookup. INPUT: payload and/or default model row. OUTPUT: embedding_model_id. WHY: deterministic model resolution for enqueue."
+      "notes": "PURPOSE: Resolve embedding_model_id from payload override or default model lookup and write back into req.job.payload.embedding_model_id. INPUT: payload and/or default model row. OUTPUT: embedding_model_id + normalized req/ctx/job. WHY: both chunk_document enqueue and embed_chunks path require deterministic resolved model id."
     },
     {
       "parameters": {
@@ -954,7 +978,8 @@
         }
       },
       "onError": "continueErrorOutput",
-      "notes": "PURPOSE: Fetch deterministic default embedding model (first active by id). INPUT: none beyond context. OUTPUT: model row. WHY: payload embedding_model_id may be absent."
+      "notes": "PURPOSE: Fetch deterministic default embedding model (first active by id). INPUT: req context. OUTPUT: model row or empty item (always output). WHY: payload embedding_model_id may be absent for both chunk_document enqueue and embed_chunks execution.",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1359,8 +1384,7 @@
     },
     {
       "parameters": {
-        "mode": "combine",
-        "combineBy": "passThrough"
+        "mode": "append"
       },
       "id": "661432f7-a58b-4741-acbd-d86c328883d6",
       "name": "Merge — Final (Success + WF99)",
@@ -1370,7 +1394,7 @@
         3808,
         368
       ],
-      "notes": "PURPOSE: Return first completed path (success or WF99 error) as workflow output. INPUTS: all terminal envelopes. OUTPUT: single envelope item. WHY: unified worker contract output."
+      "notes": "PURPOSE: Merge terminal success and WF99 error envelopes into workflow output stream. INPUTS: success envelopes (input 0) and WF99 envelopes (input 1). OUTPUT: final contract envelope item(s). WHY: single workflow exit path without StopAndError."
     },
     {
       "parameters": {
@@ -1381,12 +1405,21 @@
           "combinator": "and",
           "conditions": [
             {
-              "id": "43fc11b8-a1f5-4bd1-b315-a36f7b4dc196",
-              "leftValue": "={{ $json.req.job.payload.embedding_model_id }}",
+              "id": "wf41-guard-model-id",
+              "leftValue": "={{ $json.id }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
                 "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "wf41-guard-model-dim",
+              "leftValue": "={{ Number($json.output_dim || 0) }}",
+              "rightValue": 1536,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
               }
             }
           ]
@@ -1401,7 +1434,7 @@
         -720,
         592
       ],
-      "notes": "PURPOSE: Validate embed_chunks payload has embedding_model_id. INPUT: embed request. OUTPUT TRUE: proceed, FALSE: managed validation error via WF99. WHY: required embed preflight."
+      "notes": "PURPOSE: Validate embedding model row exists and output_dim matches required 1536 for destination pgvector table. INPUT: merged model row + req context. OUTPUT TRUE: proceed to chunk embedding; FALSE: managed validation error to WF99. WHY: prevent invalid model or dimension mismatch writes."
     },
     {
       "parameters": {
@@ -1423,7 +1456,7 @@
           "values": [
             {
               "column": "id",
-              "value": "={{ $json.req.job.payload.embedding_model_id }}"
+              "value": "={{ $json.embedding_model_id || $json.req?.job?.payload?.embedding_model_id }}"
             },
             {
               "column": "is_active",
@@ -1448,7 +1481,8 @@
         }
       },
       "onError": "continueErrorOutput",
-      "notes": "PURPOSE: Load active embedding model by payload.embedding_model_id. INPUT: embed request. OUTPUT: model row. WHY: provider/model validation before embedding loop."
+      "notes": "PURPOSE: Load active embedding model by resolved embedding_model_id. INPUT: resolved model id + req context. OUTPUT: embedding model row (or empty item). WHY: embed_chunks requires provider/model_key/output_dim validation before API calls.",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -1659,19 +1693,19 @@
             {
               "id": "5cf67bde-0f44-42ca-8e6a-60151366cae7",
               "name": "data.document_id",
-              "value": "={{ $('Set — Prepare Embed Context').first().json.req.job.payload.document_id }}",
+              "value": "={{ $(\"Set — Embed Batch Config\").first().json.req.job.payload.document_id }}",
               "type": "number"
             },
             {
               "id": "260f8c0a-67eb-4f90-b6db-04d5ac277f8a",
               "name": "data.embedding_model_id",
-              "value": "={{ $('Set — Prepare Embed Context').first().json.embed_model_id }}",
+              "value": "={{ $(\"Set — Embed Batch Config\").first().json.embedding_model_id }}",
               "type": "number"
             },
             {
               "id": "38ad9a01-6a2d-4728-a6a2-ab51f4201d23",
               "name": "data.embedded_count",
-              "value": "={{ $('DB — Upsert Embedding').all().length }}",
+              "value": "={{ $(\"DB — Upsert Embedding\").all().length }}",
               "type": "number"
             },
             {
@@ -1695,31 +1729,31 @@
             {
               "id": "d8dcaec6-d99e-4598-aa28-f4f9f5f66034",
               "name": "meta.correlation.correlation_id",
-              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.correlation_id }}",
+              "value": "={{ $(\"Set — Embed Batch Config\").first().json.ctx.correlation_id }}",
               "type": "string"
             },
             {
               "id": "9af21071-fb2e-406a-b8be-edb6d6ad3e1d",
               "name": "meta.correlation.trace_id",
-              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.trace_id || null }}",
+              "value": "={{ $(\"Set — Embed Batch Config\").first().json.ctx.trace_id || null }}",
               "type": "string"
             },
             {
               "id": "b5eb5e64-21ff-4ec2-8f60-bfbb7c66ac9a",
               "name": "meta.correlation.tenant_id",
-              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.tenant_id || null }}",
+              "value": "={{ $(\"Set — Embed Batch Config\").first().json.ctx.tenant_id || null }}",
               "type": "string"
             },
             {
               "id": "30b3af56-58cc-4833-9dc4-b13f8c4bc6f8",
               "name": "meta.correlation.chat_id",
-              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.chat_id || null }}",
+              "value": "={{ $(\"Set — Embed Batch Config\").first().json.ctx.chat_id || null }}",
               "type": "number"
             },
             {
               "id": "82439f34-a1a7-4fd7-af93-8c2f5e416111",
               "name": "meta.correlation.message_id",
-              "value": "={{ $('Set — Prepare Embed Context').first().json.ctx.message_id || null }}",
+              "value": "={{ $(\"Set — Embed Batch Config\").first().json.ctx.message_id || null }}",
               "type": "number"
             },
             {
@@ -1748,7 +1782,1174 @@
         2060,
         1200
       ],
-      "notes": "PURPOSE: Return SuccessEnvelope for embed_chunks happy path with real stats. INPUT: first upsert result (limited to 1 item). OUTPUT: ok=true, embedded_count from all upserts, document_id, embedding_model_id. WHY: worker output contract for embed job."
+      "notes": "PURPOSE: Return SuccessEnvelope for embed_chunks happy path with real stats after full batched upsert loop. INPUT: SplitInBatches done output + accumulated upsert history. OUTPUT: document_id, embedding_model_id, embedded_count, correlation meta. WHY: WF41 worker output contract."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf41-if-embed-route",
+              "leftValue": "={{ $json.req?.job?.job_type }}",
+              "rightValue": "embed_chunks",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6a9d3394-7091-4c58-8c58-9e3d26b8b4c7",
+      "name": "IF — Embed Route After Model Resolve",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -560,
+        96
+      ],
+      "notes": "PURPOSE: Split resolved embedding model flow by job_type. INPUT: Set — Select Embedding Model output. OUTPUT TRUE: embed_chunks path; FALSE: chunk_document enqueue path. WHY: shared model resolution node is reused by both branches."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf41-guard-chunk-model",
+              "leftValue": "={{ $json.embedding_model_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eb8e2f45-b899-43d6-9a93-09d5f65bc1b2",
+      "name": "GUARD — Chunk Has Model ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -320,
+        -112
+      ],
+      "notes": "PURPOSE: Ensure chunk_document enqueue has resolved embedding_model_id. INPUT: resolved model selection output. OUTPUT TRUE: enqueue embed job; FALSE: managed validation error. WHY: prevents enqueue payload with null model id."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "7d9ba072-a832-4f0a-89b9-13ebe1b8b861",
+      "name": "Merge — Restore CTX after DB Embed Model",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -80,
+        592
+      ],
+      "notes": "PURPOSE: Carry/restore req/ctx/job after DB model lookup. INPUT1: DB model row. INPUT2: pre-DB context. OUTPUT: combined model + context. WHY: Postgres select overwrites item fields."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "5af8ecf6-95b0-4964-94c9-010e7d3ef6f2",
+      "name": "Merge — Restore CTX after DB Embed Chunks",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        384,
+        816
+      ],
+      "notes": "PURPOSE: Carry/restore req/ctx/job/model after DB chunks lookup. INPUT1: chunk rows. INPUT2: validated model context. OUTPUT: chunk row + req/model context. WHY: Postgres select overwrites context needed downstream."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf41-bcfg-size",
+              "name": "batch_size",
+              "value": 50,
+              "type": "number"
+            },
+            {
+              "id": "wf41-bcfg-dim",
+              "name": "expected_dim",
+              "value": "={{ Number($json.output_dim || 1536) }}",
+              "type": "number"
+            },
+            {
+              "id": "wf41-bcfg-model",
+              "name": "openai_model",
+              "value": "={{ $json.model_key }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-bcfg-embed-id",
+              "name": "embedding_model_id",
+              "value": "={{ $json.id || $json.embedding_model_id || $json.req?.job?.payload?.embedding_model_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf41-bcfg-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-bcfg-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-bcfg-job",
+              "name": "job",
+              "value": "={{ $json.job || $json.req?.job || {} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "67f3e4ff-4be2-4ccb-bd8d-78fd0ca9bf6d",
+      "name": "Set — Embed Batch Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        640
+      ],
+      "notes": "PURPOSE: Configure embedding batch parameters and keep req context on each chunk item. INPUT: chunk row + model context. OUTPUT: batch_size, expected_dim, openai_model, embedding_model_id + context. WHY: consistent batch API calls and dimension validation."
+    },
+    {
+      "parameters": {
+        "batchSize": "={{ $json.batch_size || 50 }}",
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "b3f6d0e3-2aa5-4023-a2ed-c9fd833ca612",
+      "name": "Split — Embed Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        864,
+        640
+      ],
+      "notes": "PURPOSE: Iterate chunks in fixed-size groups for batched embeddings API calls. INPUT: chunk items with batch config. OUTPUT0: current batch; OUTPUT1: loop complete. WHY: required batched processing."
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "id"
+            },
+            {
+              "fieldToAggregate": "text"
+            },
+            {
+              "fieldToAggregate": "req"
+            },
+            {
+              "fieldToAggregate": "ctx"
+            },
+            {
+              "fieldToAggregate": "job"
+            },
+            {
+              "fieldToAggregate": "embedding_model_id"
+            },
+            {
+              "fieldToAggregate": "openai_model"
+            },
+            {
+              "fieldToAggregate": "expected_dim"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c005ed3d-c889-4cc9-b5b7-c7b17a4a0f28",
+      "name": "Aggregate — Embed Batch Inputs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        640
+      ],
+      "notes": "PURPOSE: Collapse current SplitInBatches window into one item with arrays for chunk ids/texts. INPUT: one batch of chunk items. OUTPUT: aggregated arrays + carried context/model fields. WHY: OpenAI embeddings endpoint accepts array input."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf41-openai-ids",
+              "name": "batch_chunk_ids",
+              "value": "={{ Array.isArray($json.id) ? $json.id : [$json.id] }}",
+              "type": "array"
+            },
+            {
+              "id": "wf41-openai-texts",
+              "name": "batch_texts",
+              "value": "={{ (Array.isArray($json.text) ? $json.text : [$json.text]).map(v => String(v ?? \"\")) }}",
+              "type": "array"
+            },
+            {
+              "id": "wf41-openai-req",
+              "name": "req",
+              "value": "={{ Array.isArray($json.req) ? ($json.req[0] || {}) : ($json.req || {}) }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-openai-ctx",
+              "name": "ctx",
+              "value": "={{ Array.isArray($json.ctx) ? ($json.ctx[0] || {}) : ($json.ctx || {}) }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-openai-job",
+              "name": "job",
+              "value": "={{ Array.isArray($json.job) ? ($json.job[0] || {}) : ($json.job || {}) }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-openai-model",
+              "name": "openai_model",
+              "value": "={{ Array.isArray($json.openai_model) ? ($json.openai_model[0] || \"\") : ($json.openai_model || \"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-openai-embedid",
+              "name": "embedding_model_id",
+              "value": "={{ Array.isArray($json.embedding_model_id) ? ($json.embedding_model_id[0] || null) : $json.embedding_model_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf41-openai-dim",
+              "name": "expected_dim",
+              "value": "={{ Number(Array.isArray($json.expected_dim) ? ($json.expected_dim[0] || 1536) : ($json.expected_dim || 1536)) }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "8927b4cf-7f25-43bb-a11f-55ddf80e0b70",
+      "name": "Set — Prepare OpenAI Batch Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        640
+      ],
+      "notes": "PURPOSE: Prepare single-item OpenAI embeddings request payload for current batch. INPUT: aggregated batch arrays. OUTPUT: batch_chunk_ids, batch_texts, openai_model, expected_dim, embedding_model_id, req/ctx/job. WHY: clean request contract for HTTP node and carry/restore."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $json.openai_model, input: $json.batch_texts }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "74004b7f-72c3-42e0-b3d4-f1a2f4070f7d",
+      "name": "HTTP — OpenAI Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        640
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LB6ntiMR8lDYKSy4",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Call OpenAI batched embeddings API with array input. INPUT: openai_model + batch_texts. OUTPUT: JSON response with data[].embedding vectors. WHY: embed_chunks must generate vectors in batches."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "36a32f2f-3a56-4d2b-a4b3-57f72f8f8bdf",
+      "name": "Merge — Restore CTX after HTTP Embeddings",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1840,
+        640
+      ],
+      "notes": "PURPOSE: Restore batch context after HTTP call. INPUT1: OpenAI response. INPUT2: prepared batch payload. OUTPUT: response + batch ids/texts/model/context. WHY: HTTP node output does not preserve full context."
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json.data;\nconst ids = Array.isArray($json.batch_chunk_ids) ? $json.batch_chunk_ids : [];\nconst expectedDim = Number($json.expected_dim || 1536);\nif (!Array.isArray(data)) throw new Error('OpenAI embeddings response.data is not an array');\nif (data.length !== ids.length) throw new Error('OpenAI embeddings length mismatch with batch_chunk_ids');\nconst out = [];\nfor (let i = 0; i < ids.length; i++) {\n  const vec = data[i]?.embedding;\n  if (!Array.isArray(vec)) throw new Error('Embedding vector missing at index ' + i);\n  if (vec.length !== expectedDim) throw new Error('Embedding dimension mismatch at index ' + i + ': ' + vec.length + ' != ' + expectedDim);\n  out.push({\n    json: {\n      req: $json.req,\n      ctx: $json.ctx,\n      job: $json.job,\n      chunk_id: ids[i],\n      embedding_model_id: $json.embedding_model_id,\n      embedding_vec: vec,\n      embedding_len: vec.length,\n      expected_dim: expectedDim\n    }\n  });\n}\nreturn out;"
+      },
+      "id": "17ef76fc-a7c8-4a4c-8d4e-4ff390340b53",
+      "name": "CODE — Expand Embeddings Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        640
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Validate OpenAI response lengths/dimensions and fan out to one item per chunk. INPUT: batch ids + response.data embeddings + expected_dim. OUTPUT: one item per chunk with embedding_vec and context. WHY: deterministic mapping response index -> chunk_id."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf41-vec-str",
+              "name": "embedding_str",
+              "value": "={{ \"[\" + $json.embedding_vec.join(\",\") + \"]\" }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-vec-req",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-vec-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-vec-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-vec-chunk",
+              "name": "chunk_id",
+              "value": "={{ $json.chunk_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf41-vec-mid",
+              "name": "embedding_model_id",
+              "value": "={{ $json.embedding_model_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "8f5ea0f7-7f5d-43a0-9f1f-1f0f00a7d92e",
+      "name": "Set — Prepare Embedding Vector",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2320,
+        640
+      ],
+      "notes": "PURPOSE: Convert numeric vector array to pgvector string literal format for Postgres upsert. INPUT: embedding_vec per chunk. OUTPUT: embedding_str + chunk/model/context fields. WHY: pgvector column accepts string vector representation."
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "value": "kg",
+          "mode": "list",
+          "cachedResultName": "kg"
+        },
+        "table": {
+          "__rl": true,
+          "value": "chunk_embeddings_1536",
+          "mode": "list",
+          "cachedResultName": "chunk_embeddings_1536"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chunk_id": "={{ $json.chunk_id }}",
+            "model_id": "={{ $json.embedding_model_id }}",
+            "embedding": "={{ $json.embedding_str }}"
+          },
+          "matchingColumns": [
+            "chunk_id",
+            "model_id"
+          ],
+          "schema": [
+            {
+              "id": "chunk_id",
+              "displayName": "chunk_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "model_id",
+              "displayName": "model_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "embedding",
+              "displayName": "embedding",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f6c2cb09-f89e-4155-a5bb-f394d4c6752d",
+      "name": "DB — Upsert Embedding",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2560,
+        640
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Upsert chunk embedding vector into kg.chunk_embeddings_1536 using PK (chunk_id, model_id). INPUT: chunk_id + embedding_model_id + embedding_str. OUTPUT: upsert result rows. WHY: idempotent persistence for embed_chunks."
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "62dfc014-2ad7-49e8-a4fb-6ec4a0708fd8",
+      "name": "Aggregate — Batch Upsert Results",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        640
+      ],
+      "notes": "PURPOSE: Collapse per-chunk upsert outputs to one item to continue SplitInBatches loop once per batch. INPUT: N upsert rows for current batch. OUTPUT: single aggregate item. WHY: prevent loop control fan-out."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Default Embed Model-node",
+              "name": "_err.node",
+              "value": "DB — Select Default Embedding Model",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Default Embed Model-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Default Embed Model-table",
+              "name": "_err.table",
+              "value": "kg.embedding_models",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Default Embed Model-kind",
+              "name": "_err.kind",
+              "value": "={{ 'io' }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Default Embed Model-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || \"WF41 embed failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Default Embed Model-status",
+              "name": "_err.status_code",
+              "value": "={{ 500 }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Default Embed Model-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Default Embed Model-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "249b3fae-77b9-4ea8-a693-13077f16db39",
+      "name": "ERR — Source DB Default Embed Model",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        -560
+      ],
+      "notes": "PURPOSE: Mark source metadata for DB — Select Default Embedding Model failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Embed Model-node",
+              "name": "_err.node",
+              "value": "DB — Select Embedding Model",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Model-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Model-table",
+              "name": "_err.table",
+              "value": "kg.embedding_models",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Model-kind",
+              "name": "_err.kind",
+              "value": "={{ 'io' }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Model-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || \"WF41 embed failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Model-status",
+              "name": "_err.status_code",
+              "value": "={{ 500 }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Embed Model-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Embed Model-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "db742056-c0d8-4a1b-9a23-00d18ef6767c",
+      "name": "ERR — Source DB Embed Model",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        1040
+      ],
+      "notes": "PURPOSE: Mark source metadata for DB — Select Embedding Model failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Embed Chunks-node",
+              "name": "_err.node",
+              "value": "DB — Select Chunks For Embed",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Chunks-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Chunks-table",
+              "name": "_err.table",
+              "value": "kg.chunks",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Chunks-kind",
+              "name": "_err.kind",
+              "value": "={{ 'io' }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Chunks-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || \"WF41 embed failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Embed Chunks-status",
+              "name": "_err.status_code",
+              "value": "={{ 500 }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Embed Chunks-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Embed Chunks-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "dc227eba-8f67-4f62-8fc0-43179abf0a9b",
+      "name": "ERR — Source DB Embed Chunks",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        1040
+      ],
+      "notes": "PURPOSE: Mark source metadata for DB — Select Chunks For Embed failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source HTTP OpenAI Embeddings-node",
+              "name": "_err.node",
+              "value": "HTTP — OpenAI Embeddings",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source HTTP OpenAI Embeddings-op",
+              "name": "_err.operation",
+              "value": "post",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source HTTP OpenAI Embeddings-table",
+              "name": "_err.table",
+              "value": "openai.v1.embeddings",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source HTTP OpenAI Embeddings-kind",
+              "name": "_err.kind",
+              "value": "={{ 'io' }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source HTTP OpenAI Embeddings-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || \"WF41 embed failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source HTTP OpenAI Embeddings-status",
+              "name": "_err.status_code",
+              "value": "={{ 500 }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source HTTP OpenAI Embeddings-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source HTTP OpenAI Embeddings-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "0d017298-32e8-4f5e-94a7-66f17d96d7cb",
+      "name": "ERR — Source HTTP OpenAI Embeddings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        880
+      ],
+      "notes": "PURPOSE: Mark source metadata for HTTP — OpenAI Embeddings failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source CODE Expand Embeddings-node",
+              "name": "_err.node",
+              "value": "CODE — Expand Embeddings Batch",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source CODE Expand Embeddings-op",
+              "name": "_err.operation",
+              "value": "validate_embeddings",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source CODE Expand Embeddings-table",
+              "name": "_err.table",
+              "value": "batch",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source CODE Expand Embeddings-kind",
+              "name": "_err.kind",
+              "value": "={{ 'validation' }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source CODE Expand Embeddings-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || \"OpenAI embedding response validation failed\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source CODE Expand Embeddings-status",
+              "name": "_err.status_code",
+              "value": "={{ 422 }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source CODE Expand Embeddings-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source CODE Expand Embeddings-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "f8f7b8df-6a1f-451e-90d6-2d89f5141891",
+      "name": "ERR — Source CODE Expand Embeddings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2080,
+        880
+      ],
+      "notes": "PURPOSE: Mark source metadata for CODE — Expand Embeddings Batch failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Upsert Embedding-node",
+              "name": "_err.node",
+              "value": "DB — Upsert Embedding",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Embedding-op",
+              "name": "_err.operation",
+              "value": "upsert",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Embedding-table",
+              "name": "_err.table",
+              "value": "kg.chunk_embeddings_1536",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Embedding-kind",
+              "name": "_err.kind",
+              "value": "={{ 'io' }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Embedding-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || \"WF41 embed failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Embedding-status",
+              "name": "_err.status_code",
+              "value": "={{ 500 }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Upsert Embedding-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Upsert Embedding-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "7bf4d2a9-3dc0-4b16-a7f0-fd41d8b0f6c8",
+      "name": "ERR — Source DB Upsert Embedding",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2560,
+        880
+      ],
+      "notes": "PURPOSE: Mark source metadata for DB — Upsert Embedding failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source Embed Model Guard-node",
+              "name": "_err.node",
+              "value": "GUARD — Embed Has Model ID",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Embed Model Guard-op",
+              "name": "_err.operation",
+              "value": "validate_model",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Embed Model Guard-table",
+              "name": "_err.table",
+              "value": "kg.embedding_models",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Embed Model Guard-kind",
+              "name": "_err.kind",
+              "value": "={{ 'validation' }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Embed Model Guard-msg",
+              "name": "_err.message",
+              "value": "={{ $json.id ? (\"Embedding dimension mismatch: expected 1536 got \" + $json.output_dim) : \"Embedding model not found or inactive\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Embed Model Guard-status",
+              "name": "_err.status_code",
+              "value": "={{ $json.id ? 422 : 404 }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source Embed Model Guard-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source Embed Model Guard-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "6bda7740-b8d3-4923-a1e0-42172341314b",
+      "name": "ERR — Source Embed Model Guard",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        1040
+      ],
+      "notes": "PURPOSE: Mark source metadata for GUARD — Embed Has Model ID failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source Chunk Model Guard-node",
+              "name": "_err.node",
+              "value": "GUARD — Chunk Has Model ID",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Chunk Model Guard-op",
+              "name": "_err.operation",
+              "value": "validate_model",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Chunk Model Guard-table",
+              "name": "_err.table",
+              "value": "kg.embedding_models",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Chunk Model Guard-kind",
+              "name": "_err.kind",
+              "value": "={{ 'validation' }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Chunk Model Guard-msg",
+              "name": "_err.message",
+              "value": "={{ \"No active embedding model resolved for chunk_document enqueue\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source Chunk Model Guard-status",
+              "name": "_err.status_code",
+              "value": "={{ 422 }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source Chunk Model Guard-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source Chunk Model Guard-req",
+              "name": "req",
+              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "3495f379-b53c-4f5b-9714-5839a17f3d2a",
+      "name": "ERR — Source Chunk Model Guard",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        -320
+      ],
+      "notes": "PURPOSE: Mark source metadata for GUARD — Chunk Has Model ID failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf41-ep-kind",
+              "name": "error_context.kind",
+              "value": "={{ $json._err?.kind || ($json._err?.operation?.startsWith(\"validate\") ? \"validation\" : \"io\") }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-ep-msg",
+              "name": "error_context.message",
+              "value": "={{ $json._err?.message || $json.error?.message || \"WF41 embed path failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-ep-status",
+              "name": "error_context.status_code",
+              "value": "={{ Number($json._err?.status_code || ($json._err?.operation?.startsWith(\"validate\") ? 422 : 500)) }}",
+              "type": "number"
+            },
+            {
+              "id": "wf41-ep-retry",
+              "name": "error_context.retryable",
+              "value": "={{ !($json._err?.operation?.startsWith(\"validate\")) }}",
+              "type": "boolean"
+            },
+            {
+              "id": "wf41-ep-node",
+              "name": "error_context.details.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-ep-op",
+              "name": "error_context.details.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-ep-table",
+              "name": "error_context.details.table",
+              "value": "={{ $json._err?.table || null }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-ep-ctx",
+              "name": "error_context.ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-ep-contract",
+              "name": "ctx.contracts.errorpipe",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "4cb928f0-4ce8-47dd-be3e-129ffaf9a6e6",
+      "name": "ERR — Prepare ErrorPipe v1 (Embed)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2160,
+        1040
+      ],
+      "notes": "PURPOSE: Build ErrorPipe v1 payload for embed-path I/O and validation failures. INPUT: ERR — Source* item with _err metadata. OUTPUT: error_context.* + ctx.contracts.errorpipe=1 for WF99. WHY: centralized error envelope creation via WF99."
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "1b59dc93-5887-4c14-b02c-95d0f6b3d0ff",
+      "name": "Execute WF99 (Embed)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2400,
+        1040
+      ],
+      "notes": "PURPOSE: Delegate embed-path errors to WF99 and return ErrorEnvelope. INPUT: ErrorPipe v1 payload. OUTPUT: WF99 ErrorEnvelope. WHY: project-wide centralized error handling."
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "d46007ad-bbc8-4f06-ae58-319db8f58cfa",
+      "name": "Merge — Model Resolve Branches",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -816,
+        -48
+      ],
+      "notes": "PURPOSE: Join IF model-resolution branches via Merge (project branch-join rule). INPUT1: payload model path. INPUT2: default model lookup path. OUTPUT: single stream for Set — Select Embedding Model."
     }
   ],
   "pinData": {},
@@ -1842,7 +3043,7 @@
         ],
         [
           {
-            "node": "GUARD — Embed Has Model ID",
+            "node": "IF — Payload Has Embedding Model",
             "type": "main",
             "index": 0
           }
@@ -2034,7 +3235,7 @@
       "main": [
         [
           {
-            "node": "Set — Select Embedding Model",
+            "node": "Merge — Model Resolve Branches",
             "type": "main",
             "index": 0
           }
@@ -2052,14 +3253,14 @@
       "main": [
         [
           {
-            "node": "Set — Select Embedding Model",
+            "node": "Merge — Model Resolve Branches",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ],
         [
           {
-            "node": "ERR — Source Input Guard",
+            "node": "ERR — Source DB Default Embed Model",
             "type": "main",
             "index": 0
           }
@@ -2070,7 +3271,7 @@
       "main": [
         [
           {
-            "node": "DB — Enqueue embed_chunks Job",
+            "node": "IF — Embed Route After Model Resolve",
             "type": "main",
             "index": 0
           }
@@ -2143,14 +3344,19 @@
       "main": [
         [
           {
-            "node": "DB — Select Embedding Model",
+            "node": "DB — Select Chunks For Embed",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after DB Embed Chunks",
+            "type": "main",
+            "index": 1
           }
         ],
         [
           {
-            "node": "ERR — Source Input Guard",
+            "node": "ERR — Source Embed Model Guard",
             "type": "main",
             "index": 0
           }
@@ -2161,14 +3367,14 @@
       "main": [
         [
           {
-            "node": "DB — Select Chunks For Embed",
+            "node": "Merge — Restore CTX after DB Embed Model",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source Input Guard",
+            "node": "ERR — Source DB Embed Model",
             "type": "main",
             "index": 0
           }
@@ -2179,14 +3385,14 @@
       "main": [
         [
           {
-            "node": "GUARD — Has Chunks For Embed",
+            "node": "Merge — Restore CTX after DB Embed Chunks",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source Input Guard",
+            "node": "ERR — Source DB Embed Chunks",
             "type": "main",
             "index": 0
           }
@@ -2197,7 +3403,7 @@
       "main": [
         [
           {
-            "node": "OUT — Success Embed",
+            "node": "Set — Embed Batch Config",
             "type": "main",
             "index": 0
           }
@@ -2205,6 +3411,377 @@
         [
           {
             "node": "OUT — Success No Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Embed Route After Model Resolve": {
+      "main": [
+        [
+          {
+            "node": "DB — Select Embedding Model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after DB Embed Model",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "GUARD — Chunk Has Model ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GUARD — Chunk Has Model ID": {
+      "main": [
+        [
+          {
+            "node": "DB — Enqueue embed_chunks Job",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Chunk Model Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Restore CTX after DB Embed Model": {
+      "main": [
+        [
+          {
+            "node": "GUARD — Embed Has Model ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Restore CTX after DB Embed Chunks": {
+      "main": [
+        [
+          {
+            "node": "GUARD — Has Chunks For Embed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Embed Batch Config": {
+      "main": [
+        [
+          {
+            "node": "Split — Embed Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split — Embed Batches": {
+      "main": [
+        [
+          {
+            "node": "Aggregate — Embed Batch Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OUT — Success Embed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate — Embed Batch Inputs": {
+      "main": [
+        [
+          {
+            "node": "Set — Prepare OpenAI Batch Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prepare OpenAI Batch Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP — OpenAI Embeddings",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge — Restore CTX after HTTP Embeddings",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP — OpenAI Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore CTX after HTTP Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source HTTP OpenAI Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Restore CTX after HTTP Embeddings": {
+      "main": [
+        [
+          {
+            "node": "CODE — Expand Embeddings Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE — Expand Embeddings Batch": {
+      "main": [
+        [
+          {
+            "node": "Set — Prepare Embedding Vector",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source CODE Expand Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prepare Embedding Vector": {
+      "main": [
+        [
+          {
+            "node": "DB — Upsert Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Upsert Embedding": {
+      "main": [
+        [
+          {
+            "node": "Aggregate — Batch Upsert Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source DB Upsert Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate — Batch Upsert Results": {
+      "main": [
+        [
+          {
+            "node": "Split — Embed Batches",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Default Embed Model": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Embed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Embed Model": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Embed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Embed Chunks": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Embed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source HTTP OpenAI Embeddings": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Embed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source CODE Expand Embeddings": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Embed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Upsert Embedding": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Embed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Embed Model Guard": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Embed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Chunk Model Guard": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Embed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe v1 (Embed)": {
+      "main": [
+        [
+          {
+            "node": "Execute WF99 (Embed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute WF99 (Embed)": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Success + WF99)",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "OUT — Success Chunk": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Success + WF99)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OUT — Success Already Chunked": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Success + WF99)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OUT — Success No Chunks": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Success + WF99)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OUT — Success Embed": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final (Success + WF99)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Model Resolve Branches": {
+      "main": [
+        [
+          {
+            "node": "Set — Select Embedding Model",
             "type": "main",
             "index": 0
           }
