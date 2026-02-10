@@ -1653,12 +1653,6 @@
               "type": "string"
             },
             {
-              "id": "8e82d0a1-ab6a-403f-b121-0c8c1fddd0f0",
-              "name": "_job_url.payload.visibility",
-              "value": "={{$json._parsed.visibility}}",
-              "type": "string"
-            },
-            {
               "id": "90c04b69-354d-41a6-9deb-c079bcc2069b",
               "name": "_job_url.payload.correlation_id",
               "value": "={{$json._ctx.correlation_id}}",
@@ -2077,12 +2071,6 @@
               "id": "ac3b3583-7020-41f6-9bd4-d6afaa40ecf0",
               "name": "_job_file.payload.correlation_id",
               "value": "={{$json._ctx.correlation_id}}",
-              "type": "string"
-            },
-            {
-              "id": "edf7b297-ec6a-4a86-9985-a2b1cf29ddd0",
-              "name": "_job_file.payload.visibility",
-              "value": "={{$json._parsed.visibility}}",
               "type": "string"
             }
           ]
@@ -5713,12 +5701,6 @@
               "name": "_job_doc.payload.correlation_id",
               "value": "={{$json._ctx.correlation_id}}",
               "type": "string"
-            },
-            {
-              "id": "3b12c4e4-81d5-4c86-89df-a2587202b167",
-              "name": "_job_doc.payload.visibility",
-              "value": "={{$json._parsed.visibility}}",
-              "type": "string"
             }
           ]
         },
@@ -7708,7 +7690,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6"
   },
-  "versionId": "ba287a44-8f90-4ac9-9c3b-241c9eb43eaf",
+  "versionId": "cc1ef04f-a11b-48b8-bbe4-e66721e4779d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
