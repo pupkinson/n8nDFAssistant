@@ -15,8 +15,8 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        640,
-        304
+        736,
+        384
       ],
       "id": "ed155ca7-778d-498b-a640-6963d4737655",
       "name": "Transcribe a recording",
@@ -117,8 +117,8 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        432,
-        416
+        480,
+        512
       ],
       "id": "e8f39be8-bbda-41b9-b9c3-b039258c9676",
       "name": "Analyze an image",
@@ -139,7 +139,7 @@
       "typeVersion": 2.1,
       "position": [
         64,
-        528
+        640
       ],
       "id": "04b0ac1e-d6ba-4802-9a1d-08c8496c36fc",
       "name": "Translate a recording",
@@ -202,6 +202,172 @@
           "name": "Google Gemini(PaLM) Api account"
         }
       }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        96,
+        464
+      ],
+      "id": "1e4f6a33-da21-4417-a099-5d044d797884",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "kg.chunks",
+        "options": {
+          "columnNames": {
+            "values": {
+              "vectorColumnName": "tsv",
+              "metadataColumnName": "meta"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        -16
+      ],
+      "id": "afa4ea84-c626-4184-9944-24726e1da4fd",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {
+          "splitPages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        128,
+        208
+      ],
+      "id": "ab811520-516d-4fa9-b0da-d4b8ccfa7648",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a helpful assistant",
+          "maxIterations": 10,
+          "returnIntermediateSteps": false,
+          "passthroughBinaryImages": true,
+          "batching": {
+            "batchSize": 1,
+            "delayBetweenBatches": 0
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -240
+      ],
+      "id": "a4af4d86-016a-4a04-a395-c144ded9d5e6",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Work with your data in PostgreSQL with pgvector extension",
+        "tableName": "kg.chunks",
+        "options": {
+          "columnNames": {
+            "values": {
+              "vectorColumnName": "tsv",
+              "metadataColumnName": "meta"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        32
+      ],
+      "id": "841fc2e7-2506-4a68-816a-1f1907d1fbad",
+      "name": "Postgres PGVector Store1",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        320,
+        384
+      ],
+      "id": "c7321885-17e2-432f-aec9-7d9842211df1",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        16
+      ],
+      "id": "c8c6dfd2-d842-4379-bdf2-389df4e7a923",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "autoFix": true,
+        "customizeRetryPrompt": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        16
+      ],
+      "id": "013b4c5f-39e5-46c9-a0c1-94200b88d46f",
+      "name": "Structured Output Parser"
     }
   ],
   "pinData": {},
@@ -281,6 +447,82 @@
           }
         ]
       ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -289,7 +531,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "29277fc1-dbfd-41a4-8a85-5c270596ffc8",
+  "versionId": "65df1cc9-afce-49b5-92bd-d2bcea6d4c6e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
