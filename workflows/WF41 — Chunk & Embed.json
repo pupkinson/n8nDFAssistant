@@ -357,7 +357,7 @@
               "id": "cc616176-b6fe-47bb-bb85-9df66469d76b",
               "name": "error",
               "value": null,
-              "type": "string"
+              "type": "object"
             },
             {
               "id": "97bf7a1d-f60b-4bb6-b168-f31f326f0990",
@@ -1076,7 +1076,7 @@
               "id": "fe4634d5-88fc-4de9-af49-0e7eb11f6978",
               "name": "error",
               "value": null,
-              "type": "string"
+              "type": "object"
             },
             {
               "id": "013ed014-e958-4020-90f2-1897de4af8ec",
@@ -1186,7 +1186,7 @@
               "id": "f19b5e8f-bbca-44d0-8cf5-bf09c95ba91a",
               "name": "error",
               "value": null,
-              "type": "string"
+              "type": "object"
             },
             {
               "id": "fd5fa842-444e-477d-a9f7-2f4924d7ed48",
@@ -1670,7 +1670,7 @@
               "id": "8360af28-cc57-486f-80cc-f06a39bf07ec",
               "name": "error",
               "value": null,
-              "type": "string"
+              "type": "object"
             },
             {
               "id": "f4832f8d-a832-437d-9534-0887485bc13f",
@@ -1780,7 +1780,7 @@
               "id": "ba1ca6a4-a6be-40f2-8362-dc8c7ff13d33",
               "name": "error",
               "value": null,
-              "type": "string"
+              "type": "object"
             },
             {
               "id": "2dc2e7df-4ad7-470d-9232-3cf7736f1210",
@@ -2330,21 +2330,6 @@
       },
       "onError": "continueErrorOutput",
       "notes": "PURPOSE: Upsert chunk embedding vector into kg.chunk_embeddings_1536 using PK (chunk_id, model_id). INPUT: chunk_id + embedding_model_id + embedding_str. OUTPUT: upsert result rows. WHY: idempotent persistence for embed_chunks."
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "id": "7aedaa15-0a4a-4710-bf38-9d2c7aebec29",
-      "name": "Aggregate — Batch Upsert Results",
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        4096,
-        1360
-      ],
-      "notes": "PURPOSE: Collapse per-chunk upsert outputs to one item to continue SplitInBatches loop once per batch. INPUT: N upsert rows for current batch. OUTPUT: single aggregate item. WHY: prevent loop control fan-out."
     },
     {
       "parameters": {
@@ -3914,6 +3899,21 @@
       "id": "0c1a3c72-0640-4275-99e6-882d6f2ba47b",
       "name": "ERR — Source DB Select Existing Embed Job",
       "notes": "PURPOSE: Mark source metadata for DB — Select Existing Embed Job failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error output. OUTPUT: _err.* + req/ctx. WHY: per-node error attribution."
+    },
+    {
+      "id": "wf41-split-embedding-upserts",
+      "name": "Split — Embedding Upserts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3808,
+        1344
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "notes": "PURPOSE: Enforce one-by-one embedding upserts to prevent partial-batch success when any upsert fails. INPUT: prepared embedding items for one OpenAI batch. OUTPUT 0: single item to DB — Upsert Embedding loop; OUTPUT 1: batch done signal back to Split — Embed Batches. WHY: guarantees WF99 error path wins on first failing upsert."
     }
   ],
   "pinData": {},
@@ -4519,7 +4519,7 @@
       "main": [
         [
           {
-            "node": "DB — Upsert Embedding",
+            "node": "Split — Embedding Upserts",
             "type": "main",
             "index": 0
           }
@@ -4530,7 +4530,7 @@
       "main": [
         [
           {
-            "node": "Aggregate — Batch Upsert Results",
+            "node": "Split — Embedding Upserts",
             "type": "main",
             "index": 0
           }
@@ -4920,8 +4920,15 @@
         ]
       ]
     },
-    "Aggregate — Batch Upsert Results": {
+    "Split — Embedding Upserts": {
       "main": [
+        [
+          {
+            "node": "DB — Upsert Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Split — Embed Batches",
