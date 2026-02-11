@@ -815,7 +815,7 @@
         "messages": {
           "values": [
             {
-              "content": "=Строго придерживайся принципа краткого изложения фактов. Возвращай только краткий текст с изложением фактов (максимум 1200 символов). Если что-то непонятно, укажи это.\\n\\nТекст для краткого изложения:\\n{{ $json.extracted_text }}"
+              "content": "=Строго придерживайся принципа краткого изложения фактов. Возвращай только краткий текст с изложением фактов (максимум 1200 символов). Если что-то непонятно, укажи это.\\n\\nТекст для краткого изложения:\\n={{ (typeof $json.extracted_text === 'string' ? $json.extracted_text.slice(0, 20000) : '') }}"
             }
           ]
         },
@@ -2184,7 +2184,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"pdf\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"pdf\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2208,7 +2208,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().startsWith(\"text/\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().startsWith(\"text/\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2232,7 +2232,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"csv\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"csv\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2256,7 +2256,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"html\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"html\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2280,7 +2280,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"json\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"json\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2304,7 +2304,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"calendar\") || ($binary.data.mimeType || \"\").toLowerCase().includes(\"ics\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"calendar\") || ($json.file_mime || \"\").toLowerCase().includes(\"ics\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2328,7 +2328,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"rtf\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"rtf\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2352,7 +2352,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"spreadsheetml.sheet\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"spreadsheetml.sheet\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2376,7 +2376,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"ms-excel\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"ms-excel\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2400,7 +2400,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"opendocument.spreadsheet\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"opendocument.spreadsheet\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2424,7 +2424,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ ($binary.data.mimeType || \"\").toLowerCase().includes(\"word\") || ($binary.data.mimeType || \"\").toLowerCase().includes(\"presentation\") || ($binary.data.mimeType || \"\").toLowerCase().includes(\"msword\") || ($binary.data.mimeType || \"\").toLowerCase().includes(\"officedocument\") }}",
+                    "leftValue": "={{ ($json.file_mime || \"\").toLowerCase().includes(\"word\") || ($json.file_mime || \"\").toLowerCase().includes(\"presentation\") || ($json.file_mime || \"\").toLowerCase().includes(\"msword\") || ($json.file_mime || \"\").toLowerCase().includes(\"officedocument\") }}",
                     "rightValue": true,
                     "operator": {
                       "type": "boolean",
@@ -2511,7 +2511,7 @@
             {
               "id": "wf33-exterr-node",
               "name": "_err.node",
-              "value": "Extract — Extract From File",
+              "value": "{{ $json.error?.node?.name || 'Extract — (unknown)' }}",
               "type": "string"
             },
             {
@@ -4365,7 +4365,7 @@
             {
               "id": "wf33-col-text",
               "name": "extracted_text",
-              "value": "={{ (Array.isArray($json.extracted_text) ? $json.extracted_text : [$json.extracted_text]).filter(v => typeof v === \"string\" && v.trim() !== \"\").join(\"\\n\\n\") }}",
+              "value": "=={{ (() => {\n  const parts = (Array.isArray($json.extracted_text) ? $json.extracted_text : [$json.extracted_text])\n    .filter(v => typeof v === \"string\" && v.trim() !== \"\");\n  const joined = parts.join(\"\\n\\n\");\n\n  const metas = Array.isArray($json.extracted_meta) ? $json.extracted_meta : [$json.extracted_meta];\n  const isTabular = metas.some(m => m && m.is_tabular === true);\n\n  // кап только для табличных, чтобы не резать PDF/текстовые документы\n  return isTabular ? joined.slice(0, 200000) : joined;\n})() }}",
               "type": "string"
             },
             {
@@ -4389,6 +4389,188 @@
       "id": "7aff6e86-7dff-4f63-9cda-5a7188d9e0d5",
       "name": "Set — Collapse Aggregated Fields",
       "notes": "Normalize Aggregate arrays to one unified item for downstream pipeline: pick first document_id/ctx/job and concatenate extracted_text parts."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ed7d7c68-d2e6-4b8c-9fb8-735f343a81aa",
+              "leftValue": "={{ !!$json.id && $json.id === $json.document_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -672,
+        8048
+      ],
+      "id": "4f723804-2a82-4254-b6e2-9cbdecadd10f",
+      "name": "IF — Doc Found?"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gcM1ZRVCKVtzJfHOH7OTw",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gcM1ZRVCKVtzJfHOH7OTw",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        10608
+      ],
+      "id": "cb7ee048-d9df-4fbc-96a1-86ba50153c5d",
+      "name": "Execute WF99 (Empty Text)1",
+      "notes": "Call WF99 for empty text error. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized logging. NO StopAndError after!"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9a0b1c2-d3e4-f506-1728-3949a5b6c7d8",
+              "name": "error_context.kind",
+              "value": "business",
+              "type": "string"
+            },
+            {
+              "id": "0a1b2c3d-e4f5-0617-2839-49a5b6c7d8e9",
+              "name": "error_context.message",
+              "value": "Document not found",
+              "type": "string"
+            },
+            {
+              "id": "1b2c3d4e-f506-1728-3949-a5b6c7d8e9f0",
+              "name": "error_context.status_code",
+              "value": 404,
+              "type": "number"
+            },
+            {
+              "id": "2c3d4e5f-0617-2839-49a5-b6c7d8e9f001",
+              "name": "error_context.retryable",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "3d4e5f60-1728-3949-a5b6-c7d8e9f00112",
+              "name": "error_context.details.node",
+              "value": "={{ $json._err?.node }}",
+              "type": "string"
+            },
+            {
+              "id": "4e5f6071-2839-49a5-b6c7-d8e9f0011223",
+              "name": "error_context.details.operation",
+              "value": "={{ $json._err?.operation }}",
+              "type": "string"
+            },
+            {
+              "id": "5f607182-3949-a5b6-c7d8-e9f001122334",
+              "name": "error_context.details.document_id",
+              "value": "={{ $json.document_id }}",
+              "type": "number"
+            },
+            {
+              "id": "60718293-49a5-b6c7-d8e9-f00112233445",
+              "name": "error_context.ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "718293a4-a5b6-c7d8-e9f0-011223344556",
+              "name": "error_context.job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        10608
+      ],
+      "id": "819ad42c-ddd2-4af7-a530-03f168a0e610",
+      "name": "ERR — Prepare ErrorPipe v1 (DB Doc)1",
+      "notes": "Build error_context for empty text (business error). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope for WF99."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5c5d5e5f-7081-9293-a4b5-c6d7e8f9a0b1",
+              "name": "_err.node",
+              "value": "GUARD — Documen Found",
+              "type": "string"
+            },
+            {
+              "id": "6d6e6f70-8192-a3b4-c5d6-e7f8a9b0c1d2",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "7e7f8081-9293-b4c5-d6e7-f8a9b0c1d2e3",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "8f909192-a3b4-c5d6-e7f8-a9b0c1d2e3f4",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        10608
+      ],
+      "id": "d508fe0c-4a18-4fcf-8d09-e6cf0afea4ac",
+      "name": "ERR — Source Input Guard1",
+      "notes": "ErrorPipe v1: Capture error source for Input Guard failure. Input: failed item. Output: _err.* + ctx + job + original. WHY includeOtherFields=true: preserve failure data."
     }
   ],
   "pinData": {},
@@ -4475,7 +4657,7 @@
       "main": [
         [
           {
-            "node": "Merge — Restore CTX after DB Load",
+            "node": "IF — Doc Found?",
             "type": "main",
             "index": 0
           }
@@ -5633,6 +5815,46 @@
           }
         ]
       ]
+    },
+    "IF — Doc Found?": {
+      "main": [
+        [
+          {
+            "node": "Merge — Restore CTX after DB Load",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Input Guard1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe v1 (DB Doc)1": {
+      "main": [
+        [
+          {
+            "node": "Execute WF99 (Empty Text)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Input Guard1": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (DB Doc)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -5642,10 +5864,9 @@
     "availableInMCP": false,
     "timeSavedMode": "fixed",
     "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6",
-    "callerPolicy": "workflowsFromSameOwner",
-    "executionTimeout": -1
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "8f43f6ef-d067-4e11-8273-c4c1b1f26d07",
+  "versionId": "516bd7bd-3d2f-4606-8f1f-745d4accaaae",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
