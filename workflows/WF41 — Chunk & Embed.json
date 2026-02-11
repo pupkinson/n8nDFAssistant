@@ -5,25 +5,25 @@
       "parameters": {
         "inputSource": "passthrough"
       },
-      "id": "2b425ac3-8f42-4c94-b971-b5b8693ce8a3",
+      "id": "3266fe36-6af7-4bc3-a978-731b6966af99",
       "name": "IN — Execute Workflow Trigger",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1760,
-        1040
+        -1536,
+        1024
       ],
       "notes": "PURPOSE: Worker entry from WF90 Execute Workflow. INPUT: single item with req{ctx,job}. OUTPUT: raw worker request. WHY: canonical worker trigger."
     },
     {
       "parameters": {},
-      "id": "6f86ee7b-a008-47e4-b5ac-fdf9df5bf8f4",
+      "id": "9fd5004b-56fa-4295-8ba5-b0443ddc54ec",
       "name": "TEST — Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -1760,
-        1472
+        -1536,
+        1456
       ],
       "notes": "PURPOSE: Run DB-backed T1/T2/T3 tests inside WF41. INPUT: manual click. OUTPUT: test requests merged into main pipeline. WHY: required regression checks."
     },
@@ -31,13 +31,13 @@
       "parameters": {
         "jsCode": "return [\n  {\n    json: {\n      req: {\n        ctx: {\n          tenant_id: '00000000-0000-0000-0000-000000000041',\n          correlation_id: '41000000-0000-0000-0000-000000000001',\n          trace_id: null,\n          chat_id: null,\n          message_id: null,\n          workflow: 'WF90',\n          job_id: 410001\n        },\n        job: {\n          id: 410001,\n          job_type: 'chunk_document',\n          payload: {\n            document_id: 410001,\n            strategy: 'default'\n          }\n        }\n      },\n      _test: { id: 'T1', expect: 'happy' }\n    }\n  },\n  {\n    json: {\n      req: {\n        ctx: {\n          tenant_id: '00000000-0000-0000-0000-000000000041',\n          correlation_id: '41000000-0000-0000-0000-000000000002',\n          trace_id: null,\n          chat_id: null,\n          message_id: null,\n          workflow: 'WF90',\n          job_id: 410002\n        },\n        job: {\n          id: 410002,\n          job_type: 'chunk_document',\n          payload: {\n            document_id: 410002,\n            strategy: 'default'\n          }\n        }\n      },\n      _test: { id: 'T2', expect: 'empty_text' }\n    }\n  },\n  {\n    json: {\n      req: {\n        ctx: {\n          tenant_id: '00000000-0000-0000-0000-000000000041',\n          correlation_id: '41000000-0000-0000-0000-000000000003',\n          trace_id: null,\n          chat_id: null,\n          message_id: null,\n          workflow: 'WF90',\n          job_id: 410003\n        },\n        job: {\n          id: 410003,\n          job_type: 'chunk_document',\n          payload: {\n            document_id: 999999999\n          }\n        }\n      },\n      _test: { id: 'T3', expect: 'wf99_error' }\n    }\n  }\n];"
       },
-      "id": "836d43dc-b757-4b9a-83fc-a91ff35b159a",
+      "id": "501d7ad8-2a8c-4e1d-bb7c-12e37467ff9b",
       "name": "TEST — Build Requests",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1520,
-        1472
+        -1296,
+        1456
       ],
       "notes": "PURPOSE: Emit three required test requests (T1/T2/T3) that reuse production pipeline. INPUT: manual trigger. OUTPUT: items with req.ctx/req.job. WHY: deterministic test harness."
     },
@@ -46,13 +46,13 @@
         "mode": "combine",
         "combineBy": "passThrough"
       },
-      "id": "1cb9ce68-dd00-47ed-9f1c-0212d17aaf35",
+      "id": "8e6d9f59-cc5a-4e3d-b7be-a9e6f6011ec9",
       "name": "Merge — IN (WF90 + TEST)",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1280,
-        1040
+        -1056,
+        1024
       ],
       "notes": "PURPOSE: Unify WF90 runtime input and manual test input. INPUT1: trigger. INPUT2: test requests. OUTPUT: one canonical stream. WHY: tests must reuse core logic, no mock branch."
     },
@@ -63,25 +63,25 @@
             {
               "id": "a4f9f3a5-c342-4aa7-8618-24f33f4a02b2",
               "name": "req.ctx",
-              "value": "={{ $json.req?.ctx ?? $json.ctx ?? {} }}",
+              "value": "={{ $json.req?.ctx || $json.ctx }}",
               "type": "object"
             },
             {
               "id": "a4f9f3a5-c342-4aa7-8618-24f33f4a02b3",
               "name": "req.job",
-              "value": "={{ $json.req?.job ?? $json.job ?? {} }}",
+              "value": "={{ $json.req?.job || $json.job }}",
               "type": "object"
             },
             {
               "id": "8c7f7f9a-12d9-4c21-ac3a-8253126ea7f6",
               "name": "ctx",
-              "value": "={{ $json.req?.ctx ?? $json.ctx ?? {} }}",
+              "value": "={{ $json.req?.ctx || $json.ctx }}",
               "type": "object"
             },
             {
               "id": "3a36975b-87dd-4708-af79-7377e2b66d75",
               "name": "job",
-              "value": "={{ $json.req?.job ?? $json.job ?? {} }}",
+              "value": "={{ $json.req?.job || $json.job }}",
               "type": "object"
             },
             {
@@ -102,13 +102,13 @@
           "dotNotation": true
         }
       },
-      "id": "751de9ac-6338-4b88-a7d1-0d7184199029",
+      "id": "0087a0e9-6e46-4d72-b933-c15efa7fef72",
       "name": "Set — Normalize Input",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1040,
-        1040
+        -816,
+        1024
       ],
       "notes": "PURPOSE: Normalize WF90 request contract for worker execution. INPUT: either {req:{ctx,job}} or {ctx,job} (both forms accepted). OUTPUT: req.ctx + req.job + ctx + job canonical fields. WHY: all downstream nodes expect stable $json.req.* structure; dual input format for caller flexibility."
     },
@@ -151,13 +151,13 @@
         },
         "options": {}
       },
-      "id": "4607d4c2-4c94-4478-8427-03532b594dbc",
+      "id": "06f7fa10-76bd-47b2-8703-910ba50af431",
       "name": "GUARD — Preflight Input",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -784,
-        1200
+        -560,
+        1184
       ],
       "notes": "PURPOSE: Validate req.ctx, req.job, and payload.document_id before routing. INPUT: normalized request. OUTPUT TRUE: valid; FALSE: managed validation error. WHY: Step 0 preflight requirement."
     },
@@ -213,13 +213,13 @@
           "fallbackOutput": "extra"
         }
       },
-      "id": "a3784a3d-ead5-408f-9ff4-700c24d80cf2",
+      "id": "8e376935-0007-4050-ba3d-9880d8358b36",
       "name": "SWITCH — Route job_type",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -544,
-        992
+        -336,
+        976
       ],
       "notes": "PURPOSE: Route execution to chunk_document or embed_chunks path. INPUT: validated req/job. OUTPUTS: chunk_document, embed_chunks, fallback. WHY: strict worker dispatch by ops.job_type."
     },
@@ -252,13 +252,13 @@
         },
         "options": {}
       },
-      "id": "b198ee20-54dc-4409-8010-b4d05103b511",
+      "id": "efae27c4-8371-44bf-b019-4d89991e8cf4",
       "name": "DB — Select Document",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -272,
-        896
+        -48,
+        880
       ],
       "credentials": {
         "postgres": {
@@ -275,13 +275,13 @@
         "combineBy": "combineAll",
         "options": {}
       },
-      "id": "5aff3abb-a824-4d49-9b28-245a4624526c",
+      "id": "ddd29e8b-df2e-4e0f-b310-67c5811c96af",
       "name": "Merge — Restore CTX after DB Document",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -80,
-        736
+        144,
+        720
       ],
       "notes": "PURPOSE: Carry/restore req, ctx, and job after Postgres select overwrite. INPUT1: DB row. INPUT2: pre-DB item. OUTPUT: document + req/ctx/job. WHY: mandatory carry pattern after I/O."
     },
@@ -297,7 +297,7 @@
           "conditions": [
             {
               "id": "25727870-40e3-49c2-ae54-5c916d3a4221",
-              "leftValue": "={{ ($json.text || '').trim() }}",
+              "leftValue": "={{ ($json.document_text || \"\").trim() }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -309,13 +309,13 @@
         },
         "options": {}
       },
-      "id": "f296def5-5dde-4415-8f0a-b0ce80a9674f",
+      "id": "f396cc5c-520d-4aa4-9cf0-36e97f290eb0",
       "name": "GUARD — Document Has Text",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        160,
-        656
+        416,
+        608
       ],
       "notes": "PURPOSE: Skip chunking when document text is empty/whitespace. INPUT: loaded document. OUTPUT TRUE: chunkable text; FALSE: success skipped empty_text. WHY: required Step A.2 guard."
     },
@@ -419,28 +419,29 @@
           "dotNotation": true
         }
       },
-      "id": "4000ae89-56f8-4a69-b8cf-1da08b2d71a5",
+      "id": "2e4739c3-39f2-4505-bee9-5886a9e37c84",
       "name": "OUT — Success Empty Text",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1120,
-        992
+        1344,
+        976
       ],
       "notes": "PURPOSE: Return SuccessEnvelope for empty text without enqueueing embed job. INPUT: text guard false. OUTPUT: ok=true skipped=empty_text. WHY: required non-error skip behavior."
     },
     {
       "parameters": {
-        "value": "={{ $json.text }}",
-        "dataPropertyName": "text"
+        "type": "SHA256",
+        "value": "={{ $json.document_text }}",
+        "dataPropertyName": "hash"
       },
-      "id": "3e5491f7-4464-4228-b4df-23f7932893ec",
+      "id": "4e84d8b3-88b8-464b-bed8-a2d8b509480b",
       "name": "Crypto — Hash Document Text",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        400,
-        560
+        624,
+        544
       ],
       "notes": "PURPOSE: Compute SHA256 for current document text. INPUT: document.text. OUTPUT: hash hex. WHY: idempotency and document.text_sha256 maintenance."
     },
@@ -470,13 +471,13 @@
         },
         "options": {}
       },
-      "id": "d7f0785f-3f5a-45ab-8b8e-d04190db4239",
+      "id": "6512a55a-a8c7-4b18-b9a2-393cae028a4a",
       "name": "DB — Probe Existing Chunks",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        640,
-        560
+        864,
+        544
       ],
       "credentials": {
         "postgres": {
@@ -506,43 +507,43 @@
             {
               "id": "2e6512f7-c912-486e-bdc5-7c5cc6118a9a",
               "name": "has_chunks",
-              "value": "={{ !!$json.id }}",
+              "value": "={{ $items('DB — Probe Existing Chunks').filter(i => i.json && i.json.id !== undefined && i.json.id !== null).length > 0 }}",
               "type": "boolean"
             },
             {
               "id": "f024e4c9-5639-4fdb-aaf3-4de4ea335774",
               "name": "old_hash",
-              "value": "={{ (($('Merge — Restore CTX after DB Document').item.json.text_sha256 || '') + '').replace('\\\\x','') }}",
+              "value": "={{ ((($('Set — Read Document Fields').item.json.stored_text_sha256 || '') + '')).replace('\\\\x','') }}",
               "type": "string"
             },
             {
               "id": "addfeacb-a482-4b35-b393-2b7d744de2cf",
               "name": "needs_rechunk",
-              "value": "={{ $json.req.job.payload.force === true || !($json.id) || ((($('Merge — Restore CTX after DB Document').item.json.text_sha256 || '') + '').replace('\\\\x','') !== $('Crypto — Hash Document Text').item.json.hash) }}",
+              "value": "={{ $json.req.job.payload.force === true || ($items('DB — Probe Existing Chunks').filter(i => i.json && i.json.id !== undefined && i.json.id !== null).length === 0) || ((((($('Set — Read Document Fields').item.json.stored_text_sha256 || '') + '')).replace('\\\\x','')) !== $('Crypto — Hash Document Text').item.json.hash) }}",
               "type": "boolean"
             },
             {
               "id": "a6f34f54-b410-497e-a9f6-a68f8f8913f4",
               "name": "text",
-              "value": "={{ $('Merge — Restore CTX after DB Document').item.json.text }}",
+              "value": "={{ $('Set — Read Document Fields').item.json.document_text }}",
               "type": "string"
             },
             {
               "id": "04f0ff43-4ba9-4531-827e-7e8e0dbf71e8",
               "name": "req",
-              "value": "={{ $('Merge — Restore CTX after DB Document').item.json.req }}",
+              "value": "={{ $('Set — Read Document Fields').item.json.req }}",
               "type": "object"
             },
             {
               "id": "3a7f7be5-f028-4496-a886-3c3ea42cd7d4",
               "name": "ctx",
-              "value": "={{ $('Merge — Restore CTX after DB Document').item.json.ctx }}",
+              "value": "={{ $('Set — Read Document Fields').item.json.ctx }}",
               "type": "object"
             },
             {
               "id": "852cb9ce-8776-4706-8efe-273fa63d745e",
               "name": "job",
-              "value": "={{ $('Merge — Restore CTX after DB Document').item.json.job }}",
+              "value": "={{ $('Set — Read Document Fields').item.json.job }}",
               "type": "object"
             }
           ]
@@ -551,13 +552,13 @@
           "dotNotation": true
         }
       },
-      "id": "23e68010-df4d-4b60-b091-45ee34e7567d",
+      "id": "69748c80-cfa9-4ed3-b5e8-b6a219e84ced",
       "name": "Set — Decide Rechunk",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        880,
-        496
+        1104,
+        480
       ],
       "notes": "PURPOSE: Build hash/idempotency state and carry context. INPUT: hash + chunk probe + document row. OUTPUT: needs_rechunk, hashes, req/ctx/job/text. WHY: controlled branch for stale/fresh chunks."
     },
@@ -582,13 +583,13 @@
         },
         "options": {}
       },
-      "id": "d75a0325-6751-42b0-b8c9-86d47172e659",
+      "id": "a0a97ac0-6fa3-4378-a639-b005f430dcb9",
       "name": "IF — Needs Rechunk",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1120,
-        528
+        1344,
+        512
       ],
       "notes": "PURPOSE: Skip expensive rechunk when current hash already chunked. INPUT: idempotency state. OUTPUT TRUE: rechunk; FALSE: already_chunked success. WHY: idempotent worker behavior."
     },
@@ -608,13 +609,13 @@
           "cachedResultName": "chunks"
         }
       },
-      "id": "f5a9a2e9-aa20-49cb-ba9c-952e08de32e3",
+      "id": "8306a9b3-1e8b-4cad-8559-9c31ec808568",
       "name": "DB — Delete Old Chunks",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1360,
-        560
+        1584,
+        544
       ],
       "credentials": {
         "postgres": {
@@ -629,28 +630,29 @@
       "parameters": {
         "jsCode": "const txt = ($json.text || '').toString();\nconst strategy = ($json.req?.job?.payload?.strategy || 'default').toLowerCase();\nlet size = 1200;\nlet overlap = 120;\nif (strategy === 'small') { size = 700; overlap = 80; }\nif (strategy === 'large') { size = 1800; overlap = 180; }\nconst out = [];\nif (!txt.trim()) return [];\nlet i = 0;\nlet no = 0;\nwhile (i < txt.length) {\n  const end = Math.min(txt.length, i + size);\n  const chunkText = txt.slice(i, end);\n  out.push({ json: {\n    req: $json.req,\n    ctx: $json.ctx,\n    job: $json.job,\n    document_id: $json.req.job.payload.document_id,\n    embedding_model_id: $json.req.job.payload.embedding_model_id || null,\n    doc_hash_hex: $json.doc_hash_hex,\n    doc_hash_bytea: $json.doc_hash_bytea,\n    chunk_no: no,\n    char_start: i,\n    char_end: end,\n    chunk_text: chunkText\n  }});\n  if (end >= txt.length) break;\n  i = Math.max(end - overlap, i + 1);\n  no += 1;\n}\nreturn out;"
       },
-      "id": "ec88ec5c-69e3-494c-ad15-df935e9429fb",
+      "id": "43dcbad3-7d52-473f-8f0a-a197f8925f9d",
       "name": "CODE — Build Chunks",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1616,
-        496
+        1840,
+        480
       ],
       "notes": "PURPOSE: Split text into chunk items with strategy-aware size/overlap. INPUT: text + req + hash state. OUTPUT: one item per chunk with positions. WHY: no splitter node in repo examples; controlled deterministic chunking."
     },
     {
       "parameters": {
+        "type": "SHA256",
         "value": "={{ $json.chunk_text }}",
-        "dataPropertyName": "chunk_text"
+        "dataPropertyName": "hash"
       },
-      "id": "7891c409-7486-420a-b948-dccbdfd297a9",
+      "id": "1d1ec880-bb2a-4bd1-b7c7-04df78f5402e",
       "name": "Crypto — Hash Chunk",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        1840,
-        560
+        2768,
+        -224
       ],
       "notes": "PURPOSE: Compute SHA256 for each chunk text. INPUT: chunk_text. OUTPUT: hash hex. WHY: chunk-level idempotency metadata."
     },
@@ -677,13 +679,13 @@
           "dotNotation": true
         }
       },
-      "id": "d5732b42-d661-4c3f-ae04-8896fdf8c9fd",
+      "id": "f1e37a65-a739-48d4-aaca-1904f527cb62",
       "name": "Set — Prepare Chunk Row",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2080,
-        560
+        3280,
+        -224
       ],
       "notes": "PURPOSE: Build kg.chunks row payload with meta hashes. INPUT: hashed chunk item. OUTPUT: chunk fields + meta.*. WHY: align with SQL schema and upsert key."
     },
@@ -775,13 +777,13 @@
         },
         "options": {}
       },
-      "id": "5fcba9c7-a012-45ac-a1e7-3ded7dcb5683",
+      "id": "4ad46e70-bb3d-4a6c-8e84-06f2fa3f6318",
       "name": "DB — Upsert Chunk",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2320,
-        560
+        3712,
+        -96
       ],
       "credentials": {
         "postgres": {
@@ -809,10 +811,10 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "tenant_id": "={{ $('Set — Decide Rechunk').item.json.req.ctx.tenant_id }}",
-            "job_type": "embed_chunks",
-            "payload": "={{ { document_id: $('Set — Decide Rechunk').item.json.req.job.payload.document_id, embedding_model_id: $('Set — Select Embedding Model').item.json.embedding_model_id } }}",
-            "correlation_id": "={{ $('Set — Decide Rechunk').item.json.req.ctx.correlation_id }}"
+            "tenant_id": "={{ $json.enqueue.tenant_id }}",
+            "job_type": "={{ $json.enqueue.job_type }}",
+            "payload": "={{ $json.enqueue.payload }}",
+            "correlation_id": "={{ $json.enqueue.correlation_id }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -862,13 +864,13 @@
         },
         "options": {}
       },
-      "id": "9f6a5af8-7326-4502-b294-826302ad350c",
+      "id": "0ce02eb7-f06e-4f48-92ff-8818a21fce7a",
       "name": "DB — Enqueue embed_chunks Job",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3040,
-        560
+        1776,
+        272
       ],
       "credentials": {
         "postgres": {
@@ -886,31 +888,49 @@
             {
               "id": "bd4bfce4-b360-4fa7-a38d-74dbf01cc0f5",
               "name": "embedding_model_id",
-              "value": "={{ $json.req?.job?.payload?.embedding_model_id || $json.id || $json.embedding_model_id || null }}",
+              "value": "={{ $json.id || $(\"Set — Normalize Input\").item.json.req.job.payload.embedding_model_id || null }}",
               "type": "number"
             },
             {
               "id": "wf41-setsel-req-model",
               "name": "req.job.payload.embedding_model_id",
-              "value": "={{ $json.req?.job?.payload?.embedding_model_id || $json.id || $json.embedding_model_id || null }}",
+              "value": "={{ $json.id || $(\"Set — Normalize Input\").item.json.req.job.payload.embedding_model_id || null }}",
               "type": "number"
+            },
+            {
+              "id": "wf41-setsel-model-key",
+              "name": "model_key",
+              "value": "={{ $json.model_key || null }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-setsel-model-dim",
+              "name": "output_dim",
+              "value": "={{ Number($json.output_dim || 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "wf41-setsel-model-active",
+              "name": "is_active",
+              "value": "={{ $json.is_active === true }}",
+              "type": "boolean"
             },
             {
               "id": "wf41-setsel-ctx",
               "name": "ctx",
-              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "value": "={{ $(\"Set — Normalize Input\").item.json.ctx }}",
               "type": "object"
             },
             {
               "id": "wf41-setsel-job",
               "name": "job",
-              "value": "={{ $json.job || $json.req?.job || {} }}",
+              "value": "={{ $(\"Set — Normalize Input\").item.json.job }}",
               "type": "object"
             },
             {
               "id": "wf41-setsel-req",
               "name": "req",
-              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "value": "={{ $(\"Set — Normalize Input\").item.json.req }}",
               "type": "object"
             }
           ]
@@ -920,13 +940,13 @@
           "dotNotation": true
         }
       },
-      "id": "41cc614d-6b46-4191-bffe-499e53c00f94",
+      "id": "0dfaba3c-9d40-41c7-930a-3f7afebf0d1a",
       "name": "Set — Select Embedding Model",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2864,
-        560
+        3840,
+        592
       ],
       "notes": "PURPOSE: Resolve embedding_model_id from payload override or default model lookup and write back into req.job.payload.embedding_model_id. INPUT: payload and/or default model row. OUTPUT: embedding_model_id + normalized req/ctx/job. WHY: both chunk_document enqueue and embed_chunks path require deterministic resolved model id."
     },
@@ -963,13 +983,13 @@
         },
         "options": {}
       },
-      "id": "9aea5909-82b8-4143-93a1-12df8a3b54d5",
+      "id": "0d6b5e2d-7075-4683-a3ca-9d340b9f4696",
       "name": "DB — Select Default Embedding Model",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        2704,
-        672
+        2784,
+        416
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -991,7 +1011,7 @@
           "conditions": [
             {
               "id": "af6ccdf8-f162-4e0c-a8c2-4f2c33ac9d34",
-              "leftValue": "={{ $json.req.job.payload.embedding_model_id }}",
+              "leftValue": "={{ $json.req?.job?.payload?.embedding_model_id || $(\"Set — Normalize Input\").item.json.req?.job?.payload?.embedding_model_id || \"\" }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -1002,13 +1022,13 @@
         },
         "options": {}
       },
-      "id": "a9225ce2-1e0b-43dc-b9b1-3b89a6b0e874",
+      "id": "d3b5c6e7-cbac-4303-a3bb-86396ea2cc6f",
       "name": "IF — Payload Has Embedding Model",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        2512,
-        560
+        1984,
+        -176
       ],
       "notes": "PURPOSE: Branch model resolution based on payload.embedding_model_id. INPUT: chunk state. OUTPUT TRUE: use payload model; FALSE: load default model. WHY: required enqueue model selection rule."
     },
@@ -1031,7 +1051,7 @@
             {
               "id": "ba1feef6-b0de-4021-94a6-41f86ffbd90d",
               "name": "data.document_id",
-              "value": "={{ $('Set — Decide Rechunk').item.json.req.job.payload.document_id }}",
+              "value": "={{ $json.req?.job?.payload?.document_id || $(\"Set — Decide Rechunk\").item.json.req.job.payload.document_id }}",
               "type": "number"
             },
             {
@@ -1043,13 +1063,13 @@
             {
               "id": "6f7a353d-a414-43bc-abd8-9148e8d5f27c",
               "name": "data.embed_enqueued",
-              "value": true,
+              "value": "={{ $json.embed_enqueued === true }}",
               "type": "boolean"
             },
             {
               "id": "f06c0c87-e36f-40de-a283-c823072078cf",
               "name": "data.embedding_model_id",
-              "value": "={{ $('Set — Select Embedding Model').item.json.embedding_model_id }}",
+              "value": "={{ $json.req?.job?.payload?.embedding_model_id || $(\"Set — Select Embedding Model\").item.json.embedding_model_id }}",
               "type": "number"
             },
             {
@@ -1073,31 +1093,31 @@
             {
               "id": "0f7807fc-e3b8-4a73-9837-5e7c089670ff",
               "name": "meta.correlation.correlation_id",
-              "value": "={{ $('Set — Decide Rechunk').item.json.req.ctx.correlation_id }}",
+              "value": "={{ $json.req?.ctx?.correlation_id || $(\"Set — Decide Rechunk\").item.json.req.ctx.correlation_id }}",
               "type": "string"
             },
             {
               "id": "0818f370-fafa-4f3d-8e88-62356e33d7f4",
               "name": "meta.correlation.trace_id",
-              "value": "={{ $('Set — Decide Rechunk').item.json.req.ctx.trace_id || null }}",
+              "value": "={{ $json.req?.ctx?.trace_id || $(\"Set — Decide Rechunk\").item.json.req.ctx.trace_id || null }}",
               "type": "string"
             },
             {
               "id": "0051f5af-35f4-4b81-a53c-c423dd10f6ee",
               "name": "meta.correlation.tenant_id",
-              "value": "={{ $('Set — Decide Rechunk').item.json.req.ctx.tenant_id || null }}",
+              "value": "={{ $json.req?.ctx?.tenant_id || $(\"Set — Decide Rechunk\").item.json.req.ctx.tenant_id || null }}",
               "type": "string"
             },
             {
               "id": "bb07f835-60a1-4ef5-a954-f4a211d4f20e",
               "name": "meta.correlation.chat_id",
-              "value": "={{ $('Set — Decide Rechunk').item.json.req.ctx.chat_id || null }}",
+              "value": "={{ $json.req?.ctx?.chat_id || $(\"Set — Decide Rechunk\").item.json.req.ctx.chat_id || null }}",
               "type": "number"
             },
             {
               "id": "e2520a61-d97f-4f74-b2f5-8e5e13b53f08",
               "name": "meta.correlation.message_id",
-              "value": "={{ $('Set — Decide Rechunk').item.json.req.ctx.message_id || null }}",
+              "value": "={{ $json.req?.ctx?.message_id || $(\"Set — Decide Rechunk\").item.json.req.ctx.message_id || null }}",
               "type": "number"
             },
             {
@@ -1118,13 +1138,13 @@
           "dotNotation": true
         }
       },
-      "id": "3b96760b-22ff-4374-b49b-2da1e7123d3b",
+      "id": "811e0d29-c0ba-48bc-8504-4ea7b4eeb666",
       "name": "OUT — Success Chunk",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3280,
-        544
+        2192,
+        16
       ],
       "notes": "PURPOSE: Build SuccessEnvelope for chunk_document happy path. INPUT: enqueue result + resolved model + chunk stats. OUTPUT: contract envelope. WHY: required WF41 success contract."
     },
@@ -1228,13 +1248,13 @@
           "dotNotation": true
         }
       },
-      "id": "e24cd633-898a-46fd-a452-99da0e93587f",
+      "id": "79110074-d0bb-42f1-abcf-0982a2cd1932",
       "name": "OUT — Success Already Chunked",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1776,
-        928
+        2000,
+        912
       ],
       "notes": "PURPOSE: Return SuccessEnvelope when chunks are up-to-date and no rechunk needed. INPUT: idempotency false branch. OUTPUT: skipped already_chunked envelope. WHY: idempotent short-circuit."
     },
@@ -1243,25 +1263,55 @@
         "assignments": {
           "assignments": [
             {
-              "id": "6e977b98-8e1f-4d8c-b95e-6ca3ecde4fc2",
+              "id": "wf41-input-guard-node",
               "name": "_err.node",
               "value": "GUARD — Preflight Input",
               "type": "string"
             },
             {
-              "id": "af2967b2-3992-4efd-82c8-d73d51554263",
+              "id": "wf41-input-guard-op",
               "name": "_err.operation",
               "value": "validate_input",
               "type": "string"
             },
             {
-              "id": "7fdb9665-6d8c-49a4-8e53-f98bb6e91d54",
+              "id": "wf41-input-guard-table",
+              "name": "_err.table",
+              "value": "workflow.input",
+              "type": "string"
+            },
+            {
+              "id": "wf41-input-guard-kind",
+              "name": "_err.kind",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "wf41-input-guard-msg",
+              "name": "_err.message",
+              "value": "Missing req.ctx, req.job, or req.job.payload.document_id",
+              "type": "string"
+            },
+            {
+              "id": "wf41-input-guard-status",
+              "name": "_err.status_code",
+              "value": 400,
+              "type": "number"
+            },
+            {
+              "id": "wf41-input-guard-retry",
+              "name": "_err.retryable",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "wf41-input-guard-ctx",
               "name": "ctx",
-              "value": "={{ $json.ctx }}",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
               "type": "object"
             },
             {
-              "id": "9f92cc41-caf3-4ee0-8f35-b56a1d66bf16",
+              "id": "wf41-input-guard-req",
               "name": "req",
               "value": "={{ $json.req }}",
               "type": "object"
@@ -1273,13 +1323,13 @@
           "dotNotation": true
         }
       },
-      "id": "376b4879-36c7-4ad4-9ed2-d8d3f3a6c7bb",
+      "id": "0093a50c-5d94-41bc-b6e5-57b4c84224c4",
       "name": "ERR — Source Input Guard",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3568,
-        2880
+        5888,
+        2560
       ],
       "notes": "PURPOSE: Mark validation source metadata for ErrorPipe. INPUT: guard false branch. OUTPUT: _err.* + ctx/req for WF99. WHY: managed validation error handling."
     },
@@ -1288,49 +1338,55 @@
         "assignments": {
           "assignments": [
             {
-              "id": "7e20f96d-658c-4b38-a6b7-79f4acdb5bca",
+              "id": "ERR — Prepare ErrorPipe v1 (Input)-kind",
               "name": "error_context.kind",
-              "value": "validation",
+              "value": "={{ $json._err?.kind || \"unknown\" }}",
               "type": "string"
             },
             {
-              "id": "28f2f579-f58b-49d3-865d-2383f0738f75",
-              "name": "error_context.message",
-              "value": "Missing req.ctx, req.job, or req.job.payload.document_id",
+              "id": "ERR — Prepare ErrorPipe v1 (Input)-msg",
+              "name": "error_context.error_message",
+              "value": "={{ $json._err?.message || $json.error?.message || $json.message || \"WF41 failure\" }}",
               "type": "string"
             },
             {
-              "id": "533bb3f5-a8d0-4148-aed8-47ef3d35b4f6",
+              "id": "ERR — Prepare ErrorPipe v1 (Input)-status",
               "name": "error_context.status_code",
-              "value": 400,
+              "value": "={{ Number($json._err?.status_code || $json.statusCode || $json.httpCode || 500) }}",
               "type": "number"
             },
             {
-              "id": "c03a7606-8b89-4aa1-a812-e85d640260ce",
+              "id": "ERR — Prepare ErrorPipe v1 (Input)-retry",
               "name": "error_context.retryable",
-              "value": false,
+              "value": "={{ $json._err?.retryable !== undefined ? $json._err.retryable : false }}",
               "type": "boolean"
             },
             {
-              "id": "4f25d5ea-4400-447b-8d66-2d2862274978",
-              "name": "error_context.details.node",
-              "value": "={{ $json._err.node }}",
+              "id": "ERR — Prepare ErrorPipe v1 (Input)-node",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node || null }}",
               "type": "string"
             },
             {
-              "id": "f43411fc-0f58-4ad3-bbc8-4f8cbf9f85ad",
-              "name": "error_context.details.operation",
-              "value": "={{ $json._err.operation }}",
+              "id": "ERR — Prepare ErrorPipe v1 (Input)-op",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation || null }}",
               "type": "string"
             },
             {
-              "id": "6d17dfd4-e845-4811-af2d-5f84de0d76e4",
+              "id": "ERR — Prepare ErrorPipe v1 (Input)-table",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table || null }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Prepare ErrorPipe v1 (Input)-ctx",
               "name": "error_context.ctx",
-              "value": "={{ $json.ctx }}",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
               "type": "object"
             },
             {
-              "id": "949f8723-afca-4955-8f15-576845f5a5b2",
+              "id": "ERR — Prepare ErrorPipe v1 (Input)-ctx-contract",
               "name": "ctx.contracts.errorpipe",
               "value": 1,
               "type": "number"
@@ -1341,13 +1397,13 @@
           "dotNotation": true
         }
       },
-      "id": "fec8c0a5-5cde-45b4-9a0e-1269cc24f1cc",
+      "id": "8d317fd0-2541-4e77-b59c-2859c8e6f770",
       "name": "ERR — Prepare ErrorPipe v1 (Input)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3840,
-        2880
+        6160,
+        2560
       ],
       "notes": "PURPOSE: Build ErrorPipe v1 payload for validation failures. INPUT: err source item. OUTPUT: error_context.* for WF99. WHY: WF41 must delegate envelope creation to WF99."
     },
@@ -1372,25 +1428,27 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "320a6076-cd01-4ff2-8503-4ccedcceb4e1",
+      "id": "fce66118-0218-42d0-86b1-078e7faac513",
       "name": "Execute WF99 (Input)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        4080,
-        2880
+        6400,
+        2560
       ],
       "notes": "PURPOSE: Delegate managed validation errors to WF99 and return its ErrorEnvelope. INPUT: error_context. OUTPUT: WF99 envelope. WHY: centralized error pipeline."
     },
     {
-      "parameters": {},
-      "id": "39af5df1-ad76-479e-b220-8b4b7ebfb5e1",
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "id": "78fae714-b54f-4bcb-a230-0e74db072244",
       "name": "Merge — Final (Success + WF99)",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        6400,
-        1232
+        6624,
+        1216
       ],
       "notes": "PURPOSE: Merge terminal success and WF99 error envelopes into workflow output stream. INPUTS: success envelopes (input 0) and WF99 envelopes (input 1). OUTPUT: final contract envelope item(s). WHY: single workflow exit path without StopAndError."
     },
@@ -1403,8 +1461,8 @@
           "combinator": "and",
           "conditions": [
             {
-              "id": "wf41-guard-model-id",
-              "leftValue": "={{ $json.id }}",
+              "id": "GUARD — Embed Has Model ID-id",
+              "leftValue": "={{ $json.embedding_model_id }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -1412,7 +1470,16 @@
               }
             },
             {
-              "id": "wf41-guard-model-dim",
+              "id": "GUARD — Embed Has Model ID-active",
+              "leftValue": "={{ $json.is_active === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "id": "GUARD — Embed Has Model ID-dim",
               "leftValue": "={{ Number($json.output_dim || 0) }}",
               "rightValue": 1536,
               "operator": {
@@ -1424,13 +1491,13 @@
         },
         "options": {}
       },
-      "id": "dc6a3d97-38a5-45d3-ad6c-cbe490eac0c7",
+      "id": "ca09ea05-7dca-47e5-a43b-056a07daa08d",
       "name": "GUARD — Embed Has Model ID",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -320,
-        1152
+        160,
+        1520
       ],
       "notes": "PURPOSE: Validate embedding model row exists and output_dim matches required 1536 for destination pgvector table. INPUT: merged model row + req context. OUTPUT TRUE: proceed to chunk embedding; FALSE: managed validation error to WF99. WHY: prevent invalid model or dimension mismatch writes."
     },
@@ -1464,13 +1531,13 @@
         },
         "options": {}
       },
-      "id": "a5b8894f-ae58-4907-af36-0178a1df9bc8",
+      "id": "570931e5-c89d-468e-9624-3737473ce45c",
       "name": "DB — Select Embedding Model",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        0,
-        1504
+        2352,
+        -240
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -1507,13 +1574,13 @@
         },
         "options": {}
       },
-      "id": "8b4b19fb-2920-45e9-8a2a-ec3c48a02834",
+      "id": "4a859a1e-ce77-4ac8-b54b-d775e38e0ef4",
       "name": "DB — Select Chunks For Embed",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        176,
-        1376
+        400,
+        1360
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -1529,9 +1596,11 @@
       "parameters": {
         "conditions": {
           "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
             "version": 3
           },
-          "combinator": "and",
           "conditions": [
             {
               "id": "d57b4e31-d3c0-4459-97cb-63bf876f13ef",
@@ -1542,16 +1611,17 @@
                 "operation": "notEmpty"
               }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
-      "id": "5c36090b-50fd-4d58-a11f-db72a8cb53b5",
+      "id": "9362c693-f93b-4209-ad3c-e7e7e27bb467",
       "name": "GUARD — Has Chunks For Embed",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        400,
+        704,
         1248
       ],
       "notes": "PURPOSE: Branch embed flow when chunk set is empty. INPUT: chunk query output. OUTPUT TRUE: embed path, FALSE: skipped no_chunks success. WHY: required edge behavior."
@@ -1662,13 +1732,13 @@
           "dotNotation": true
         }
       },
-      "id": "4babc11a-0942-44b1-9764-1bf477bfd145",
+      "id": "10af0e42-900b-4776-9273-c98fe0609bb9",
       "name": "OUT — Success No Chunks",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        800,
-        1696
+        1792,
+        1392
       ],
       "notes": "PURPOSE: Return SuccessEnvelope skipped=no_chunks for embed path. INPUT: no chunk branch. OUTPUT: contract envelope. WHY: required embed edge case."
     },
@@ -1772,13 +1842,13 @@
           "dotNotation": true
         }
       },
-      "id": "35bfeaed-4f24-47f2-b4c3-090240177822",
+      "id": "c0d20831-7237-4f7c-86ec-fcb356151458",
       "name": "OUT — Success Embed",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2624,
-        2208
+        5280,
+        1536
       ],
       "notes": "PURPOSE: Return SuccessEnvelope for embed_chunks happy path with real stats after full batched upsert loop. INPUT: SplitInBatches done output + accumulated upsert history. OUTPUT: document_id, embedding_model_id, embedded_count, correlation meta. WHY: WF41 worker output contract."
     },
@@ -1803,13 +1873,13 @@
         },
         "options": {}
       },
-      "id": "6e44cb08-d28d-421d-91bf-265dbdd95b85",
+      "id": "c6da98a3-7fdf-4f38-ac6b-1d12d5991b1e",
       "name": "IF — Embed Route After Model Resolve",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -160,
-        656
+        4064,
+        816
       ],
       "notes": "PURPOSE: Split resolved embedding model flow by job_type. INPUT: Set — Select Embedding Model output. OUTPUT TRUE: embed_chunks path; FALSE: chunk_document enqueue path. WHY: shared model resolution node is reused by both branches."
     },
@@ -1822,59 +1892,45 @@
           "combinator": "and",
           "conditions": [
             {
-              "id": "wf41-guard-chunk-model",
+              "id": "GUARD — Chunk Has Model ID-id",
               "leftValue": "={{ $json.embedding_model_id }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
                 "operation": "notEmpty"
               }
+            },
+            {
+              "id": "GUARD — Chunk Has Model ID-active",
+              "leftValue": "={{ $json.is_active === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "id": "GUARD — Chunk Has Model ID-dim",
+              "leftValue": "={{ Number($json.output_dim || 0) }}",
+              "rightValue": 1536,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
             }
           ]
         },
         "options": {}
       },
-      "id": "114e467d-ac64-40fe-bdce-00ff497fffd3",
+      "id": "575c668d-772e-4526-8d12-8f195487d5fd",
       "name": "GUARD — Chunk Has Model ID",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        80,
-        448
+        448,
+        368
       ],
       "notes": "PURPOSE: Ensure chunk_document enqueue has resolved embedding_model_id. INPUT: resolved model selection output. OUTPUT TRUE: enqueue embed job; FALSE: managed validation error. WHY: prevents enqueue payload with null model id."
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "id": "5cb6e83d-bbdb-4cac-ab1c-f953381c2e8a",
-      "name": "Merge — Restore CTX after DB Embed Model",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        320,
-        1152
-      ],
-      "notes": "PURPOSE: Carry/restore req/ctx/job after DB model lookup. INPUT1: DB model row. INPUT2: pre-DB context. OUTPUT: combined model + context. WHY: Postgres select overwrites item fields."
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "id": "b5eef8e7-ef81-41ea-8f14-89a64bda0587",
-      "name": "Merge — Restore CTX after DB Embed Chunks",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        784,
-        1376
-      ],
-      "notes": "PURPOSE: Carry/restore req/ctx/job/model after DB chunks lookup. INPUT1: chunk rows. INPUT2: validated model context. OUTPUT: chunk row + req/model context. WHY: Postgres select overwrites context needed downstream."
     },
     {
       "parameters": {
@@ -1889,37 +1945,37 @@
             {
               "id": "wf41-bcfg-dim",
               "name": "expected_dim",
-              "value": "={{ Number($json.output_dim || 1536) }}",
+              "value": "={{ Number($(\"Set — Select Embedding Model\").item.json.output_dim || 1536) }}",
               "type": "number"
             },
             {
               "id": "wf41-bcfg-model",
               "name": "openai_model",
-              "value": "={{ $json.model_key }}",
+              "value": "={{ $(\"Set — Select Embedding Model\").item.json.model_key }}",
               "type": "string"
             },
             {
               "id": "wf41-bcfg-embed-id",
               "name": "embedding_model_id",
-              "value": "={{ $json.id || $json.embedding_model_id || $json.req?.job?.payload?.embedding_model_id }}",
+              "value": "={{ $(\"Set — Select Embedding Model\").item.json.embedding_model_id }}",
               "type": "number"
             },
             {
               "id": "wf41-bcfg-req",
               "name": "req",
-              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "value": "={{ $(\"Set — Select Embedding Model\").item.json.req }}",
               "type": "object"
             },
             {
               "id": "wf41-bcfg-ctx",
               "name": "ctx",
-              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "value": "={{ $(\"Set — Select Embedding Model\").item.json.ctx }}",
               "type": "object"
             },
             {
               "id": "wf41-bcfg-job",
               "name": "job",
-              "value": "={{ $json.job || $json.req?.job || {} }}",
+              "value": "={{ $(\"Set — Select Embedding Model\").item.json.job }}",
               "type": "object"
             }
           ]
@@ -1929,13 +1985,13 @@
           "dotNotation": true
         }
       },
-      "id": "4a6e6e48-74a5-4091-91c8-b7ad5771b62d",
+      "id": "6ff2a803-4703-4ace-bccd-c6b1305b0007",
       "name": "Set — Embed Batch Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1024,
-        1200
+        1248,
+        1184
       ],
       "notes": "PURPOSE: Configure embedding batch parameters and keep req context on each chunk item. INPUT: chunk row + model context. OUTPUT: batch_size, expected_dim, openai_model, embedding_model_id + context. WHY: consistent batch API calls and dimension validation."
     },
@@ -1946,13 +2002,13 @@
           "reset": false
         }
       },
-      "id": "ecb07c6b-6844-4317-933e-16c4e826798c",
+      "id": "3fded915-c8a0-441b-9aab-7968dc5a62c6",
       "name": "Split — Embed Batches",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        1200,
-        2096
+        4288,
+        1680
       ],
       "notes": "PURPOSE: Iterate chunks in fixed-size groups for batched embeddings API calls. INPUT: chunk items with batch config. OUTPUT0: current batch; OUTPUT1: loop complete. WHY: required batched processing."
     },
@@ -1988,13 +2044,13 @@
         },
         "options": {}
       },
-      "id": "c8c2b7ea-6d6a-4ce9-bdca-6f080811c9a1",
+      "id": "17df582a-586b-4d6d-97a8-9cc63bb16615",
       "name": "Aggregate — Embed Batch Inputs",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        1424,
-        1808
+        4528,
+        1968
       ],
       "notes": "PURPOSE: Collapse current SplitInBatches window into one item with arrays for chunk ids/texts. INPUT: one batch of chunk items. OUTPUT: aggregated arrays + carried context/model fields. WHY: OpenAI embeddings endpoint accepts array input."
     },
@@ -2017,19 +2073,19 @@
             {
               "id": "wf41-openai-req",
               "name": "req",
-              "value": "={{ Array.isArray($json.req) ? ($json.req[0] || {}) : ($json.req || {}) }}",
+              "value": "={{ Array.isArray($json.req) ? ($json.req[0] || null) : $json.req }}",
               "type": "object"
             },
             {
               "id": "wf41-openai-ctx",
               "name": "ctx",
-              "value": "={{ Array.isArray($json.ctx) ? ($json.ctx[0] || {}) : ($json.ctx || {}) }}",
+              "value": "={{ Array.isArray($json.ctx) ? ($json.ctx[0] || null) : $json.ctx }}",
               "type": "object"
             },
             {
               "id": "wf41-openai-job",
               "name": "job",
-              "value": "={{ Array.isArray($json.job) ? ($json.job[0] || {}) : ($json.job || {}) }}",
+              "value": "={{ Array.isArray($json.job) ? ($json.job[0] || null) : $json.job }}",
               "type": "object"
             },
             {
@@ -2049,6 +2105,18 @@
               "name": "expected_dim",
               "value": "={{ Number(Array.isArray($json.expected_dim) ? ($json.expected_dim[0] || 1536) : ($json.expected_dim || 1536)) }}",
               "type": "number"
+            },
+            {
+              "id": "wf41-openai-body-model",
+              "name": "body.model",
+              "value": "={{ Array.isArray($json.openai_model) ? ($json.openai_model[0] || \"\") : ($json.openai_model || \"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-openai-body-input",
+              "name": "body.input",
+              "value": "={{ (Array.isArray($json.text) ? $json.text : [$json.text]).map(v => String(v ?? \"\")) }}",
+              "type": "array"
             }
           ]
         },
@@ -2056,13 +2124,13 @@
           "dotNotation": true
         }
       },
-      "id": "d45d3138-d1a3-4299-97bc-7c52f243821e",
+      "id": "b51a8274-0211-44e2-941f-aa0d73fc4bfb",
       "name": "Set — Prepare OpenAI Batch Request",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1664,
-        1888
+        1888,
+        1872
       ],
       "notes": "PURPOSE: Prepare single-item OpenAI embeddings request payload for current batch. INPUT: aggregated batch arrays. OUTPUT: batch_chunk_ids, batch_texts, openai_model, expected_dim, embedding_model_id, req/ctx/job. WHY: clean request contract for HTTP node and carry/restore."
     },
@@ -2074,7 +2142,7 @@
         "nodeCredentialType": "openAiApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: $json.openai_model, input: $json.batch_texts }) }}",
+        "jsonBody": "={{ $json.body }}",
         "options": {
           "response": {
             "response": {
@@ -2084,13 +2152,13 @@
           "timeout": 120000
         }
       },
-      "id": "ca24e340-44ce-43e0-ab4b-f9d86c3e7d6d",
+      "id": "adfde378-cb71-4ad4-be9d-eeb9ab3f7e99",
       "name": "HTTP — OpenAI Embeddings",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1904,
-        1744
+        2224,
+        1568
       ],
       "credentials": {
         "openAiApi": {
@@ -2107,13 +2175,13 @@
         "combineBy": "combineAll",
         "options": {}
       },
-      "id": "96767c1a-fae7-46ac-bcc6-8fcfafd95e15",
+      "id": "c892e3a2-7282-4a1d-b087-d8b0dd8ec57f",
       "name": "Merge — Restore CTX after HTTP Embeddings",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2304,
-        1984
+        2528,
+        1968
       ],
       "notes": "PURPOSE: Restore batch context after HTTP call. INPUT1: OpenAI response. INPUT2: prepared batch payload. OUTPUT: response + batch ids/texts/model/context. WHY: HTTP node output does not preserve full context."
     },
@@ -2121,13 +2189,13 @@
       "parameters": {
         "jsCode": "const data = $json.data;\nconst ids = Array.isArray($json.batch_chunk_ids) ? $json.batch_chunk_ids : [];\nconst expectedDim = Number($json.expected_dim || 1536);\nif (!Array.isArray(data)) throw new Error('OpenAI embeddings response.data is not an array');\nif (data.length !== ids.length) throw new Error('OpenAI embeddings length mismatch with batch_chunk_ids');\nconst out = [];\nfor (let i = 0; i < ids.length; i++) {\n  const vec = data[i]?.embedding;\n  if (!Array.isArray(vec)) throw new Error('Embedding vector missing at index ' + i);\n  if (vec.length !== expectedDim) throw new Error('Embedding dimension mismatch at index ' + i + ': ' + vec.length + ' != ' + expectedDim);\n  out.push({\n    json: {\n      req: $json.req,\n      ctx: $json.ctx,\n      job: $json.job,\n      chunk_id: ids[i],\n      embedding_model_id: $json.embedding_model_id,\n      embedding_vec: vec,\n      embedding_len: vec.length,\n      expected_dim: expectedDim\n    }\n  });\n}\nreturn out;"
       },
-      "id": "68ba2a77-c589-4c5b-ab41-ce73e2383e58",
+      "id": "9e6973da-671f-4ff2-99a1-dd78668888ba",
       "name": "CODE — Expand Embeddings Batch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2704,
-        1696
+        3360,
+        1456
       ],
       "onError": "continueErrorOutput",
       "notes": "PURPOSE: Validate OpenAI response lengths/dimensions and fan out to one item per chunk. INPUT: batch ids + response.data embeddings + expected_dim. OUTPUT: one item per chunk with embedding_vec and context. WHY: deterministic mapping response index -> chunk_id."
@@ -2178,13 +2246,13 @@
           "dotNotation": true
         }
       },
-      "id": "7749f4b6-7986-430a-85aa-e21d426a9204",
+      "id": "4939cc8c-b56e-4287-adc3-3e30aa2919fa",
       "name": "Set — Prepare Embedding Vector",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3072,
-        1248
+        3584,
+        1344
       ],
       "notes": "PURPOSE: Convert numeric vector array to pgvector string literal format for Postgres upsert. INPUT: embedding_vec per chunk. OUTPUT: embedding_str + chunk/model/context fields. WHY: pgvector column accepts string vector representation."
     },
@@ -2246,13 +2314,13 @@
         },
         "options": {}
       },
-      "id": "be998edf-1d37-403b-a94b-4aaf27ec8da8",
+      "id": "7464e985-6b69-48a0-9981-3f2e278303c4",
       "name": "DB — Upsert Embedding",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        3280,
-        1248
+        3824,
+        1360
       ],
       "credentials": {
         "postgres": {
@@ -2268,13 +2336,13 @@
         "aggregate": "aggregateAllItemData",
         "options": {}
       },
-      "id": "2854b6ed-f26e-47d3-a1f2-253564b6860b",
+      "id": "7aedaa15-0a4a-4710-bf38-9d2c7aebec29",
       "name": "Aggregate — Batch Upsert Results",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        3968,
-        1216
+        4096,
+        1360
       ],
       "notes": "PURPOSE: Collapse per-chunk upsert outputs to one item to continue SplitInBatches loop once per batch. INPUT: N upsert rows for current batch. OUTPUT: single aggregate item. WHY: prevent loop control fan-out."
     },
@@ -2337,13 +2405,13 @@
           "dotNotation": true
         }
       },
-      "id": "13356d6f-5fdb-4d4a-b371-fb53ecbdbd67",
+      "id": "81596266-d0d7-478e-b40f-a67b845f3416",
       "name": "ERR — Source DB Default Embed Model",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4512,
-        2720
+        4736,
+        2704
       ],
       "notes": "PURPOSE: Mark source metadata for DB — Select Default Embedding Model failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
     },
@@ -2406,13 +2474,13 @@
           "dotNotation": true
         }
       },
-      "id": "0a3664de-1516-432f-9ca1-6c01de278003",
+      "id": "eb828892-58ad-4762-a7cd-2bb5c18373d1",
       "name": "ERR — Source DB Embed Model",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        320,
-        1600
+        4304,
+        2832
       ],
       "notes": "PURPOSE: Mark source metadata for DB — Select Embedding Model failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
     },
@@ -2475,13 +2543,13 @@
           "dotNotation": true
         }
       },
-      "id": "2ba806c6-4c55-4d27-928e-cb4fdb213f93",
+      "id": "201c2983-5dc8-4036-bbf4-04f0541b0cf1",
       "name": "ERR — Source DB Embed Chunks",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        784,
-        1600
+        1360,
+        2432
       ],
       "notes": "PURPOSE: Mark source metadata for DB — Select Chunks For Embed failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
     },
@@ -2516,25 +2584,25 @@
             {
               "id": "ERR — Source HTTP OpenAI Embeddings-msg",
               "name": "_err.message",
-              "value": "={{ $json.error?.message || \"WF41 embed failure\" }}",
+              "value": "={{ $json.error?.message || $json.body?.error?.message || (\"OpenAI embeddings HTTP status \" + ($json.statusCode || 500)) }}",
               "type": "string"
             },
             {
               "id": "ERR — Source HTTP OpenAI Embeddings-status",
               "name": "_err.status_code",
-              "value": "={{ 500 }}",
+              "value": "={{ Number($json.statusCode || $json.httpCode || 500) }}",
               "type": "number"
             },
             {
               "id": "ERR — Source HTTP OpenAI Embeddings-ctx",
               "name": "ctx",
-              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
               "type": "object"
             },
             {
               "id": "ERR — Source HTTP OpenAI Embeddings-req",
               "name": "req",
-              "value": "={{ $json.req || { ctx: ($json.ctx||{}), job: ($json.job||{}) } }}",
+              "value": "={{ $json.req }}",
               "type": "object"
             }
           ]
@@ -2544,13 +2612,13 @@
           "dotNotation": true
         }
       },
-      "id": "79a970b1-364d-43c2-8c68-d2df853fd77a",
+      "id": "f865df7c-70b5-4ea8-a8c1-a40b6d6e2187",
       "name": "ERR — Source HTTP OpenAI Embeddings",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2272,
-        1712
+        4512,
+        2528
       ],
       "notes": "PURPOSE: Mark source metadata for HTTP — OpenAI Embeddings failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
     },
@@ -2613,13 +2681,13 @@
           "dotNotation": true
         }
       },
-      "id": "510ba8b3-ca2a-46d3-b1dc-266d5ed719d1",
+      "id": "91ab5ab1-36a7-424d-bdc4-191c58b66999",
       "name": "ERR — Source CODE Expand Embeddings",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3152,
-        1616
+        4624,
+        2944
       ],
       "notes": "PURPOSE: Mark source metadata for CODE — Expand Embeddings Batch failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
     },
@@ -2682,13 +2750,13 @@
           "dotNotation": true
         }
       },
-      "id": "547ea4e6-ae33-4eaf-9e1f-c3d27f3e9bbb",
+      "id": "26216db8-e7d6-425c-9296-9b812d83a6fa",
       "name": "ERR — Source DB Upsert Embedding",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4272,
-        2272
+        4496,
+        2256
       ],
       "notes": "PURPOSE: Mark source metadata for DB — Upsert Embedding failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
     },
@@ -2751,13 +2819,13 @@
           "dotNotation": true
         }
       },
-      "id": "d64b6536-93b4-4733-80b0-01d28f7894a9",
+      "id": "e6c46e05-957f-403b-82b3-43513645ba2a",
       "name": "ERR — Source Embed Model Guard",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        560,
-        1600
+        1088,
+        2448
       ],
       "notes": "PURPOSE: Mark source metadata for GUARD — Embed Has Model ID failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
     },
@@ -2820,13 +2888,13 @@
           "dotNotation": true
         }
       },
-      "id": "faccb2c5-0dcc-4272-84c8-0942a0bf2a18",
+      "id": "f76187fc-eee9-494e-b366-f7fb1949e73c",
       "name": "ERR — Source Chunk Model Guard",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        320,
-        240
+        1712,
+        3008
       ],
       "notes": "PURPOSE: Mark source metadata for GUARD — Chunk Has Model ID failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error/guard-false item. OUTPUT: _err.* + req/ctx payload. WHY: per-node error attribution for embed path."
     },
@@ -2835,55 +2903,55 @@
         "assignments": {
           "assignments": [
             {
-              "id": "wf41-ep-kind",
+              "id": "ERR — Prepare ErrorPipe v1 (Embed)-kind",
               "name": "error_context.kind",
-              "value": "={{ $json._err?.kind || ($json._err?.operation?.startsWith(\"validate\") ? \"validation\" : \"io\") }}",
+              "value": "={{ $json._err?.kind || \"unknown\" }}",
               "type": "string"
             },
             {
-              "id": "wf41-ep-msg",
-              "name": "error_context.message",
-              "value": "={{ $json._err?.message || $json.error?.message || \"WF41 embed path failure\" }}",
+              "id": "ERR — Prepare ErrorPipe v1 (Embed)-msg",
+              "name": "error_context.error_message",
+              "value": "={{ $json._err?.message || $json.error?.message || $json.message || \"WF41 failure\" }}",
               "type": "string"
             },
             {
-              "id": "wf41-ep-status",
+              "id": "ERR — Prepare ErrorPipe v1 (Embed)-status",
               "name": "error_context.status_code",
-              "value": "={{ Number($json._err?.status_code || ($json._err?.operation?.startsWith(\"validate\") ? 422 : 500)) }}",
+              "value": "={{ Number($json._err?.status_code || $json.statusCode || $json.httpCode || 500) }}",
               "type": "number"
             },
             {
-              "id": "wf41-ep-retry",
+              "id": "ERR — Prepare ErrorPipe v1 (Embed)-retry",
               "name": "error_context.retryable",
-              "value": "={{ !($json._err?.operation?.startsWith(\"validate\")) }}",
+              "value": "={{ $json._err?.retryable !== undefined ? $json._err.retryable : false }}",
               "type": "boolean"
             },
             {
-              "id": "wf41-ep-node",
-              "name": "error_context.details.node",
-              "value": "={{ $json._err?.node }}",
+              "id": "ERR — Prepare ErrorPipe v1 (Embed)-node",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node || null }}",
               "type": "string"
             },
             {
-              "id": "wf41-ep-op",
-              "name": "error_context.details.operation",
-              "value": "={{ $json._err?.operation }}",
+              "id": "ERR — Prepare ErrorPipe v1 (Embed)-op",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation || null }}",
               "type": "string"
             },
             {
-              "id": "wf41-ep-table",
-              "name": "error_context.details.table",
+              "id": "ERR — Prepare ErrorPipe v1 (Embed)-table",
+              "name": "error_context.table",
               "value": "={{ $json._err?.table || null }}",
               "type": "string"
             },
             {
-              "id": "wf41-ep-ctx",
+              "id": "ERR — Prepare ErrorPipe v1 (Embed)-ctx",
               "name": "error_context.ctx",
-              "value": "={{ $json.ctx || $json.req?.ctx || {} }}",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
               "type": "object"
             },
             {
-              "id": "wf41-ep-contract",
+              "id": "ERR — Prepare ErrorPipe v1 (Embed)-ctx-contract",
               "name": "ctx.contracts.errorpipe",
               "value": 1,
               "type": "number"
@@ -2894,13 +2962,13 @@
           "dotNotation": true
         }
       },
-      "id": "c3a4c848-ef51-4785-b00e-9892ab66df7a",
+      "id": "0ea68dba-569d-49af-bfe5-1f6c33a4248a",
       "name": "ERR — Prepare ErrorPipe v1 (Embed)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4928,
-        2640
+        5152,
+        2624
       ],
       "notes": "PURPOSE: Build ErrorPipe v1 payload for embed-path I/O and validation failures. INPUT: ERR — Source* item with _err metadata. OUTPUT: error_context.* + ctx.contracts.errorpipe=1 for WF99. WHY: centralized error envelope creation via WF99."
     },
@@ -2925,27 +2993,927 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "bfceb09e-f130-4012-8051-84d283c26943",
+      "id": "af7c135c-c416-47bb-b328-dbaa1c2217b5",
       "name": "Execute WF99 (Embed)",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        5168,
-        2640
+        5392,
+        2624
       ],
       "notes": "PURPOSE: Delegate embed-path errors to WF99 and return ErrorEnvelope. INPUT: ErrorPipe v1 payload. OUTPUT: WF99 ErrorEnvelope. WHY: project-wide centralized error handling."
     },
     {
       "parameters": {},
-      "id": "9ef14e7f-5fcd-4d17-bdc5-b51ebc61f4ab",
+      "id": "86bfdda9-6824-4b49-91f7-68e01d31a516",
       "name": "Merge — Model Resolve Branches",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        3296,
-        224
+        3520,
+        208
       ],
       "notes": "PURPOSE: Join IF model-resolution branches via Merge (project branch-join rule). INPUT1: payload model path. INPUT2: default model lookup path. OUTPUT: single stream for Set — Select Embedding Model."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf41-doc-read-found",
+              "name": "document_found",
+              "value": "={{ $items('DB — Select Document').filter(i => i.json && i.json.id !== undefined && i.json.id !== null).length > 0 }}",
+              "type": "boolean"
+            },
+            {
+              "id": "wf41-doc-read-text",
+              "name": "document_text",
+              "value": "={{ (($items('DB — Select Document')[0] && $items('DB — Select Document')[0].json && $items('DB — Select Document')[0].json.text) || '') }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-doc-read-sha",
+              "name": "stored_text_sha256",
+              "value": "={{ (($items('DB — Select Document')[0] && $items('DB — Select Document')[0].json && $items('DB — Select Document')[0].json.text_sha256) || '') }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-doc-read-req",
+              "name": "req",
+              "value": "={{ $('Merge — Restore CTX after DB Document').item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-doc-read-ctx",
+              "name": "ctx",
+              "value": "={{ $('Merge — Restore CTX after DB Document').item.json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-doc-read-job",
+              "name": "job",
+              "value": "={{ $('Merge — Restore CTX after DB Document').item.json.job }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -176,
+        144
+      ],
+      "id": "69f917c9-180f-4797-a0b7-1d6ceb480b7d",
+      "name": "Set — Read Document Fields",
+      "notes": "PURPOSE: Read document lookup output as side-data while keeping one spine item. INPUT: restored req/ctx spine + DB side lookup. OUTPUT: document_found, document_text, stored_text_sha256 + req/ctx/job. WHY: avoid 0-row dead ends from SELECT lookups."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf41-doc-found-cond",
+              "leftValue": "={{ $json.document_found }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        48,
+        144
+      ],
+      "id": "37fa3f30-d799-4bf0-be9f-820d9eb710ec",
+      "name": "IF — Doc Found?",
+      "notes": "PURPOSE: Ensure required document exists before chunking. INPUT: spine with document_found flag. OUTPUT TRUE: continue; FALSE: managed 404 to ErrorPipe. WHY: required lookup must fail explicitly, not silently."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf41-err-doc-node",
+              "name": "_err.node",
+              "value": "IF — Doc Found?",
+              "type": "string"
+            },
+            {
+              "id": "wf41-err-doc-op",
+              "name": "_err.operation",
+              "value": "validate_document",
+              "type": "string"
+            },
+            {
+              "id": "wf41-err-doc-table",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "wf41-err-doc-kind",
+              "name": "_err.kind",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "wf41-err-doc-msg",
+              "name": "_err.message",
+              "value": "Document not found",
+              "type": "string"
+            },
+            {
+              "id": "wf41-err-doc-status",
+              "name": "_err.status_code",
+              "value": 404,
+              "type": "number"
+            },
+            {
+              "id": "wf41-err-doc-retry",
+              "name": "_err.retryable",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "wf41-err-doc-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-err-doc-req",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        2848
+      ],
+      "id": "4e09bcba-691b-409f-b916-44be1de4cc96",
+      "name": "ERR — Source Document Not Found",
+      "notes": "PURPOSE: Build managed 404 source metadata for missing document. INPUT: IF false branch. OUTPUT: _err.* + req/ctx for WF99 ErrorPipe. WHY: required lookup miss must be attributed and returned as ErrorEnvelope."
+    },
+    {
+      "parameters": {
+        "batchSize": 200,
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2528,
+        -80
+      ],
+      "id": "3099dc03-a7e5-4469-a6cb-610827211570",
+      "name": "Split — Chunk Upserts",
+      "notes": "PURPOSE: Batch chunk upserts and emit one DONE branch after all chunk rows are written. INPUT: chunk item stream from chunk builder. OUTPUT 0: current batch for upsert loop; OUTPUT 1: done signal once. WHY: enqueue embed job exactly once after loop completion."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf41-enq-job-type",
+              "name": "enqueue.job_type",
+              "value": "embed_chunks",
+              "type": "string"
+            },
+            {
+              "id": "wf41-enq-tenant",
+              "name": "enqueue.tenant_id",
+              "value": "={{ $json.req.ctx.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-enq-correlation",
+              "name": "enqueue.correlation_id",
+              "value": "={{ $json.req.ctx.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "wf41-enq-doc",
+              "name": "enqueue.payload.document_id",
+              "value": "={{ $json.req.job.payload.document_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf41-enq-model",
+              "name": "enqueue.payload.embedding_model_id",
+              "value": "={{ $json.embedding_model_id }}",
+              "type": "number"
+            },
+            {
+              "id": "wf41-enq-force",
+              "name": "enqueue.payload.force",
+              "value": "={{ $json.req.job.payload.force === true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "wf41-enq-req",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-enq-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-enq-job",
+              "name": "job",
+              "value": "={{ $json.job }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        320
+      ],
+      "id": "2612d109-9704-4188-80cb-0f68f4efbd65",
+      "name": "Set — Prepare embed_chunks Job",
+      "notes": "PURPOSE: Build enqueue payload with dotNotation (no object-literal). INPUT: validated model + req/ctx/job spine. OUTPUT: enqueue.* fields for select/insert. WHY: idempotent enqueue requires stable lookup and insert payload."
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "ops",
+          "mode": "list",
+          "cachedResultName": "ops"
+        },
+        "table": {
+          "__rl": true,
+          "value": "jobs",
+          "mode": "list",
+          "cachedResultName": "jobs"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $json.enqueue.tenant_id }}"
+            },
+            {
+              "column": "job_type",
+              "value": "embed_chunks"
+            },
+            {
+              "column": "status",
+              "value": "queued"
+            },
+            {
+              "column": "correlation_id",
+              "value": "={{ $json.enqueue.correlation_id }}"
+            },
+            {
+              "column": "payload",
+              "value": "={{ $json.enqueue.payload }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1168,
+        288
+      ],
+      "id": "53dbaa02-5ea3-4956-b800-11f3be54717d",
+      "name": "DB — Select Existing Embed Job",
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: Prevent duplicate enqueue when reruns/retries happen. INPUT: enqueue keys from Set. OUTPUT: existing queued job row or empty item. WHY: ops.jobs has no unique key for this payload, so idempotency uses select-if-exists pattern."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf41-if-existing-enqueue",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1456,
+        192
+      ],
+      "id": "220d11b3-45e3-41df-a0e6-583b673381d9",
+      "name": "IF — Existing Embed Job?",
+      "notes": "PURPOSE: Branch enqueue path by existing queued job presence. INPUT: select existing output. TRUE: skip insert; FALSE: insert once. WHY: enforce enqueue exactly once."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf41-mark-enqueued-true",
+              "name": "embed_enqueued",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "wf41-mark-enqueued-req",
+              "name": "req",
+              "value": "={{ $(\"Set — Prepare embed_chunks Job\").item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-mark-enqueued-ctx",
+              "name": "ctx",
+              "value": "={{ $(\"Set — Prepare embed_chunks Job\").item.json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2032,
+        176
+      ],
+      "id": "383c4660-f824-428c-a0db-f0c488d2d9ec",
+      "name": "Set — Mark Embed Enqueued",
+      "notes": "PURPOSE: Tag success path where enqueue insert was performed. INPUT: DB enqueue success. OUTPUT: embed_enqueued=true with req/ctx spine. WHY: stable SuccessEnvelope semantics."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf41-mark-enqueued-false",
+              "name": "embed_enqueued",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "wf41-mark-enqueued-false-req",
+              "name": "req",
+              "value": "={{ $(\"Set — Prepare embed_chunks Job\").item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "wf41-mark-enqueued-false-ctx",
+              "name": "ctx",
+              "value": "={{ $(\"Set — Prepare embed_chunks Job\").item.json.ctx }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1760,
+        48
+      ],
+      "id": "4bd01bf8-4bfc-4a58-93a5-0de95c2d6400",
+      "name": "Set — Mark Embed Already Enqueued",
+      "notes": "PURPOSE: Tag success path where enqueue was skipped due to existing queued job. INPUT: IF existing true branch. OUTPUT: embed_enqueued=false with req/ctx spine. WHY: idempotent enqueue transparency."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "wf41-http-ok-status",
+              "leftValue": "={{ Number($json.statusCode || 200) < 400 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3008,
+        1552
+      ],
+      "id": "943aabf7-1375-4dbf-9ece-ee038f5b7db5",
+      "name": "IF — OpenAI Status OK",
+      "notes": "PURPOSE: Catch HTTP >=400 responses that may not route to error output in all n8n versions. INPUT: merged HTTP response + spine. TRUE: expand embeddings; FALSE: ErrorPipe. WHY: deterministic managed error routing for upstream failures."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Select Document-node",
+              "name": "_err.node",
+              "value": "DB — Select Document",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Document-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Document-table",
+              "name": "_err.table",
+              "value": "content.documents",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Document-kind",
+              "name": "_err.kind",
+              "value": "io",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Document-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || $json.message || \"WF41 I/O failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Document-status",
+              "name": "_err.status_code",
+              "value": "={{ Number($json.statusCode || $json.httpCode || 500) }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Select Document-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "ERR — Source DB Select Document-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Select Document-req",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        2208
+      ],
+      "id": "94261975-2f57-4ded-a9fa-fe92ea514c91",
+      "name": "ERR — Source DB Select Document",
+      "notes": "PURPOSE: Mark source metadata for DB — Select Document failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error output. OUTPUT: _err.* + req/ctx. WHY: per-node error attribution."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Probe Existing Chunks-node",
+              "name": "_err.node",
+              "value": "DB — Probe Existing Chunks",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Probe Existing Chunks-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Probe Existing Chunks-table",
+              "name": "_err.table",
+              "value": "kg.chunks",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Probe Existing Chunks-kind",
+              "name": "_err.kind",
+              "value": "io",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Probe Existing Chunks-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || $json.message || \"WF41 I/O failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Probe Existing Chunks-status",
+              "name": "_err.status_code",
+              "value": "={{ Number($json.statusCode || $json.httpCode || 500) }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Probe Existing Chunks-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "ERR — Source DB Probe Existing Chunks-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Probe Existing Chunks-req",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1968,
+        2528
+      ],
+      "id": "2880ef54-665f-40b3-a34d-eb7a52569fe4",
+      "name": "ERR — Source DB Probe Existing Chunks",
+      "notes": "PURPOSE: Mark source metadata for DB — Probe Existing Chunks failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error output. OUTPUT: _err.* + req/ctx. WHY: per-node error attribution."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Delete Old Chunks-node",
+              "name": "_err.node",
+              "value": "DB — Delete Old Chunks",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Delete Old Chunks-op",
+              "name": "_err.operation",
+              "value": "delete",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Delete Old Chunks-table",
+              "name": "_err.table",
+              "value": "kg.chunks",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Delete Old Chunks-kind",
+              "name": "_err.kind",
+              "value": "io",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Delete Old Chunks-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || $json.message || \"WF41 I/O failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Delete Old Chunks-status",
+              "name": "_err.status_code",
+              "value": "={{ Number($json.statusCode || $json.httpCode || 500) }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Delete Old Chunks-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "ERR — Source DB Delete Old Chunks-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Delete Old Chunks-req",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2624,
+        2752
+      ],
+      "id": "d716154d-92e9-4d83-b114-c717c3fb2dac",
+      "name": "ERR — Source DB Delete Old Chunks",
+      "notes": "PURPOSE: Mark source metadata for DB — Delete Old Chunks failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error output. OUTPUT: _err.* + req/ctx. WHY: per-node error attribution."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Upsert Chunk-node",
+              "name": "_err.node",
+              "value": "DB — Upsert Chunk",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Chunk-op",
+              "name": "_err.operation",
+              "value": "upsert",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Chunk-table",
+              "name": "_err.table",
+              "value": "kg.chunks",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Chunk-kind",
+              "name": "_err.kind",
+              "value": "io",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Chunk-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || $json.message || \"WF41 I/O failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Upsert Chunk-status",
+              "name": "_err.status_code",
+              "value": "={{ Number($json.statusCode || $json.httpCode || 500) }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Upsert Chunk-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "ERR — Source DB Upsert Chunk-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Upsert Chunk-req",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5712,
+        2288
+      ],
+      "id": "eb91ff8e-e05d-48bf-a263-de68c7347185",
+      "name": "ERR — Source DB Upsert Chunk",
+      "notes": "PURPOSE: Mark source metadata for DB — Upsert Chunk failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error output. OUTPUT: _err.* + req/ctx. WHY: per-node error attribution."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Enqueue embed_chunks Job-node",
+              "name": "_err.node",
+              "value": "DB — Enqueue embed_chunks Job",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Enqueue embed_chunks Job-op",
+              "name": "_err.operation",
+              "value": "insert",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Enqueue embed_chunks Job-table",
+              "name": "_err.table",
+              "value": "ops.jobs",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Enqueue embed_chunks Job-kind",
+              "name": "_err.kind",
+              "value": "io",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Enqueue embed_chunks Job-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || $json.message || \"WF41 I/O failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Enqueue embed_chunks Job-status",
+              "name": "_err.status_code",
+              "value": "={{ Number($json.statusCode || $json.httpCode || 500) }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Enqueue embed_chunks Job-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "ERR — Source DB Enqueue embed_chunks Job-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Enqueue embed_chunks Job-req",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3824,
+        2624
+      ],
+      "id": "03479865-a363-4f70-a6b9-0353f8527f58",
+      "name": "ERR — Source DB Enqueue embed_chunks Job",
+      "notes": "PURPOSE: Mark source metadata for DB — Enqueue embed_chunks Job failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error output. OUTPUT: _err.* + req/ctx. WHY: per-node error attribution."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ERR — Source DB Select Existing Embed Job-node",
+              "name": "_err.node",
+              "value": "DB — Select Existing Embed Job",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Existing Embed Job-op",
+              "name": "_err.operation",
+              "value": "select",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Existing Embed Job-table",
+              "name": "_err.table",
+              "value": "ops.jobs",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Existing Embed Job-kind",
+              "name": "_err.kind",
+              "value": "io",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Existing Embed Job-msg",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || $json.message || \"WF41 I/O failure\" }}",
+              "type": "string"
+            },
+            {
+              "id": "ERR — Source DB Select Existing Embed Job-status",
+              "name": "_err.status_code",
+              "value": "={{ Number($json.statusCode || $json.httpCode || 500) }}",
+              "type": "number"
+            },
+            {
+              "id": "ERR — Source DB Select Existing Embed Job-retry",
+              "name": "_err.retryable",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "ERR — Source DB Select Existing Embed Job-ctx",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json.req?.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "ERR — Source DB Select Existing Embed Job-req",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1936,
+        2304
+      ],
+      "id": "0c1a3c72-0640-4275-99e6-882d6f2ba47b",
+      "name": "ERR — Source DB Select Existing Embed Job",
+      "notes": "PURPOSE: Mark source metadata for DB — Select Existing Embed Job failure and preserve req/ctx for WF99 ErrorPipe. INPUT: node error output. OUTPUT: _err.* + req/ctx. WHY: per-node error attribution."
     }
   ],
   "pinData": {},
@@ -3064,7 +4032,7 @@
         ],
         [
           {
-            "node": "ERR — Source Input Guard",
+            "node": "ERR — Source DB Select Document",
             "type": "main",
             "index": 0
           }
@@ -3075,7 +4043,7 @@
       "main": [
         [
           {
-            "node": "GUARD — Document Has Text",
+            "node": "Set — Read Document Fields",
             "type": "main",
             "index": 0
           }
@@ -3122,7 +4090,7 @@
         ],
         [
           {
-            "node": "ERR — Source Input Guard",
+            "node": "ERR — Source DB Probe Existing Chunks",
             "type": "main",
             "index": 0
           }
@@ -3169,7 +4137,7 @@
         ],
         [
           {
-            "node": "ERR — Source Input Guard",
+            "node": "ERR — Source DB Delete Old Chunks",
             "type": "main",
             "index": 0
           }
@@ -3180,7 +4148,7 @@
       "main": [
         [
           {
-            "node": "Crypto — Hash Chunk",
+            "node": "Split — Chunk Upserts",
             "type": "main",
             "index": 0
           }
@@ -3213,14 +4181,14 @@
       "main": [
         [
           {
-            "node": "IF — Payload Has Embedding Model",
+            "node": "Split — Chunk Upserts",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source Input Guard",
+            "node": "ERR — Source DB Upsert Chunk",
             "type": "main",
             "index": 0
           }
@@ -3231,7 +4199,7 @@
       "main": [
         [
           {
-            "node": "Merge — Model Resolve Branches",
+            "node": "DB — Select Embedding Model",
             "type": "main",
             "index": 0
           }
@@ -3278,14 +4246,14 @@
       "main": [
         [
           {
-            "node": "OUT — Success Chunk",
+            "node": "Set — Mark Embed Enqueued",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "ERR — Source Input Guard",
+            "node": "ERR — Source DB Enqueue embed_chunks Job",
             "type": "main",
             "index": 0
           }
@@ -3343,11 +4311,6 @@
             "node": "DB — Select Chunks For Embed",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Merge — Restore CTX after DB Embed Chunks",
-            "type": "main",
-            "index": 1
           }
         ],
         [
@@ -3363,7 +4326,7 @@
       "main": [
         [
           {
-            "node": "Merge — Restore CTX after DB Embed Model",
+            "node": "Merge — Model Resolve Branches",
             "type": "main",
             "index": 0
           }
@@ -3381,7 +4344,7 @@
       "main": [
         [
           {
-            "node": "Merge — Restore CTX after DB Embed Chunks",
+            "node": "GUARD — Has Chunks For Embed",
             "type": "main",
             "index": 0
           }
@@ -3417,14 +4380,9 @@
       "main": [
         [
           {
-            "node": "DB — Select Embedding Model",
+            "node": "GUARD — Embed Has Model ID",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Merge — Restore CTX after DB Embed Model",
-            "type": "main",
-            "index": 1
           }
         ],
         [
@@ -3440,7 +4398,7 @@
       "main": [
         [
           {
-            "node": "DB — Enqueue embed_chunks Job",
+            "node": "Set — Prepare embed_chunks Job",
             "type": "main",
             "index": 0
           }
@@ -3448,28 +4406,6 @@
         [
           {
             "node": "ERR — Source Chunk Model Guard",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge — Restore CTX after DB Embed Model": {
-      "main": [
-        [
-          {
-            "node": "GUARD — Embed Has Model ID",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge — Restore CTX after DB Embed Chunks": {
-      "main": [
-        [
-          {
-            "node": "GUARD — Has Chunks For Embed",
             "type": "main",
             "index": 0
           }
@@ -3554,7 +4490,7 @@
       "main": [
         [
           {
-            "node": "CODE — Expand Embeddings Batch",
+            "node": "IF — OpenAI Status OK",
             "type": "main",
             "index": 0
           }
@@ -3772,6 +4708,228 @@
           }
         ]
       ]
+    },
+    "Set — Read Document Fields": {
+      "main": [
+        [
+          {
+            "node": "IF — Doc Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Doc Found?": {
+      "main": [
+        [
+          {
+            "node": "GUARD — Document Has Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Document Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Document Not Found": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Input)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split — Chunk Upserts": {
+      "main": [
+        [
+          {
+            "node": "Crypto — Hash Chunk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF — Payload Has Embedding Model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Select Document": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Input)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Probe Existing Chunks": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Input)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Delete Old Chunks": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Input)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Upsert Chunk": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Input)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Enqueue embed_chunks Job": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Input)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source DB Select Existing Embed Job": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1 (Input)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prepare embed_chunks Job": {
+      "main": [
+        [
+          {
+            "node": "DB — Select Existing Embed Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Select Existing Embed Job": {
+      "main": [
+        [
+          {
+            "node": "IF — Existing Embed Job?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source DB Select Existing Embed Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Existing Embed Job?": {
+      "main": [
+        [
+          {
+            "node": "Set — Mark Embed Already Enqueued",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Enqueue embed_chunks Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Mark Embed Enqueued": {
+      "main": [
+        [
+          {
+            "node": "OUT — Success Chunk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Mark Embed Already Enqueued": {
+      "main": [
+        [
+          {
+            "node": "OUT — Success Chunk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — OpenAI Status OK": {
+      "main": [
+        [
+          {
+            "node": "CODE — Expand Embeddings Batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source HTTP OpenAI Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate — Batch Upsert Results": {
+      "main": [
+        [
+          {
+            "node": "Split — Embed Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -3780,8 +4938,9 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "5463b9cd-6c00-4fc3-9e42-0537f8361537",
+  "versionId": "06baf03b-42bd-4c10-944f-94fef683c822",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
   },
   "id": "mRsYUkeg_hP-L6kzvpjis",

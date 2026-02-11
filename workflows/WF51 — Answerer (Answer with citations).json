@@ -1,0 +1,2849 @@
+{
+  "name": "WF51 — Answerer (Mention/DM question → answer + citations)",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "IN — Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2400,
+        240
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "notes": "PURPOSE: Sub-workflow entry for WF50/WF90. INPUT: req + optional ctx. OUTPUT: spine item. WHY: worker contract compatibility."
+    },
+    {
+      "id": "n2",
+      "name": "Set — Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2180,
+        240
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n2-a1",
+              "name": "req",
+              "value": "={{ $json.req || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "n2-a2",
+              "name": "ctx",
+              "value": "={{ $json.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "n2-a3",
+              "name": "req.tenant_id",
+              "value": "={{ $json.req?.tenant_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n2-a4",
+              "name": "req.tg_user_id",
+              "value": "={{ $json.req?.tg_user_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "n2-a5",
+              "name": "req.channel",
+              "value": "={{ ($json.req?.channel || '') === 'group_chat' ? 'group' : ($json.req?.channel || '') }}",
+              "type": "string"
+            },
+            {
+              "id": "n2-a6",
+              "name": "req.chat_id",
+              "value": "={{ $json.req?.chat_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "n2-a7",
+              "name": "req.question",
+              "value": "={{ $json.req?.question || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "n2-a8",
+              "name": "req.question_message_version_id",
+              "value": "={{ $json.req?.question_message_version_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "n2-a9",
+              "name": "req.trace_id",
+              "value": "={{ $json.req?.trace_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n2-a10",
+              "name": "ctx.contracts.errorpipe",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Canonical req/ctx normalization. INPUT: trigger item. OUTPUT: req.* + ctx.* with channel normalized. WHY: deterministic guard and ACL handling."
+    },
+    {
+      "id": "n3",
+      "name": "Crypto — Generate Correlation ID",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -1960,
+        240
+      ],
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "generated_correlation_id"
+      },
+      "notes": "PURPOSE: Generate UUID v4 fallback correlation id. INPUT: normalized req/ctx. OUTPUT: generated_correlation_id. WHY: traceability for every run."
+    },
+    {
+      "id": "n4",
+      "name": "Set — Build Canonical CTX",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1740,
+        240
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n4-a1",
+              "name": "req",
+              "value": "={{ $('Set — Normalize Input').item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n4-a2",
+              "name": "ctx.tenant_id",
+              "value": "={{ $('Set — Normalize Input').item.json.req.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "n4-a3",
+              "name": "ctx.workflow",
+              "value": "WF51",
+              "type": "string"
+            },
+            {
+              "id": "n4-a4",
+              "name": "ctx.correlation_id",
+              "value": "={{ $('Set — Normalize Input').item.json.ctx?.correlation_id || $json.generated_correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "n4-a5",
+              "name": "ctx.trace_id",
+              "value": "={{ $('Set — Normalize Input').item.json.req.trace_id || $('Set — Normalize Input').item.json.ctx?.trace_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n4-a6",
+              "name": "ctx.job_id",
+              "value": "={{ $('Set — Normalize Input').item.json.ctx?.job_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n4-a7",
+              "name": "ctx.job_run_id",
+              "value": "={{ $('Set — Normalize Input').item.json.ctx?.job_run_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n4-a8",
+              "name": "ctx.bot_id",
+              "value": "={{ $('Set — Normalize Input').item.json.ctx?.bot_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n4-a9",
+              "name": "ctx.chat_id",
+              "value": "={{ $('Set — Normalize Input').item.json.req.chat_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "n4-a10",
+              "name": "ctx.actor_user_id",
+              "value": "={{ $('Set — Normalize Input').item.json.req.tg_user_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "n4-a11",
+              "name": "ctx.contracts.errorpipe",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Build canonical ctx for downstream. INPUT: normalized req + generated correlation id. OUTPUT: ctx.* + req.*. WHY: WF00c and ErrorPipe expect stable ctx."
+    },
+    {
+      "id": "n5",
+      "name": "IF — Input Guard",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1520,
+        240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "n5-c1",
+              "leftValue": "={{ $json.req?.tenant_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "n5-c2",
+              "leftValue": "={{ $json.req?.tg_user_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "n5-c3",
+              "leftValue": "={{ $json.req?.channel }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "n5-c4",
+              "leftValue": "={{ $json.req?.chat_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "n5-c5",
+              "leftValue": "={{ ($json.req?.question || '').trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "PURPOSE: Validate mandatory req fields. INPUT: canonical req/ctx. OUTPUT TRUE: valid request; FALSE: managed validation failure path. WHY: avoid unmanaged worker crashes."
+    },
+    {
+      "id": "n6",
+      "name": "ERR — Source Input Guard",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1300,
+        80
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n6-a1",
+              "name": "_err.node",
+              "value": "IF — Input Guard",
+              "type": "string"
+            },
+            {
+              "id": "n6-a2",
+              "name": "_err.operation",
+              "value": "validate",
+              "type": "string"
+            },
+            {
+              "id": "n6-a3",
+              "name": "_err.table",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "n6-a4",
+              "name": "_err.kind",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "n6-a5",
+              "name": "_err.message",
+              "value": "Invalid WF51 input contract",
+              "type": "string"
+            },
+            {
+              "id": "n6-a6",
+              "name": "_err.status_code",
+              "value": 400,
+              "type": "number"
+            },
+            {
+              "id": "n6-a7",
+              "name": "_err.retryable",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "n6-a8",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n6-a9",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Build source metadata for input validation failure. INPUT: IF false branch item. OUTPUT: _err + ctx + req. WHY: canonical ErrorPipe v1 feed."
+    },
+    {
+      "id": "n7",
+      "name": "ERR — Prepare ErrorPipe v1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1080,
+        80
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n7-a1",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $json._ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "n7-a2",
+              "name": "ctx.contracts.errorpipe",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "n7-a3",
+              "name": "error_context.kind",
+              "value": "={{ $json._err?.kind || 'io' }}",
+              "type": "string"
+            },
+            {
+              "id": "n7-a4",
+              "name": "error_context.error_message",
+              "value": "={{ $json._err?.message || $json.error?.message || 'WF51 failure' }}",
+              "type": "string"
+            },
+            {
+              "id": "n7-a5",
+              "name": "error_context.status_code",
+              "value": "={{ Number($json._err?.status_code || 500) }}",
+              "type": "number"
+            },
+            {
+              "id": "n7-a6",
+              "name": "error_context.retryable",
+              "value": "={{ $json._err?.retryable === true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "n7-a7",
+              "name": "error_context.node",
+              "value": "={{ $json._err?.node || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n7-a8",
+              "name": "error_context.operation",
+              "value": "={{ $json._err?.operation || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n7-a9",
+              "name": "error_context.table",
+              "value": "={{ $json._err?.table || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n7-a10",
+              "name": "error_context.ctx",
+              "value": "={{ $json.ctx || $json._ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "n7-a11",
+              "name": "req",
+              "value": "={{ $json.req || {} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Canonical ErrorPipe v1 payload builder. INPUT: ERR source item. OUTPUT: ctx + error_context + req for WF99. WHY: centralized logging and envelope policy."
+    },
+    {
+      "id": "n8",
+      "name": "ERR — Execute WF99",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -860,
+        80
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WF99 — Global ERR Handler",
+          "mode": "list",
+          "cachedResultName": "WF99 — Global ERR Handler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "notes": "PURPOSE: Call WF99 for managed error logging. INPUT: ErrorPipe v1 payload. OUTPUT: WF99 envelope. WHY: project-standard error pipeline."
+    },
+    {
+      "id": "n9",
+      "name": "OUT — Safe Fallback Invalid Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -640,
+        80
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n9-a1",
+              "name": "ok",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "n9-a2",
+              "name": "status_code",
+              "value": 200,
+              "type": "number"
+            },
+            {
+              "id": "n9-a3",
+              "name": "data.status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "n9-a4",
+              "name": "data.session_id",
+              "value": null,
+              "type": "string"
+            },
+            {
+              "id": "n9-a5",
+              "name": "data.turn_id",
+              "value": null,
+              "type": "number"
+            },
+            {
+              "id": "n9-a6",
+              "name": "data.answer_text",
+              "value": "Invalid request",
+              "type": "string"
+            },
+            {
+              "id": "n9-a7",
+              "name": "data.citations",
+              "value": [],
+              "type": "array"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Return safe success envelope for invalid input after WF99 logging. INPUT: WF99 output/error path. OUTPUT: SuccessEnvelope with status=error. WHY: no unmanaged throw policy."
+    },
+    {
+      "id": "n10",
+      "name": "CALL — Execute WF00c",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -1300,
+        320
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WF00c — Context Loader (ACL + Chat Policy + Visibility)",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "notes": "PURPOSE: Load canonical ACL/chat policy context. INPUT: req + ctx. OUTPUT: WF00c ctx envelope. WHY: ACL must be enforced before any retrieval/answering."
+    },
+    {
+      "id": "n11",
+      "name": "CTX — Canonicalize WF00c",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1080,
+        320
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n11-a1",
+              "name": "req",
+              "value": "={{ $('Set — Build Canonical CTX').item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n11-a2",
+              "name": "ctx",
+              "value": "={{ $json.data?.ctx || $json.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "n11-a3",
+              "name": "ctx.tenant_id",
+              "value": "={{ $json.data?.ctx?.tenant_id || $json.ctx?.tenant_id || $('Set — Build Canonical CTX').item.json.ctx.tenant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "n11-a4",
+              "name": "ctx.correlation_id",
+              "value": "={{ $json.data?.ctx?.correlation_id || $json.ctx?.correlation_id || $('Set — Build Canonical CTX').item.json.ctx.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "n11-a5",
+              "name": "ctx.chat_id",
+              "value": "={{ $json.data?.ctx?.chat_id || $json.ctx?.chat_id || $('Set — Build Canonical CTX').item.json.req.chat_id }}",
+              "type": "number"
+            },
+            {
+              "id": "n11-a6",
+              "name": "ctx.actor_user_id",
+              "value": "={{ $json.data?.ctx?.tg_user_id || $json.ctx?.tg_user_id || $('Set — Build Canonical CTX').item.json.req.tg_user_id }}",
+              "type": "number"
+            },
+            {
+              "id": "n11-a7",
+              "name": "ctx.channel",
+              "value": "={{ $json.data?.ctx?.channel || $json.ctx?.channel || $('Set — Build Canonical CTX').item.json.req.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "n11-a8",
+              "name": "ctx.is_allowed",
+              "value": "={{ $json.data?.ctx?.is_allowed !== undefined ? $json.data.ctx.is_allowed : ($json.ctx?.is_allowed !== undefined ? $json.ctx.is_allowed : false) }}",
+              "type": "boolean"
+            },
+            {
+              "id": "n11-a9",
+              "name": "ctx.allowed_chat_ids",
+              "value": "={{ $json.data?.ctx?.allowed_chat_ids || $json.ctx?.allowed_chat_ids || [] }}",
+              "type": "array"
+            },
+            {
+              "id": "n11-a10",
+              "name": "ctx.actor_role",
+              "value": "={{ $json.data?.ctx?.actor_role || $json.ctx?.actor_role || 'user' }}",
+              "type": "string"
+            },
+            {
+              "id": "n11-a11",
+              "name": "ctx.chat_policy",
+              "value": "={{ $json.data?.ctx?.chat_policy || $json.ctx?.chat_policy || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "n11-a12",
+              "name": "ctx.contracts.errorpipe",
+              "value": 1,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Normalize WF00c output into canonical ctx spine. INPUT: WF00c result + original req. OUTPUT: req + enriched ctx. WHY: predictable ACL and scope fields downstream."
+    },
+    {
+      "id": "n12",
+      "name": "IF — Allowed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -860,
+        320
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "n12-c1",
+              "leftValue": "={{ $json.ctx?.is_allowed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "PURPOSE: Enforce access decision from canonical ctx. INPUT: req + ctx. OUTPUT TRUE: proceed; FALSE: denied response path. WHY: no retrieval if denied."
+    },
+    {
+      "id": "n13",
+      "name": "Set — Answer Access Denied",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -640,
+        200
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n13-a1",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n13-a2",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n13-a3",
+              "name": "answer.answer_text",
+              "value": "Access denied",
+              "type": "string"
+            },
+            {
+              "id": "n13-a4",
+              "name": "answer.citations",
+              "value": [],
+              "type": "array"
+            },
+            {
+              "id": "n13-a5",
+              "name": "answer.status",
+              "value": "denied",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Build safe non-revealing deny answer payload. INPUT: ACL false branch. OUTPUT: answer draft for shared audit/send pipeline. WHY: consistent user-facing denial handling."
+    },
+    {
+      "id": "n14",
+      "name": "ACL — Build Retrieval Scope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -640,
+        360
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n14-a1",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n14-a2",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n14-a3",
+              "name": "access_scope.origin_chat_id",
+              "value": "={{ $json.req.chat_id }}",
+              "type": "number"
+            },
+            {
+              "id": "n14-a4",
+              "name": "access_scope.channel",
+              "value": "={{ $json.req.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "n14-a5",
+              "name": "access_scope.is_admin",
+              "value": "={{ ($json.ctx.actor_role || 'user') === 'admin' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "n14-a6",
+              "name": "access_scope.allowed_chat_ids",
+              "value": "={{ ($json.req.channel === 'group') ? [$json.req.chat_id] : ($json.ctx.allowed_chat_ids || []) }}",
+              "type": "array"
+            },
+            {
+              "id": "n14-a7",
+              "name": "access_scope.dm_owner_user_id",
+              "value": "={{ $json.req.tg_user_id }}",
+              "type": "number"
+            },
+            {
+              "id": "n14-a8",
+              "name": "access_scope.allow_answering",
+              "value": "={{ $json.ctx.chat_policy?.allow_answering !== false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "n14-a9",
+              "name": "access_scope.scope_allowed",
+              "value": "={{ $json.ctx.chat_policy?.allow_answering !== false && (($json.req.channel === 'group' && ($json.access_scope?.allowed_chat_ids || []).length === 1 && ($json.access_scope?.allowed_chat_ids[0] + '') === ($json.req.chat_id + '')) || ($json.req.channel === 'dm' && ($json.access_scope?.is_admin || ($json.access_scope?.allowed_chat_ids || []).length > 0))) }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Build ACL-first access scope object. INPUT: canonical req/ctx. OUTPUT: access_scope with group/DM constraints. WHY: retrieval scope invariant enforcement before answering."
+    },
+    {
+      "id": "n15",
+      "name": "IF — Scope Allowed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -420,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "n15-c1",
+              "leftValue": "={{ $json.access_scope.scope_allowed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "PURPOSE: Refuse out-of-scope retrieval attempts. INPUT: access_scope. OUTPUT TRUE: continue; FALSE: refusal answer. WHY: strict ACL at retrieval stage."
+    },
+    {
+      "id": "n16",
+      "name": "Set — Answer Scope Refusal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -200,
+        240
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n16-a1",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n16-a2",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n16-a3",
+              "name": "answer.answer_text",
+              "value": "Запрос выходит за доступный ACL scope.",
+              "type": "string"
+            },
+            {
+              "id": "n16-a4",
+              "name": "answer.citations",
+              "value": [],
+              "type": "array"
+            },
+            {
+              "id": "n16-a5",
+              "name": "answer.status",
+              "value": "refused",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Build refusal answer for scope overflow attempts. INPUT: scope guard false branch. OUTPUT: answer draft for audit/send pipeline. WHY: avoid out-of-scope retrieval."
+    },
+    {
+      "id": "n17",
+      "name": "RETRIEVE — Prepare Candidates",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -200,
+        440
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n17-a1",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n17-a2",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n17-a3",
+              "name": "access_scope",
+              "value": "={{ $json.access_scope }}",
+              "type": "object"
+            },
+            {
+              "id": "n17-a4",
+              "name": "retrieval.candidates",
+              "value": "={{ $json.req?.retrieved_candidates || [] }}",
+              "type": "array"
+            },
+            {
+              "id": "n17-a5",
+              "name": "retrieval.count",
+              "value": "={{ ($json.req?.retrieved_candidates || []).length }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Build retrieval payload from upstream candidates. INPUT: scoped req/ctx. OUTPUT: retrieval.candidates/count. WHY: SQL.txt currently lacks ACL-safe vector search object for CRUD-only retrieval."
+    },
+    {
+      "id": "n18",
+      "name": "IF — Have Candidates?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        20,
+        440
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "n18-c1",
+              "leftValue": "={{ $json.retrieval.count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "PURPOSE: Route between answer synthesis and managed retrieval-missing fallback. INPUT: retrieval.count. OUTPUT TRUE: AI answer path; FALSE: ErrorPipe retrieval-missing path. WHY: fail fast without unmanaged exception."
+    },
+    {
+      "id": "n19",
+      "name": "Set — Answer Retrieval Unavailable",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        520
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n19-a1",
+              "name": "req",
+              "value": "={{ $json.req || $('RETRIEVE — Prepare Candidates').item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n19-a2",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $('RETRIEVE — Prepare Candidates').item.json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n19-a3",
+              "name": "answer.answer_text",
+              "value": "={{ ($json.req?.channel || $('RETRIEVE — Prepare Candidates').item.json.req.channel) === 'group' ? 'Нет данных в доступном scope. Напишите в личные сообщения боту для более широкого поиска.' : 'Нет данных в базе в доступном scope.' }}",
+              "type": "string"
+            },
+            {
+              "id": "n19-a4",
+              "name": "answer.citations",
+              "value": [],
+              "type": "array"
+            },
+            {
+              "id": "n19-a5",
+              "name": "answer.status",
+              "value": "no_data",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Build fallback answer when retrieval cannot run or has no scoped data. INPUT: retrieval-missing path. OUTPUT: safe answer draft. WHY: deterministic non-throwing behavior."
+    },
+    {
+      "id": "n20",
+      "name": "AI — Prepare Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        360
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n20-a1",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n20-a2",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n20-a3",
+              "name": "retrieval.candidates",
+              "value": "={{ $json.retrieval.candidates }}",
+              "type": "array"
+            },
+            {
+              "id": "n20-a4",
+              "name": "ai_prompt",
+              "value": "={{ 'You are a strict JSON assistant for Telegram Knowledge Bot. Use ONLY provided sources. Question: ' + $json.req.question + '\\n\\nSources JSON: ' + JSON.stringify($json.retrieval.candidates) + '\\n\\nReturn ONLY valid JSON object with keys answer_text (string) and used_citations (array of {rank,chunk_id,score}). If sources are insufficient, answer_text must say нет данных в базе.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Build strict JSON prompt for cited answering. INPUT: question + retrieval candidates. OUTPUT: ai_prompt. WHY: constrain model to source-grounded output."
+    },
+    {
+      "id": "n21",
+      "name": "AI — Generate Answer with Citations",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        360
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "={{ $json.ai_prompt }}",
+        "inputType": "text",
+        "simplify": false,
+        "options": {}
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4J3UGUqYNZJxtTVa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "notes": "PURPOSE: Generate answer JSON with citation ids. INPUT: ai_prompt. OUTPUT: raw model text payload. WHY: centralized answer generation using project Gemini credential."
+    },
+    {
+      "id": "n22",
+      "name": "CODE — Parse AI JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        360
+      ],
+      "parameters": {
+        "jsCode": "const out = $json;\nconst raw = out.text || out.output || out.response || out.data?.text || out.data?.output || '';\nconst str = typeof raw === 'string' ? raw : JSON.stringify(raw || '');\nconst start = str.indexOf('{');\nconst end = str.lastIndexOf('}');\nlet parsed = null;\ntry {\n  if (start >= 0 && end > start) parsed = JSON.parse(str.slice(start, end + 1));\n} catch (e) {}\nif (!parsed || typeof parsed !== 'object') {\n  return [{ json: { parse_failed: true, answer_text: str.slice(0, 3500) || 'Нет данных в базе.', used_citations: [] } }];\n}\nconst used = Array.isArray(parsed.used_citations) ? parsed.used_citations : [];\nreturn [{ json: { parse_failed: false, answer_text: (parsed.answer_text || 'Нет данных в базе.').toString(), used_citations: used } }];"
+      },
+      "notes": "PURPOSE: Safe JSON parse for Gemini output. INPUT: model raw output. OUTPUT: answer_text + used_citations or parse_failed fallback. WHY: one minimal code node for robust parsing."
+    },
+    {
+      "id": "n23",
+      "name": "Set — Build Answer From AI",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        360
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n23-a1",
+              "name": "req",
+              "value": "={{ $('AI — Prepare Prompt').item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n23-a2",
+              "name": "ctx",
+              "value": "={{ $('AI — Prepare Prompt').item.json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n23-a3",
+              "name": "answer.answer_text",
+              "value": "={{ $json.answer_text }}",
+              "type": "string"
+            },
+            {
+              "id": "n23-a4",
+              "name": "answer.citations",
+              "value": "={{ $json.used_citations.map((c, i) => ({ rank: Number(c.rank || (i + 1)), chunk_id: Number(c.chunk_id || 0), score: c.score !== undefined ? Number(c.score) : null })) }}",
+              "type": "array"
+            },
+            {
+              "id": "n23-a5",
+              "name": "answer.status",
+              "value": "={{ $json.parse_failed ? 'fallback' : 'ok' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Map parsed AI result into canonical answer payload. INPUT: parse output + prompt context. OUTPUT: answer.* for shared pipeline. WHY: uniform downstream audit/send."
+    },
+    {
+      "id": "n24",
+      "name": "Merge — Answer Seed (Deny+Refuse)",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        120,
+        160
+      ],
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "notes": "PURPOSE: Join deny/refusal answer branches. INPUT1: deny answer, INPUT2: scope refusal. OUTPUT: one answer draft. WHY: branch-join via Merge only."
+    },
+    {
+      "id": "n49",
+      "name": "Merge — Answer Seed + AI",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1140,
+        180
+      ],
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "notes": "PURPOSE: Join prior fallback answer with AI answer path. INPUT1: fallback answer, INPUT2: AI answer. OUTPUT: unified answer candidate. WHY: enforce merge-only branch join rule."
+    },
+    {
+      "id": "n50",
+      "name": "Merge — Add NoData Answer",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1360,
+        200
+      ],
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "notes": "PURPOSE: Join AI/fallback with no-data answer path. INPUT1: prior answer, INPUT2: no-data answer. OUTPUT: unified answer candidate. WHY: deterministic single answer item."
+    },
+    {
+      "id": "n51",
+      "name": "Merge — Unified Answer",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1580,
+        220
+      ],
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "notes": "PURPOSE: Final answer seed merge point before audit/send. INPUT1: merged answer seed, INPUT2: retrieval-missing answer. OUTPUT: single answer payload. WHY: stabilize downstream DB and TG writes."
+    },
+    {
+      "id": "n25",
+      "name": "PG — Select QA Session Existing",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1800,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "audit",
+          "mode": "list",
+          "cachedResultName": "audit"
+        },
+        "table": {
+          "__rl": true,
+          "value": "qa_sessions",
+          "mode": "list",
+          "cachedResultName": "qa_sessions"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $json.ctx.tenant_id }}"
+            },
+            {
+              "column": "tg_user_id",
+              "value": "={{ $json.req.tg_user_id }}"
+            },
+            {
+              "column": "channel",
+              "value": "={{ $json.req.channel }}"
+            },
+            {
+              "column": "chat_id",
+              "value": "={{ $json.req.chat_id }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "tenant_id",
+            "tg_user_id",
+            "channel",
+            "chat_id",
+            "last_at",
+            "meta"
+          ]
+        }
+      },
+      "notes": "PURPOSE: Find latest matching QA session. INPUT: req/ctx identity fields. OUTPUT: existing session row or empty item. WHY: reuse session when available before insert."
+    },
+    {
+      "id": "n26",
+      "name": "IF — Session Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2020,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "n26-c1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "PURPOSE: Branch between session update and insert. INPUT: qa_sessions select output. OUTPUT TRUE: update path; FALSE: insert path. WHY: idempotent session handling without raw SQL."
+    },
+    {
+      "id": "n27",
+      "name": "PG — Update QA Session",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2240,
+        140
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "audit",
+          "mode": "list",
+          "cachedResultName": "audit"
+        },
+        "table": {
+          "__rl": true,
+          "value": "qa_sessions",
+          "mode": "list",
+          "cachedResultName": "qa_sessions"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "last_at": "={{ $now.toISO() }}",
+            "meta": "={{ $json.meta || {} }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ]
+        }
+      },
+      "notes": "PURPOSE: Refresh existing session timestamp/meta. INPUT: existing session row. OUTPUT: session id. WHY: keep QA session continuity."
+    },
+    {
+      "id": "n28",
+      "name": "PG — Insert QA Session",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2240,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "value": "audit",
+          "mode": "list",
+          "cachedResultName": "audit"
+        },
+        "table": {
+          "__rl": true,
+          "value": "qa_sessions",
+          "mode": "list",
+          "cachedResultName": "qa_sessions"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_id": "={{ $('Merge — Unified Answer').item.json.ctx.tenant_id }}",
+            "tg_user_id": "={{ $('Merge — Unified Answer').item.json.req.tg_user_id }}",
+            "channel": "={{ $('Merge — Unified Answer').item.json.req.channel }}",
+            "chat_id": "={{ $('Merge — Unified Answer').item.json.req.chat_id }}",
+            "meta": "={{ { correlation_id: $('Merge — Unified Answer').item.json.ctx.correlation_id || null } }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ]
+        }
+      },
+      "notes": "PURPOSE: Create new QA session when none exists. INPUT: unified answer req/ctx. OUTPUT: new session id. WHY: audit trail requirement for Q/A workflow."
+    },
+    {
+      "id": "n29",
+      "name": "Merge — Session Id",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2460,
+        220
+      ],
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "notes": "PURPOSE: Join update/insert session branches. INPUT1 update result, INPUT2 insert result. OUTPUT: session id item. WHY: single session_id downstream."
+    },
+    {
+      "id": "n30",
+      "name": "Set — Carry Session + Answer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2680,
+        220
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n30-a1",
+              "name": "req",
+              "value": "={{ $('Merge — Unified Answer').item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n30-a2",
+              "name": "ctx",
+              "value": "={{ $('Merge — Unified Answer').item.json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n30-a3",
+              "name": "answer",
+              "value": "={{ $('Merge — Unified Answer').item.json.answer }}",
+              "type": "object"
+            },
+            {
+              "id": "n30-a4",
+              "name": "audit.session_id",
+              "value": "={{ $json.id || $('PG — Select QA Session Existing').item.json.id || null }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Restore req/ctx/answer spine with resolved session_id. INPUT: session branch result + answer seed. OUTPUT: audit.session_id + answer payload. WHY: maintain full context after DB branching."
+    },
+    {
+      "id": "n31",
+      "name": "PG — Insert QA Turn",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2900,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "value": "audit",
+          "mode": "list",
+          "cachedResultName": "audit"
+        },
+        "table": {
+          "__rl": true,
+          "value": "qa_turns",
+          "mode": "list",
+          "cachedResultName": "qa_turns"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $json.audit.session_id }}",
+            "question_text": "={{ $json.req.question }}",
+            "question_msg_version_id": "={{ $json.req.question_message_version_id || null }}",
+            "answer_text": "={{ $json.answer.answer_text }}",
+            "answer_json": "={{ { status: $json.answer.status || 'ok', citations: ($json.answer.citations || []), correlation_id: $json.ctx.correlation_id || null, access_scope: $json.access_scope || null } }}",
+            "model_used": "gemini-2.5-flash",
+            "latency_ms": null
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "outputColumns": [
+            "id"
+          ]
+        }
+      },
+      "notes": "PURPOSE: Insert QA turn audit record. INPUT: session_id + question + answer payload. OUTPUT: turn id. WHY: required audit.qa_turns persistence."
+    },
+    {
+      "id": "n32",
+      "name": "Set — Carry Turn + Answer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3120,
+        220
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n32-a1",
+              "name": "req",
+              "value": "={{ $('Set — Carry Session + Answer').item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n32-a2",
+              "name": "ctx",
+              "value": "={{ $('Set — Carry Session + Answer').item.json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n32-a3",
+              "name": "answer",
+              "value": "={{ $('Set — Carry Session + Answer').item.json.answer }}",
+              "type": "object"
+            },
+            {
+              "id": "n32-a4",
+              "name": "audit.session_id",
+              "value": "={{ $('Set — Carry Session + Answer').item.json.audit.session_id }}",
+              "type": "string"
+            },
+            {
+              "id": "n32-a5",
+              "name": "audit.turn_id",
+              "value": "={{ $json.id || null }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Restore answer context after qa_turn insert and capture turn_id. INPUT: turn insert output + prior spine. OUTPUT: req/ctx/answer + audit ids. WHY: downstream citations and Telegram need turn context."
+    },
+    {
+      "id": "n33",
+      "name": "CODE — Expand Citations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3340,
+        100
+      ],
+      "parameters": {
+        "jsCode": "const base = $json;\nconst turnId = base.audit?.turn_id;\nconst citations = Array.isArray(base.answer?.citations) ? base.answer.citations : [];\nif (!turnId || citations.length === 0) return [];\nreturn citations.map((c, i) => ({ json: {\n  turn_id: Number(turnId),\n  rank: Number(c.rank || (i + 1)),\n  chunk_id: Number(c.chunk_id || 0),\n  score: c.score !== undefined && c.score !== null ? Number(c.score) : null,\n  snippet: (c.snippet || '').toString().slice(0, 400),\n  source_ref: c.source_ref && typeof c.source_ref === 'object' ? c.source_ref : {}\n}}));"
+      },
+      "notes": "PURPOSE: Expand citations array into row items for audit.qa_citations insert. INPUT: answer payload with turn_id. OUTPUT: citation row items. WHY: Postgres insert consumes one row per item."
+    },
+    {
+      "id": "n34",
+      "name": "PG — Insert QA Citations",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3560,
+        100
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "value": "audit",
+          "mode": "list",
+          "cachedResultName": "audit"
+        },
+        "table": {
+          "__rl": true,
+          "value": "qa_citations",
+          "mode": "list",
+          "cachedResultName": "qa_citations"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "turn_id": "={{ $json.turn_id }}",
+            "rank": "={{ $json.rank }}",
+            "chunk_id": "={{ $json.chunk_id }}",
+            "score": "={{ $json.score }}",
+            "snippet": "={{ $json.snippet }}",
+            "source_ref": "={{ $json.source_ref }}"
+          },
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "notes": "PURPOSE: Persist citation rows linked to qa_turn. INPUT: expanded citation items. OUTPUT: insert result rows. WHY: required audit.qa_citations side effect."
+    },
+    {
+      "id": "n35",
+      "name": "Set — Prepare Telegram Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3340,
+        280
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n35-a1",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n35-a2",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n35-a3",
+              "name": "answer",
+              "value": "={{ $json.answer }}",
+              "type": "object"
+            },
+            {
+              "id": "n35-a4",
+              "name": "audit",
+              "value": "={{ $json.audit }}",
+              "type": "object"
+            },
+            {
+              "id": "n35-a5",
+              "name": "tg_text",
+              "value": "={{ (($json.answer.answer_text || '') + ((($json.answer.citations || []).length > 0) ? ('\\n\\nИсточники:\\n' + $json.answer.citations.map(c => '[' + c.rank + '] chunk_id=' + c.chunk_id).join('\\n')) : '')).slice(0, 4000) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Compose Telegram-safe answer text with compact sources list. INPUT: answer payload. OUTPUT: tg_text <= 4000 chars. WHY: Telegram message length/format safety."
+    },
+    {
+      "id": "n36",
+      "name": "PG — Select Message By Version",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3560,
+        280
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "tg",
+          "mode": "list",
+          "cachedResultName": "tg"
+        },
+        "table": {
+          "__rl": true,
+          "value": "messages",
+          "mode": "list",
+          "cachedResultName": "messages"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "tenant_id",
+              "value": "={{ $json.req.tenant_id }}"
+            },
+            {
+              "column": "chat_id",
+              "value": "={{ $json.req.chat_id }}"
+            },
+            {
+              "column": "current_version_id",
+              "value": "={{ $json.req.question_message_version_id || -1 }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "message_id"
+          ]
+        }
+      },
+      "notes": "PURPOSE: Resolve original Telegram message_id by current_version_id if available. INPUT: req identity + question_message_version_id. OUTPUT: message_id or empty item. WHY: optional reply threading without raw SQL join."
+    },
+    {
+      "id": "n37",
+      "name": "Set — Carry Reply Target",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3780,
+        280
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n37-a1",
+              "name": "req",
+              "value": "={{ $('Set — Prepare Telegram Message').item.json.req }}",
+              "type": "object"
+            },
+            {
+              "id": "n37-a2",
+              "name": "ctx",
+              "value": "={{ $('Set — Prepare Telegram Message').item.json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n37-a3",
+              "name": "answer",
+              "value": "={{ $('Set — Prepare Telegram Message').item.json.answer }}",
+              "type": "object"
+            },
+            {
+              "id": "n37-a4",
+              "name": "audit",
+              "value": "={{ $('Set — Prepare Telegram Message').item.json.audit }}",
+              "type": "object"
+            },
+            {
+              "id": "n37-a5",
+              "name": "tg_text",
+              "value": "={{ $('Set — Prepare Telegram Message').item.json.tg_text }}",
+              "type": "string"
+            },
+            {
+              "id": "n37-a6",
+              "name": "reply_to_message_id",
+              "value": "={{ $json.message_id || null }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Restore full answer spine and attach optional reply_to_message_id. INPUT: tg.messages lookup + prepared message. OUTPUT: tg send payload. WHY: preserve context after DB lookup."
+    },
+    {
+      "id": "n38",
+      "name": "TG — Send Answer",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4000,
+        280
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "chatId": "={{ $json.req.chat_id }}",
+        "text": "={{ $json.tg_text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "reply_to_message_id": "={{ $json.reply_to_message_id }}"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "VFrDyUiM8hl33bSt",
+          "name": "df_assistantbot"
+        }
+      },
+      "notes": "PURPOSE: Send final answer to Telegram. INPUT: req.chat_id + tg_text + optional reply id. OUTPUT: Telegram API result. WHY: user-facing response delivery in same chat."
+    },
+    {
+      "id": "n39",
+      "name": "OUT — SuccessEnvelope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4220,
+        280
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n39-a1",
+              "name": "ok",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "n39-a2",
+              "name": "status_code",
+              "value": 200,
+              "type": "number"
+            },
+            {
+              "id": "n39-a3",
+              "name": "data.status",
+              "value": "={{ $('Set — Carry Turn + Answer').item.json.answer.status || 'ok' }}",
+              "type": "string"
+            },
+            {
+              "id": "n39-a4",
+              "name": "data.session_id",
+              "value": "={{ $('Set — Carry Turn + Answer').item.json.audit.session_id || null }}",
+              "type": "string"
+            },
+            {
+              "id": "n39-a5",
+              "name": "data.turn_id",
+              "value": "={{ $('Set — Carry Turn + Answer').item.json.audit.turn_id || null }}",
+              "type": "number"
+            },
+            {
+              "id": "n39-a6",
+              "name": "data.answer_text",
+              "value": "={{ $('Set — Carry Turn + Answer').item.json.answer.answer_text || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "n39-a7",
+              "name": "data.citations",
+              "value": "={{ $('Set — Carry Turn + Answer').item.json.answer.citations || [] }}",
+              "type": "array"
+            },
+            {
+              "id": "n39-a8",
+              "name": "data.telegram_send",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Build final WF51 success envelope. INPUT: Telegram send output + audit context. OUTPUT: contract data.session_id/turn_id/answer_text/citations. WHY: worker-compatible response contract."
+    },
+    {
+      "id": "n41",
+      "name": "ERR — Source I/O",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        720
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n41-a1",
+              "name": "_err.node",
+              "value": "={{ $json.n8nDetails?.nodeName || $json.error?.node?.name || 'WF51 I/O' }}",
+              "type": "string"
+            },
+            {
+              "id": "n41-a2",
+              "name": "_err.operation",
+              "value": "={{ $json._err?.operation || 'io' }}",
+              "type": "string"
+            },
+            {
+              "id": "n41-a3",
+              "name": "_err.table",
+              "value": "={{ $json._err?.table || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "n41-a4",
+              "name": "_err.kind",
+              "value": "io",
+              "type": "string"
+            },
+            {
+              "id": "n41-a5",
+              "name": "_err.message",
+              "value": "={{ $json.error?.message || $json.message || 'WF51 I/O failure' }}",
+              "type": "string"
+            },
+            {
+              "id": "n41-a6",
+              "name": "_err.status_code",
+              "value": "={{ Number($json.statusCode || $json.httpCode || 500) }}",
+              "type": "number"
+            },
+            {
+              "id": "n41-a7",
+              "name": "_err.retryable",
+              "value": "={{ Number($json.statusCode || $json.httpCode || 500) >= 500 || Number($json.statusCode || $json.httpCode || 500) === 429 }}",
+              "type": "boolean"
+            },
+            {
+              "id": "n41-a8",
+              "name": "ctx",
+              "value": "={{ $json.ctx || $('CTX — Canonicalize WF00c').item.json.ctx || $('Set — Build Canonical CTX').item.json.ctx || {} }}",
+              "type": "object"
+            },
+            {
+              "id": "n41-a9",
+              "name": "req",
+              "value": "={{ $json.req || $('Set — Build Canonical CTX').item.json.req || {} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Collect source metadata for I/O node failures. INPUT: error outputs from Postgres/Telegram/AI/ExecuteWorkflow nodes. OUTPUT: _err + ctx + req. WHY: single local ErrorPipe ingress."
+    },
+    {
+      "id": "n46",
+      "name": "ERR — Source Retrieval Missing",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        520
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n46-a1",
+              "name": "_err.node",
+              "value": "RETRIEVE — Missing Search Object",
+              "type": "string"
+            },
+            {
+              "id": "n46-a2",
+              "name": "_err.operation",
+              "value": "retrieve",
+              "type": "string"
+            },
+            {
+              "id": "n46-a3",
+              "name": "_err.table",
+              "value": "kg.chunk_embeddings_1536 + kg.chunks + content.documents",
+              "type": "string"
+            },
+            {
+              "id": "n46-a4",
+              "name": "_err.kind",
+              "value": "validation",
+              "type": "string"
+            },
+            {
+              "id": "n46-a5",
+              "name": "_err.message",
+              "value": "Cannot perform retrieval: missing SQL-defined ACL-safe search object for CRUD-only execution",
+              "type": "string"
+            },
+            {
+              "id": "n46-a6",
+              "name": "_err.status_code",
+              "value": 500,
+              "type": "number"
+            },
+            {
+              "id": "n46-a7",
+              "name": "_err.retryable",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "n46-a8",
+              "name": "ctx",
+              "value": "={{ $json.ctx }}",
+              "type": "object"
+            },
+            {
+              "id": "n46-a9",
+              "name": "req",
+              "value": "={{ $json.req }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Explicitly log retrieval-unavailable condition via ErrorPipe. INPUT: no-candidate path. OUTPUT: canonical _err + req + ctx. WHY: contract requires logged managed failure when DB search object is missing."
+    },
+    {
+      "id": "n53",
+      "name": "ERR — Is Input Validation?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1340,
+        720
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "n53-c1",
+              "leftValue": "={{ $json.error?.details?.error_context?.node || $json.error_context?.node || '' }}",
+              "rightValue": "IF — Input Guard",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "PURPOSE: Separate invalid-input WF99 events from other managed errors. INPUT: WF99 output. OUTPUT TRUE: invalid-request fallback; FALSE: continue error classification. WHY: preserve contract-specific validation message."
+    },
+    {
+      "id": "n48",
+      "name": "ERR — Is Retrieval Missing?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1560,
+        720
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "n48-c1",
+              "leftValue": "={{ $json.error?.details?.error_context?.node || $json.error_context?.node || '' }}",
+              "rightValue": "RETRIEVE — Missing Search Object",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "PURPOSE: Distinguish retrieval-missing managed error from generic runtime I/O errors. INPUT: WF99 output. OUTPUT TRUE: continue with no-data answer; FALSE: terminal safe fallback. WHY: preserve user response flow when retrieval object missing."
+    },
+    {
+      "id": "n44",
+      "name": "OUT — Safe Fallback Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1780,
+        760
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n44-a1",
+              "name": "ok",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "n44-a2",
+              "name": "status_code",
+              "value": 200,
+              "type": "number"
+            },
+            {
+              "id": "n44-a3",
+              "name": "data.status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "n44-a4",
+              "name": "data.session_id",
+              "value": null,
+              "type": "string"
+            },
+            {
+              "id": "n44-a5",
+              "name": "data.turn_id",
+              "value": null,
+              "type": "number"
+            },
+            {
+              "id": "n44-a6",
+              "name": "data.answer_text",
+              "value": "Сервис временно недоступен. Попробуйте позже.",
+              "type": "string"
+            },
+            {
+              "id": "n44-a7",
+              "name": "data.citations",
+              "value": [],
+              "type": "array"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "notes": "PURPOSE: Terminal safe fallback after non-retrieval errors logged by WF99. INPUT: WF99 output/error path. OUTPUT: SuccessEnvelope with status=error. WHY: avoid WF98 duplicate escalation."
+    },
+    {
+      "id": "n40",
+      "name": "Merge — Final Output A",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4440,
+        280
+      ],
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "notes": "PURPOSE: Merge main success path with invalid-request fallback. INPUT1: invalid fallback, INPUT2: success envelope. OUTPUT: one terminal item. WHY: single output stream."
+    },
+    {
+      "id": "n52",
+      "name": "Merge — Final Output",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4660,
+        280
+      ],
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "notes": "PURPOSE: Merge terminal safe-error fallback with prior output. INPUT1: final output A, INPUT2: safe fallback error. OUTPUT: single workflow response envelope. WHY: exactly one terminal output path."
+    }
+  ],
+  "connections": {
+    "IN — Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set — Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Crypto — Generate Correlation ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto — Generate Correlation ID": {
+      "main": [
+        [
+          {
+            "node": "Set — Build Canonical CTX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Build Canonical CTX": {
+      "main": [
+        [
+          {
+            "node": "IF — Input Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Input Guard": {
+      "main": [
+        [
+          {
+            "node": "CALL — Execute WF00c",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Input Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Input Guard": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Prepare ErrorPipe v1": {
+      "main": [
+        [
+          {
+            "node": "ERR — Execute WF99",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Execute WF99": {
+      "main": [
+        [
+          {
+            "node": "ERR — Is Input Validation?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OUT — Safe Fallback Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Is Input Validation?": {
+      "main": [
+        [
+          {
+            "node": "OUT — Safe Fallback Invalid Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Is Retrieval Missing?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CALL — Execute WF00c": {
+      "main": [
+        [
+          {
+            "node": "CTX — Canonicalize WF00c",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source I/O",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CTX — Canonicalize WF00c": {
+      "main": [
+        [
+          {
+            "node": "IF — Allowed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Allowed?": {
+      "main": [
+        [
+          {
+            "node": "ACL — Build Retrieval Scope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Answer Access Denied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ACL — Build Retrieval Scope": {
+      "main": [
+        [
+          {
+            "node": "IF — Scope Allowed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Scope Allowed?": {
+      "main": [
+        [
+          {
+            "node": "RETRIEVE — Prepare Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set — Answer Scope Refusal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Answer Access Denied": {
+      "main": [
+        [
+          {
+            "node": "Merge — Answer Seed (Deny+Refuse)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Answer Scope Refusal": {
+      "main": [
+        [
+          {
+            "node": "Merge — Answer Seed (Deny+Refuse)",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "RETRIEVE — Prepare Candidates": {
+      "main": [
+        [
+          {
+            "node": "IF — Have Candidates?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Have Candidates?": {
+      "main": [
+        [
+          {
+            "node": "AI — Prepare Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source Retrieval Missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI — Prepare Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI — Generate Answer with Citations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI — Generate Answer with Citations": {
+      "main": [
+        [
+          {
+            "node": "CODE — Parse AI JSON",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source I/O",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE — Parse AI JSON": {
+      "main": [
+        [
+          {
+            "node": "Set — Build Answer From AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Build Answer From AI": {
+      "main": [
+        [
+          {
+            "node": "Merge — Answer Seed + AI",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Answer Seed (Deny+Refuse)": {
+      "main": [
+        [
+          {
+            "node": "Merge — Answer Seed + AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Answer Seed + AI": {
+      "main": [
+        [
+          {
+            "node": "Merge — Add NoData Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Answer Retrieval Unavailable": {
+      "main": [
+        [
+          {
+            "node": "Merge — Add NoData Answer",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge — Add NoData Answer": {
+      "main": [
+        [
+          {
+            "node": "Merge — Unified Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Is Retrieval Missing?": {
+      "main": [
+        [
+          {
+            "node": "Set — Answer Retrieval Unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OUT — Safe Fallback Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR — Source Retrieval Missing": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Unified Answer": {
+      "main": [
+        [
+          {
+            "node": "PG — Select QA Session Existing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Select QA Session Existing": {
+      "main": [
+        [
+          {
+            "node": "IF — Session Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source I/O",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Session Exists?": {
+      "main": [
+        [
+          {
+            "node": "PG — Update QA Session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PG — Insert QA Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Update QA Session": {
+      "main": [
+        [
+          {
+            "node": "Merge — Session Id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source I/O",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert QA Session": {
+      "main": [
+        [
+          {
+            "node": "Merge — Session Id",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source I/O",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Session Id": {
+      "main": [
+        [
+          {
+            "node": "Set — Carry Session + Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Carry Session + Answer": {
+      "main": [
+        [
+          {
+            "node": "PG — Insert QA Turn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert QA Turn": {
+      "main": [
+        [
+          {
+            "node": "Set — Carry Turn + Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source I/O",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Carry Turn + Answer": {
+      "main": [
+        [
+          {
+            "node": "CODE — Expand Citations",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set — Prepare Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE — Expand Citations": {
+      "main": [
+        [
+          {
+            "node": "PG — Insert QA Citations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Insert QA Citations": {
+      "main": [
+        [],
+        [
+          {
+            "node": "ERR — Source I/O",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Prepare Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "PG — Select Message By Version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PG — Select Message By Version": {
+      "main": [
+        [
+          {
+            "node": "Set — Carry Reply Target",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source I/O",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set — Carry Reply Target": {
+      "main": [
+        [
+          {
+            "node": "TG — Send Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TG — Send Answer": {
+      "main": [
+        [
+          {
+            "node": "OUT — SuccessEnvelope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR — Source I/O",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OUT — SuccessEnvelope": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final Output A",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ERR — Source I/O": {
+      "main": [
+        [
+          {
+            "node": "ERR — Prepare ErrorPipe v1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OUT — Safe Fallback Invalid Request": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final Output A",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge — Final Output A": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OUT — Safe Fallback Error": {
+      "main": [
+        [
+          {
+            "node": "Merge — Final Output",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6",
+    "binaryMode": "separate"
+  },
+  "versionId": "a0d57f6e-91bf-4d6a-8672-2c9d9d8bf551"
+}

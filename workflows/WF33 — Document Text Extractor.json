@@ -8,10 +8,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1584,
-        8272
+        1392,
+        8400
       ],
-      "id": "68d27997-951b-4c44-ae84-0dd91698e24a",
+      "id": "b16d962b-4e90-4853-a678-d894fdb65c43",
       "name": "IN — Execute Workflow Trigger",
       "notes": "PROD ENTRY: Receives job from WF90 with ctx{tenant_id, correlation_id, job_id, ...} + job{id, payload{document_id}, ...}. Input: WF90 item. Output: raw item."
     },
@@ -76,10 +76,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1344,
-        8288
+        1632,
+        8416
       ],
-      "id": "abf7aae3-773a-4add-8ebe-7059ff556e52",
+      "id": "00163060-7be8-482e-9a82-334a684590cb",
       "name": "Set — Normalize Input",
       "notes": "Extract ctx + job from trigger. Preserve tenant_id, correlation_id, job_id. Set workflow=WF33 and errorpipe=1. Input: trigger item. Output: ctx.* + job.*. WHY dotNotation: nested fields."
     },
@@ -132,10 +132,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1120,
-        8160
+        1856,
+        8288
       ],
-      "id": "a0a76167-802b-43d6-83f8-511bd233f73a",
+      "id": "6ac69a64-2c99-4059-b636-be72c8ba4702",
       "name": "GUARD — Input Valid",
       "notes": "IF v3. Validate tenant_id, correlation_id, document_id all present. TRUE=valid, FALSE=error. Input: ctx + job. Output: same. WHY version=3: n8n v2.6.3 IF requirement."
     },
@@ -177,10 +177,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        432,
-        10352
+        3408,
+        10480
       ],
-      "id": "a32aad72-c5a0-4cc5-b0d4-b21a233d78ea",
+      "id": "e7de1148-688b-43c3-8cf7-c3d5ea5b8d29",
       "name": "ERR — Source Input Guard",
       "notes": "ErrorPipe v1: Capture error source for Input Guard failure. Input: failed item. Output: _err.* + ctx + job + original. WHY includeOtherFields=true: preserve failure data."
     },
@@ -245,10 +245,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        688,
-        10352
+        3664,
+        10480
       ],
-      "id": "8e3ed902-83e2-45bf-8e77-03646bfa1ed8",
+      "id": "58b8bc3c-c326-481e-9ec1-ab8d0c7bef9a",
       "name": "ERR — Prepare ErrorPipe v1 (Input)",
       "notes": "Build error_context for WF99. Input: err source. Output: error_context.* only. WHY includeOtherFields=false: clean envelope for WF99."
     },
@@ -274,10 +274,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        928,
-        10352
+        3904,
+        10480
       ],
-      "id": "cd2a365f-b1b7-47f7-9b6a-d635c2482ddd",
+      "id": "0d3386dd-70c0-44eb-b77e-7b4a277ff15c",
       "name": "Execute WF99 (Input)",
       "notes": "Call WF99 for input validation error. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized logging. NO StopAndError after this!"
     },
@@ -313,10 +313,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -880,
-        8144
+        2096,
+        8272
       ],
-      "id": "41ea8be7-4742-49a4-afaf-ffd31458491f",
+      "id": "da5d93ee-c09d-4abd-888c-58cac3eec40e",
       "name": "DB — Load Document",
       "credentials": {
         "postgres": {
@@ -371,10 +371,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1504,
-        10480
+        4480,
+        10608
       ],
-      "id": "ceef73fe-fb48-49f6-9d79-b12af0019f5f",
+      "id": "1971b469-fd1d-40b0-8d6a-6fb1afd48cc9",
       "name": "ERR — Source DB Load Doc",
       "notes": "ErrorPipe v1: Capture DB error for Load Document (404 or DB error). Input: error output. Output: _err.* + ctx + job + error. WHY includeOtherFields=true: preserve error details."
     },
@@ -445,10 +445,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1888,
-        10512
+        4864,
+        10640
       ],
-      "id": "5c09d688-32f0-4df1-939f-595b6e339c5c",
+      "id": "008d299d-ed32-49cb-92b8-4c88963b01c3",
       "name": "ERR — Prepare ErrorPipe v1 (DB Doc)",
       "notes": "Build error_context for DB Load Doc failure. Distinguish 404 (business) vs DB error. Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope."
     },
@@ -474,10 +474,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        2128,
-        10512
+        5104,
+        10640
       ],
-      "id": "0674b643-d954-43d2-b538-f4ce80fcec6d",
+      "id": "6ae26e0e-8327-453f-8444-c1413c8eb9d9",
       "name": "Execute WF99 (DB Doc)",
       "notes": "Call WF99 for DB Load Document failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized logging. NO StopAndError after!"
     },
@@ -490,10 +490,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        -624,
-        8272
+        2352,
+        8400
       ],
-      "id": "7d0b0185-4d28-4418-9dc8-6ce5602db16d",
+      "id": "f65ccb7a-9abe-422e-9f8a-27af01832802",
       "name": "Merge — Restore CTX after DB Load",
       "notes": "Restore ctx/job after DB Load Document (Carry pattern via Merge). Input1: DB result, Input2: ctx/job from Set Normalize Input. Output: document.* + ctx + job. WHY: Postgres overwrites item."
     },
@@ -524,10 +524,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -384,
-        8272
+        2592,
+        8400
       ],
-      "id": "e39b118b-add9-43e2-8bca-adaea68d2a91",
+      "id": "77eda20b-c934-4a0b-ad9e-7a1f7cb982e9",
       "name": "CTL — Route by doc_type: message?",
       "notes": "IF v3. Route by doc_type. TRUE=message, FALSE=file/url. Input: document + ctx + job. Output: same. WHY version=3: n8n v2.6.3 requirement."
     },
@@ -558,10 +558,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -384,
-        8560
+        2592,
+        8688
       ],
-      "id": "c9392ef6-5aea-4702-bd40-9131f9cb02e3",
+      "id": "8cd22b16-7594-4570-a5b2-d4cb0bf46090",
       "name": "CTL — Route by doc_type: file?",
       "notes": "IF v3. Route file vs url. TRUE=file, FALSE=url. Input: document + ctx + job. Output: same. WHY version=3: n8n v2.6.3 requirement."
     },
@@ -593,10 +593,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -144,
-        8128
+        2832,
+        8256
       ],
-      "id": "3b39b9d1-b560-4138-b49e-fd896d1cbb9d",
+      "id": "8981e050-8d7d-45d1-931b-09a401aa031a",
       "name": "GUARD — Message Has Text",
       "notes": "IF v3. Check if message doc has text. TRUE=has text, FALSE=empty (error 409). Input: document + ctx + job. Output: same. WHY version=3: n8n v2.6.3 requirement."
     },
@@ -644,10 +644,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        336,
-        10000
+        3312,
+        10128
       ],
-      "id": "47fb1642-260b-4fc2-9890-0c5ec388735c",
+      "id": "b62f44e8-a54a-4fe9-a857-0a9ec284cc5a",
       "name": "ERR — Source Message Empty",
       "notes": "ErrorPipe v1: Capture error for empty message text (business error 409). Input: failed guard. Output: _err.* + ctx + job + document. WHY includeOtherFields=true: preserve document data."
     },
@@ -718,10 +718,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        576,
-        10000
+        3552,
+        10128
       ],
-      "id": "3fcb7ffd-b7b8-4c81-bab7-0b6b62e6cad6",
+      "id": "ec78ed0f-16f8-4946-b2d1-ecefb028ee86",
       "name": "ERR — Prepare ErrorPipe v1 (Empty Text)",
       "notes": "Build error_context for empty text (business error). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope for WF99."
     },
@@ -747,10 +747,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        816,
-        10000
+        3792,
+        10128
       ],
-      "id": "2d10f9db-c357-45c1-b5a3-8a986dec9320",
+      "id": "4fc9921e-567d-4944-b408-742fce0ab826",
       "name": "Execute WF99 (Empty Text)",
       "notes": "Call WF99 for empty text error. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized logging. NO StopAndError after!"
     },
@@ -797,10 +797,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1696,
-        7760
+        4672,
+        7888
       ],
-      "id": "7364f4df-e648-4734-afa6-74e0a69cc87f",
+      "id": "ae85775e-e706-479a-aea8-f90a018b6dba",
       "name": "Set — Message: Extract Existing Text",
       "notes": "For message doc: map content.documents.text into unified extraction payload. Input: document + ctx + job. Output: extracted_text + extracted_meta + document_id + ctx + job."
     },
@@ -827,10 +827,10 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        5056,
-        8144
+        8032,
+        8272
       ],
-      "id": "ac7f344d-4bad-4d44-b174-fd34945d45b0",
+      "id": "8133da05-3a85-49c6-b6f6-bc57cbacce8e",
       "name": "AI — Generate Description (Gemini)",
       "credentials": {
         "googlePalmApi": {
@@ -891,10 +891,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6000,
-        10224
+        8976,
+        10352
       ],
-      "id": "a36fa2aa-c0b2-401a-85ac-1fc0b7afc29b",
+      "id": "cd08d745-d270-449c-86b0-d63bfcbab825",
       "name": "ERR — Source AI Description",
       "notes": "ErrorPipe v1: Capture AI error for description generation. Input: error output. Output: _err.* + ctx + job + document_id + extracted_text + error. WHY includeOtherFields=true: preserve error details."
     },
@@ -965,10 +965,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6352,
-        10240
+        9328,
+        10368
       ],
-      "id": "89ed4a7f-ee2a-4dd9-8b1b-17ceb5d4ccec",
+      "id": "0c440d67-ddf6-4cab-a685-c7d14f1354c1",
       "name": "ERR — Prepare ErrorPipe v1 (AI Desc)",
       "notes": "Build error_context for AI description failure (upstream error, retryable). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope."
     },
@@ -994,10 +994,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        6656,
-        10272
+        9632,
+        10400
       ],
-      "id": "5d360480-ecf0-4b2f-9d05-6cdbb5b37dd6",
+      "id": "6c9cc964-3f84-4d0a-b59f-ef55b20f8d00",
       "name": "Execute WF99 (AI Desc)",
       "notes": "Call WF99 for AI description failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized logging. NO StopAndError after!"
     },
@@ -1044,10 +1044,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        5680,
-        8336
+        8656,
+        8464
       ],
-      "id": "6012384f-d7fc-4265-93f1-3bfce4a604e4",
+      "id": "2b5cc00d-c4d5-4980-bd36-7cc49afa343b",
       "name": "Set — Extract Description from AI Response",
       "notes": "Extract description from AI response and restore carried fields. Input: merged AI+carry item. Output: description + extracted_text + document_id + ctx + job."
     },
@@ -1060,10 +1060,10 @@
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 1,
       "position": [
-        5904,
-        8352
+        8880,
+        8480
       ],
-      "id": "9f718174-6036-406d-95e9-d47b893e345e",
+      "id": "1a2ce137-93a6-47b2-a60b-4e8b19b94f89",
       "name": "Crypto — Compute SHA256",
       "notes": "Compute SHA256 hash from extracted_text using explicit Value field. INPUT: unified extracted_text. OUTPUT: hash in data. WHY: required field must be explicitly filled."
     },
@@ -1116,10 +1116,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6144,
-        8352
+        9120,
+        8480
       ],
-      "id": "5ea4ff4c-fd0e-4cb5-b3f0-1974b443d0bd",
+      "id": "0c768ceb-a635-47b7-ab82-426077d403b8",
       "name": "Set — Prepare Bytea Format",
       "notes": "Convert hash to Postgres bytea format (\\\\x prefix). Restore description/extracted_text/document_id/ctx/job. Input: hash + description + extracted_text + document_id + ctx + job. Output: text_sha256_bytea + all. WHY: Postgres bytea requires \\\\x prefix."
     },
@@ -1219,10 +1219,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        6400,
-        8128
+        9376,
+        8256
       ],
-      "id": "92276ad9-797c-4cfd-b70e-23fd650398ac",
+      "id": "93d13dab-9b2c-4efa-8661-96a9bbf9582e",
       "name": "DB — Update Document (Success)",
       "credentials": {
         "postgres": {
@@ -1283,10 +1283,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6848,
-        9936
+        9824,
+        10064
       ],
-      "id": "5bcfd5bc-2505-4180-9fb3-953e63417d1a",
+      "id": "b0db688e-d54a-4853-b134-a64d57141d78",
       "name": "ERR — Source DB Update Doc",
       "notes": "ErrorPipe v1: Capture DB error for Update Document. Input: error output. Output: _err.* + ctx + job + document_id + error. WHY includeOtherFields=true: preserve error details."
     },
@@ -1363,10 +1363,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        7136,
-        9936
+        10112,
+        10064
       ],
-      "id": "081453c0-ceb1-42c8-929b-abfac314bb51",
+      "id": "79536ee0-2792-42aa-b0b2-01dfc7f23871",
       "name": "ERR — Prepare ErrorPipe v1 (DB Update)",
       "notes": "Build error_context for DB Update Document failure (DB error, retryable). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope."
     },
@@ -1392,10 +1392,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        7376,
-        9936
+        10352,
+        10064
       ],
-      "id": "f962f8bb-10e9-4345-9c61-692445fb7af0",
+      "id": "e6939477-2e50-44ca-8299-e08163453559",
       "name": "Execute WF99 (DB Update)",
       "notes": "Call WF99 for DB Update Document failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized logging. NO StopAndError after!"
     },
@@ -1408,10 +1408,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        6704,
-        8352
+        9680,
+        8480
       ],
-      "id": "530d497f-7c7e-4326-a501-9ebe96d8d14f",
+      "id": "17460de2-1838-4ce9-8628-389c3f843f5c",
       "name": "Merge — Restore CTX after DB Update",
       "notes": "Restore ctx/job after DB Update (Carry pattern via Merge). Input1: DB result, Input2: ctx/job from Set Prepare Bytea Format. Output: updated document.* + ctx + job. WHY: Postgres overwrites item."
     },
@@ -1446,10 +1446,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6944,
-        8576
+        9920,
+        8704
       ],
-      "id": "51ed98d1-3a46-4bff-8a6f-4870ef5e8fb2",
+      "id": "3349e32b-3b82-4bf5-bbad-6e4c116bb689",
       "name": "Set — Prepare Enqueue Payload",
       "notes": "Build enqueue_payload object for chunk_document job. No object literals (use dotNotation). Input: updated document + ctx + job. Output: enqueue_payload.document_id + ctx + job. WHY: prepare for ops.jobs insert."
     },
@@ -1542,10 +1542,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        7200,
-        8432
+        10176,
+        8560
       ],
-      "id": "1531ef30-2349-4f94-a418-02a8e3af2fa0",
+      "id": "67271edf-0a1e-40a6-872c-bfc7e5239cf8",
       "name": "DB — Enqueue chunk_document Job",
       "credentials": {
         "postgres": {
@@ -1600,10 +1600,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        7744,
-        9968
+        10720,
+        10096
       ],
-      "id": "6a0c5e1b-f586-4114-a376-9017b08d6c03",
+      "id": "4c82d29c-5162-457f-9d0b-a1fb27e5071d",
       "name": "ERR — Source DB Enqueue",
       "notes": "ErrorPipe v1: Capture DB error for Enqueue chunk_document. Input: error output. Output: _err.* + ctx + job + error. WHY includeOtherFields=true: preserve error details."
     },
@@ -1674,10 +1674,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        8048,
-        9984
+        11024,
+        10112
       ],
-      "id": "66e9e5bf-b1f0-467e-be6f-1bdea73199b6",
+      "id": "ac512ac4-a83a-484b-a665-fb2fe149ee22",
       "name": "ERR — Prepare ErrorPipe v1 (DB Enqueue)",
       "notes": "Build error_context for DB Enqueue failure (DB error, retryable). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope."
     },
@@ -1703,10 +1703,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        8288,
-        9984
+        11264,
+        10112
       ],
-      "id": "151993e4-e47d-47e1-96e7-2b86451f070a",
+      "id": "abada27d-d49c-4cb6-90fd-e195d55d8a1e",
       "name": "Execute WF99 (DB Enqueue)",
       "notes": "Call WF99 for DB Enqueue failure. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized logging. NO StopAndError after!"
     },
@@ -1719,10 +1719,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        7584,
-        8688
+        10560,
+        8816
       ],
-      "id": "a1ef0041-25b9-453b-a623-e22960c2cb30",
+      "id": "94bc6cd1-9c50-419a-b702-716df9cddbd1",
       "name": "Merge — Restore CTX after Enqueue",
       "notes": "Restore ctx/job after DB Enqueue (Carry pattern via Merge). Input1: DB result, Input2: ctx/job from Set Prepare Enqueue Payload. Output: enqueued job.* + ctx + job. WHY: Postgres overwrites item."
     },
@@ -1775,10 +1775,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        7872,
-        9248
+        10848,
+        9376
       ],
-      "id": "ed9a45da-ba6f-4008-9887-779c087a8742",
+      "id": "c890727f-c93f-4d14-940d-ed14ffab7c61",
       "name": "OUT — Success Envelope",
       "notes": "Build SuccessEnvelope for WF90. ok=true, status_code=200, ctx preserved, result with document_id/extracted/enqueued_chunk_job. Input: enqueued job + ctx. Output: SuccessEnvelope. WHY: contract compliance."
     },
@@ -1787,10 +1787,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        8448,
-        9536
+        11424,
+        9664
       ],
-      "id": "974e95d0-7292-4646-8911-ada748e26463",
+      "id": "0cf1702a-39b0-4215-a3ed-f16e0830a549",
       "name": "Merge — Final (Success + All Errors)",
       "notes": "Merge all paths: success (OUT — Success Envelope) + all error paths (WF99 outputs). PassThrough mode merges first available. Input0: success, Input1-6: error paths. Output: first available item. WHY: combine all branches."
     },
@@ -1831,10 +1831,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -144,
-        8560
+        2832,
+        8688
       ],
-      "id": "22b0e127-1bfc-4d6a-9004-74dcf54a79f0",
+      "id": "d8c02b83-5033-4f1b-9a12-ef2a76100823",
       "name": "Set — File Ref from Document",
       "notes": "Build file reference and unified carry fields from content.documents row. Input: document + ctx + job. Output: file_unique_id + document_id + ctx + job."
     },
@@ -1881,10 +1881,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -144,
-        8752
+        2832,
+        8880
       ],
-      "id": "379359a1-a4f0-4c7e-bd97-cbf317674506",
+      "id": "37fa4a89-8aed-4f22-bd0a-e5d7062d29d3",
       "name": "Set — URL Placeholder Unified",
       "notes": "URL extraction placeholder unified output: extracted_text empty with reason marker. Keeps pipeline deterministic until URL extractor workflow is implemented."
     },
@@ -1893,10 +1893,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -1584,
-        9472
+        1392,
+        9600
       ],
-      "id": "e6060521-0ddf-4253-afc8-ac6251989554",
+      "id": "950306b1-d605-4154-83fe-11c33389899b",
       "name": "TEST — Manual Trigger",
       "notes": "Manual test entrypoint for T1/T2/T3 fixture seeding and execution through production path."
     },
@@ -1907,10 +1907,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -64,
-        9504
+        2912,
+        9632
       ],
-      "id": "8ce7936f-5015-40b4-a132-efcbb863023a",
+      "id": "f59ade69-1cbc-4362-921e-1e38703a5b08",
       "name": "TEST — Build Worker Requests",
       "notes": "Single worker request item (T1) to prevent combinatorial growth in test execution path."
     },
@@ -1943,10 +1943,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        144,
-        8416
+        3120,
+        8544
       ],
-      "id": "ff0e5c17-b6fd-459a-afe0-7c5ab7effb50",
+      "id": "3d716afb-e671-46f1-a45d-b81bf6b208d0",
       "name": "DB — Select tg.files by file_unique_id",
       "alwaysOutputData": true,
       "credentials": {
@@ -1967,10 +1967,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        336,
-        8576
+        3312,
+        8704
       ],
-      "id": "181c063e-84ac-4db8-967b-b6029e2bc0ea",
+      "id": "bdb86e45-a4ab-44ad-81f7-4b04d05bc352",
       "name": "Merge — Restore CTX after tg.files",
       "notes": "Carry/restore after tg.files select overwrite."
     },
@@ -2002,10 +2002,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        528,
-        8656
+        3504,
+        8784
       ],
-      "id": "d15c8094-31a4-44a9-baea-2c0727517037",
+      "id": "6bacb222-c4a5-40f1-bc18-a5a4f99afc0f",
       "name": "GUARD — File Has sha256",
       "notes": "Require sha256 in tg.files to locate blob object."
     },
@@ -2038,10 +2038,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        752,
-        8400
+        3728,
+        8528
       ],
-      "id": "1c6d8dc3-aa00-4c7c-89d3-112f610bbd5e",
+      "id": "526b0679-de61-4102-896a-4dc913243300",
       "name": "DB — Select blob_objects by sha256",
       "alwaysOutputData": true,
       "credentials": {
@@ -2062,10 +2062,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        1088,
-        8432
+        4064,
+        8560
       ],
-      "id": "49fa8ac9-97d8-465c-bc7e-3132f129dee2",
+      "id": "7952fc07-c9b8-4fd3-88a1-d70ad81ee907",
       "name": "Merge — Restore CTX after blob lookup",
       "notes": "Carry/restore after blob_objects select overwrite."
     },
@@ -2096,10 +2096,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1296,
-        8496
+        4272,
+        8624
       ],
-      "id": "b9667234-8db9-40e8-9338-084f17c11e29",
+      "id": "c5a2b91c-4cbc-4951-9bc5-03719062c063",
       "name": "GUARD — Blob Has storage_key",
       "notes": "Require blob storage_key before S3 download."
     },
@@ -2112,10 +2112,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        1776,
-        8480
+        4752,
+        8608
       ],
-      "id": "9c73f317-d305-4efb-ba0c-3534df67e4eb",
+      "id": "2c647f55-53c0-430c-bb9d-f25846a26371",
       "name": "Merge — Restore CTX after S3",
       "notes": "Carry/restore after S3 download overwrite."
     },
@@ -2163,10 +2163,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2032,
-        8480
+        5008,
+        8608
       ],
-      "id": "f2c5c5a7-22dc-44bb-9693-4f115549f55d",
+      "id": "0dff2d2c-3c08-4ecf-8cfb-f7a16e3e82a2",
       "name": "Set — Detect File Type",
       "notes": "Read MIME from S3 binary metadata ($binary.data.mimeType) for routing. Keep ctx/job/document_id + binary."
     },
@@ -2447,10 +2447,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        2256,
-        8512
+        5232,
+        8640
       ],
-      "id": "ba687085-060c-43b3-9955-5395faed9106",
+      "id": "6c5f7507-4612-42fd-8d5c-02dcd61a2baf",
       "name": "SWITCH — Route by File Type",
       "notes": "Switch by MIME from S3 download binary metadata ($binary.data.mimeType), aligned with WF42 Media Kind Router pattern. No file-name/extension routing."
     },
@@ -2497,10 +2497,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2976,
-        8272
+        5952,
+        8400
       ],
-      "id": "167e9ca8-4c5a-4c8e-bbc7-710f476725a9",
+      "id": "1a3229d8-dc55-43e5-aa2b-04118ce68a88",
       "name": "Set — Unified from Extract",
       "notes": "Map any Extract From File output shape to unified extracted_text deterministically; fallback to JSON.stringify for table-like outputs."
     },
@@ -2554,10 +2554,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2928,
-        8992
+        5904,
+        9120
       ],
-      "id": "09c31d2f-dca4-4af4-bfcb-bc27bde624da",
+      "id": "6bcac47f-b7b4-4ff2-99ff-f618628fb245",
       "name": "ERR — Source Extract File",
       "notes": "Capture extractor error details for unsupported/fatal routing."
     },
@@ -2588,10 +2588,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3104,
-        8992
+        6080,
+        9120
       ],
-      "id": "e4a7755a-8188-47ec-b2f2-97a765f3eb43",
+      "id": "026ab1b0-2448-4ac3-b5ad-02b968efe483",
       "name": "IF — Extract Error Is Unsupported",
       "notes": "Expected unsupported-type errors route to converter; other errors go to WF99."
     },
@@ -2600,10 +2600,10 @@
       "type": "@mazix/n8n-nodes-converter-documents.convertFileToJson",
       "typeVersion": 5,
       "position": [
-        3488,
-        8736
+        6464,
+        8864
       ],
-      "id": "aabfa1b5-1b95-40e6-8d85-9d6b99a60e32",
+      "id": "7cfcef92-17e9-432d-982f-b4ce8dfdcd71",
       "name": "Convert — File To Json",
       "retryOnFail": true,
       "onError": "continueErrorOutput",
@@ -2658,10 +2658,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3856,
-        8736
+        6832,
+        8864
       ],
-      "id": "7e3cf455-c973-427c-aad8-da7ad5ab72aa",
+      "id": "8e6ba823-6dbe-4eae-b79f-653d041a0e2a",
       "name": "Set — Unified from Convert",
       "notes": "Map Convert File To Json output to unified extraction contract without Code. Input: converted JSON + restored ctx/job/document_id. Output: extracted_text JSON string + extracted_meta.converted_json + context fields."
     },
@@ -2715,10 +2715,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4544,
-        10688
+        7520,
+        10816
       ],
-      "id": "d697e052-7f5e-4619-8c3d-1705e8b1315e",
+      "id": "28a0c8e7-ad30-48b7-a3b0-30e90295c12d",
       "name": "ERR — Source Convert File",
       "notes": "Capture converter errors for ErrorPipe."
     },
@@ -2727,10 +2727,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        4032,
-        8544
+        7008,
+        8672
       ],
-      "id": "a6e481a0-06dd-4a32-89cc-0b002d20dd13",
+      "id": "38b0fea0-f269-4914-a9bf-0c28b381162b",
       "name": "Merge — File Extract Unified",
       "notes": "Merge extraction outputs using append mode (valid in current n8n build). Input: Extract/Convert/AI-fallback unified items. Output: single extracted stream."
     },
@@ -2807,10 +2807,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        7936,
-        10896
+        10912,
+        11024
       ],
-      "id": "36fa85d3-1c65-437b-9750-11ae66f994d4",
+      "id": "1635bfbc-18ac-4e55-8f78-2699200822b1",
       "name": "ERR — Prepare ErrorPipe v1 (File I/O)",
       "notes": "Prepare ErrorPipe payload for all file path DB/S3/extractor/converter errors."
     },
@@ -2836,10 +2836,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        8176,
-        10896
+        11152,
+        11024
       ],
-      "id": "522d6630-9674-4b9a-a729-d33694d2167a",
+      "id": "bb4bcdc5-92d9-4fd7-86a4-0860ce42c755",
       "name": "Execute WF99 (File I/O)",
       "notes": "Call WF99 for file extraction failures and return ErrorEnvelope."
     },
@@ -2893,10 +2893,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1008,
-        9760
+        3984,
+        9888
       ],
-      "id": "a14ac15e-4c21-4f22-bcab-d8dca716488e",
+      "id": "da51e536-ee06-4bb6-87b1-41d7e6197c1b",
       "name": "ERR — Source DB File Ref",
       "notes": "Error source for tg.files lookup failure."
     },
@@ -2950,10 +2950,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2176,
-        9984
+        5152,
+        10112
       ],
-      "id": "1118ca59-d475-4cc5-87b4-e2ef3fa52477",
+      "id": "91c2baad-b80d-4489-bc45-4e2c7434f743",
       "name": "ERR — Source DB Blob Ref",
       "notes": "Error source for blob_objects lookup failure."
     },
@@ -3007,10 +3007,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1936,
-        9984
+        4912,
+        10112
       ],
-      "id": "6990b922-473a-4bdc-b808-ef7046e74ad3",
+      "id": "24dc560e-3191-4076-b915-6f3620f576cf",
       "name": "ERR — Source Missing File Ref",
       "notes": "Managed error source when file/blob references are absent."
     },
@@ -3064,10 +3064,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2688,
-        9664
+        5664,
+        9792
       ],
-      "id": "2c03f21a-32b6-4842-8bc9-8ff0b7d67d85",
+      "id": "d8c62db8-ec2b-489f-a6a8-80f8a46138f4",
       "name": "ERR — Source S3 Download",
       "notes": "Error source for S3 download failure."
     },
@@ -3076,10 +3076,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        4272,
-        8480
+        7248,
+        8608
       ],
-      "id": "a53472f6-0968-41c1-802c-d7ba98fe156d",
+      "id": "d48b3bea-2d81-4878-a180-e07e516af6f5",
       "name": "Merge — Unified Extracted Text",
       "notes": "Join message/file/url branches into unified extraction item shape."
     },
@@ -3111,10 +3111,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        4768,
-        8496
+        7744,
+        8624
       ],
-      "id": "1720c742-006f-44da-b1e3-034f15137d6f",
+      "id": "40a2d56e-6476-49c8-af98-eb8c0d87c62f",
       "name": "GUARD — Extracted Text NonEmpty",
       "notes": "Proceed to AI only when extracted_text is non-empty; otherwise return deterministic skipped success."
     },
@@ -3173,10 +3173,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        5056,
-        8640
+        8032,
+        8768
       ],
-      "id": "0c0297d9-0db5-4b04-88fd-1f1e46689e15",
+      "id": "3d56aee6-c891-44f2-9a10-ae79b2aca67a",
       "name": "OUT — Success Envelope (Skipped Empty)",
       "notes": "Return deterministic success when extracted_text is empty (message/file/url) and skip enqueue."
     },
@@ -3186,11 +3186,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "id": "bb583d5b-e11a-462c-a2cd-4dfa360968ba",
+      "id": "7ccbfc8f-ad1f-4e67-886f-d574244d246f",
       "name": "TEST — Build Fixtures",
       "position": [
-        -1280,
-        9360
+        1696,
+        9488
       ],
       "notes": "Single fixture item (T1) to avoid test-item multiplication in merge chains. Seeds tenant/file/blob/document for one real extraction run."
     },
@@ -3275,11 +3275,11 @@
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "id": "8e7aad16-2430-495c-9c20-85115abde108",
+      "id": "b6aafdcc-872c-4592-9598-37da0bbf093a",
       "name": "TEST — DB Upsert Tenant",
       "position": [
-        -1088,
-        9216
+        1888,
+        9344
       ],
       "credentials": {
         "postgres": {
@@ -3401,11 +3401,11 @@
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "id": "e8e30d8e-091b-4e2c-854c-881e73fe6baa",
+      "id": "64e1a96a-b3d7-4590-bc59-0781aa19d413",
       "name": "TEST — DB Upsert tg.files",
       "position": [
-        -896,
-        9376
+        2080,
+        9504
       ],
       "credentials": {
         "postgres": {
@@ -3518,11 +3518,11 @@
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "id": "693c1298-b5a3-4dc6-9297-4ed7edb8c8ba",
+      "id": "80485c1c-2af7-4af5-985b-7615f1d40412",
       "name": "TEST — DB Upsert blob_objects",
       "position": [
-        -640,
-        9216
+        2336,
+        9344
       ],
       "credentials": {
         "postgres": {
@@ -3819,11 +3819,11 @@
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "id": "19abf30b-a571-4764-baca-2ffa17816abb",
+      "id": "1c94fef6-60ba-4609-af21-868bfbcf4022",
       "name": "TEST — DB Upsert content.documents",
       "position": [
-        -304,
-        9248
+        2672,
+        9376
       ],
       "credentials": {
         "postgres": {
@@ -3844,10 +3844,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        8000
+        5488,
+        8128
       ],
-      "id": "109e1ac1-023a-4a85-b3ec-373bd838c417",
+      "id": "4adc54c5-b9c9-421e-a2e7-961592b2c079",
       "name": "Extract — From PDF",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=pdf. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -3863,10 +3863,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        8160
+        5488,
+        8288
       ],
-      "id": "3f6e329b-3fc0-4868-ac17-115c532d0e72",
+      "id": "fbbe6c95-db35-46ba-82ac-420cd66264d1",
       "name": "Extract — From Text",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=text. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -3880,10 +3880,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        8320
+        5488,
+        8448
       ],
-      "id": "99236c42-b2af-42b4-9834-86111717bc20",
+      "id": "294c317e-21e4-4c41-a9bb-486abe70aaad",
       "name": "Extract — From CSV",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=csv. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -3896,10 +3896,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        8480
+        5488,
+        8608
       ],
-      "id": "bb65e3a5-0027-405b-8d04-a0acf63f5369",
+      "id": "4184ad20-440e-403b-af44-484e87bdc4fb",
       "name": "Extract — From HTML",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=html. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -3914,10 +3914,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        8640
+        5488,
+        8768
       ],
-      "id": "7e57415e-3d54-42ec-b551-0eea406b87ab",
+      "id": "0926ab25-cb8f-404d-baea-db5cbf17e57d",
       "name": "Extract — From JSON",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=json. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -3932,10 +3932,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        8800
+        5488,
+        8928
       ],
-      "id": "6ace41bb-b45d-4b99-a08d-fb352794c173",
+      "id": "c7eee04a-9d41-4742-aa99-5d31eaa3dcf7",
       "name": "Extract — From ICS",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=ics. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -3948,10 +3948,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        8944
+        5488,
+        9072
       ],
-      "id": "82f7f72e-8efa-48e2-ac17-3874d4f32e58",
+      "id": "49a25a7c-f8a2-440e-ab43-bb41725d60f5",
       "name": "Extract — From RTF",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=rtf. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -3964,10 +3964,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        9104
+        5488,
+        9232
       ],
-      "id": "9296de3f-708d-4c5e-9d6f-75c6b61fc36a",
+      "id": "feb15571-6f38-45a6-b959-9d4b2e1d5dde",
       "name": "Extract — From XLSX",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=xlsx. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -3980,10 +3980,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        9264
+        5488,
+        9392
       ],
-      "id": "bf4bed0a-d5cb-45d0-9b83-2436638ff6c6",
+      "id": "18291467-623e-4b00-952a-8636e57e82b9",
       "name": "Extract — From XLS",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=xls. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -3996,10 +3996,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.1,
       "position": [
-        2512,
-        9408
+        5488,
+        9536
       ],
-      "id": "9224e976-5814-4cc8-a808-25499368212d",
+      "id": "658a70ad-34cd-4cc8-a48f-7554638a7eec",
       "name": "Extract — From ODS",
       "onError": "continueErrorOutput",
       "notes": "Extract From File operation=ods. INPUT: binary data + file metadata. OUTPUT: extracted JSON/text. WHY: only for formats supported by core Extract From File."
@@ -4021,10 +4021,10 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        3616,
-        9312
+        6592,
+        9440
       ],
-      "id": "a5b21758-dd7e-4f03-9851-5a233b4ec868",
+      "id": "5f1754d6-3787-4e92-b13a-509226818b80",
       "name": "AI — Analyze Document Fallback",
       "credentials": {
         "googlePalmApi": {
@@ -4084,10 +4084,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4192,
-        9216
+        7168,
+        9344
       ],
-      "id": "7305bb74-ebd1-4524-8e2e-7d3205399126",
+      "id": "c719ce0d-c1ef-4d7e-8a1b-9d890aefd3f5",
       "name": "Set — Unified from AI Fallback",
       "notes": "Map Gemini Analyze Document fallback output into unified extraction payload for shared downstream processing."
     },
@@ -4141,10 +4141,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4032,
-        10528
+        7008,
+        10656
       ],
-      "id": "5b431e33-fce8-401c-8349-586d6be31bbb",
+      "id": "106a5902-54b3-42d8-a713-27db3946a6a2",
       "name": "ERR — Source AI Fallback",
       "notes": "Error source wrapper for Gemini Analyze Document fallback failures."
     },
@@ -4156,10 +4156,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        3392,
-        9280
+        6368,
+        9408
       ],
-      "id": "4b4f2134-3016-4caf-be40-3a67de5ed23d",
+      "id": "730bf20e-d1f0-47d8-9cc8-0bcf561f7cdc",
       "name": "Merge — Fallback Inputs",
       "notes": "Join three fallback entry points: unsupported mime route, Extract fatal error route, Convert error route."
     },
@@ -4171,10 +4171,10 @@
       "type": "n8n-nodes-base.s3",
       "typeVersion": 1,
       "position": [
-        1520,
-        8368
+        4496,
+        8496
       ],
-      "id": "241ebcab-c47d-4979-bb9c-81d0b7380f96",
+      "id": "6f0d3c8e-d831-40ae-a821-f05b747f0b26",
       "name": "S3 - Download a file",
       "credentials": {
         "s3": {
@@ -4229,10 +4229,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4896,
-        8352
+        7872,
+        8480
       ],
-      "id": "4628686e-f998-41df-b850-380218100b13",
+      "id": "897afd34-2e11-4adb-9731-940ae832cc43",
       "name": "Carry — Pre AI Description",
       "notes": "Carry unified context before AI node that may overwrite fields. Input: unified extraction payload. Output: same item with guaranteed document_id/extracted_text/ctx/job."
     },
@@ -4245,10 +4245,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        5440,
-        8144
+        8416,
+        8272
       ],
-      "id": "e7996e75-84b4-4161-bb98-ba8edf55a1a9",
+      "id": "219981fb-0b9b-4b09-a419-0303645fe793",
       "name": "Merge — Restore CTX after AI",
       "notes": "Restore carried fields after AI response. Input1: AI output. Input2: carry item. Output: AI fields + document_id/extracted_text/ctx/job."
     },
@@ -4284,10 +4284,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3328,
-        8880
+        6304,
+        9008
       ],
-      "id": "104911ae-25b9-4bc3-978a-989c6cf5e23a",
+      "id": "b953a83e-548e-42e6-b6ab-c58c7c57227f",
       "name": "Carry — Pre Convert File",
       "notes": "Carry context before Convert node that may overwrite json fields. Input: file item from switch/unsupported branch. Output: same item with guaranteed ctx/job/document_id."
     },
@@ -4300,10 +4300,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        3696,
-        8992
+        6672,
+        9120
       ],
-      "id": "cc5ab0af-cba7-4c08-bbf0-e2f61c5e5d2a",
+      "id": "f9cb044f-4ec8-47a5-ba0d-c89108dd26da",
       "name": "Merge — Restore CTX after Convert",
       "notes": "Restore ctx/job/document_id after Convert output. Input1: Convert output. Input2: carried context. Output: converted payload + restored context."
     },
@@ -4333,10 +4333,10 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        4432,
-        8464
+        7408,
+        8592
       ],
-      "id": "bfac9805-a707-4553-b84c-4e01f67a2e32",
+      "id": "a581af9a-ab59-4d6f-96c3-e0c8b8642c67",
       "name": "Aggregate — Collapse Extracted Items",
       "notes": "Collapse fan-out outputs (for example XLSX multi-sheet) into one aggregated item before DB update/enqueue. Collects document_id/ctx/job/extracted_text/meta arrays."
     },
@@ -4383,10 +4383,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4592,
-        8432
+        7568,
+        8560
       ],
-      "id": "7aff6e86-7dff-4f63-9cda-5a7188d9e0d5",
+      "id": "90c3fb9d-413b-4973-9540-86d75a576d43",
       "name": "Set — Collapse Aggregated Fields",
       "notes": "Normalize Aggregate arrays to one unified item for downstream pipeline: pick first document_id/ctx/job and concatenate extracted_text parts."
     },
@@ -4402,11 +4402,11 @@
           "conditions": [
             {
               "id": "ed7d7c68-d2e6-4b8c-9fb8-735f343a81aa",
-              "leftValue": "={{ !!$json.id && $json.id === $json.document_id }}",
+              "leftValue": "={{ $json.id }}",
               "rightValue": "",
               "operator": {
-                "type": "boolean",
-                "operation": "true",
+                "type": "string",
+                "operation": "notEmpty",
                 "singleValue": true
               }
             }
@@ -4418,10 +4418,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -672,
-        8048
+        2304,
+        8176
       ],
-      "id": "4f723804-2a82-4254-b6e2-9cbdecadd10f",
+      "id": "3b0ddb1d-39be-4a78-bfa4-a18a2930d8d5",
       "name": "IF — Doc Found?"
     },
     {
@@ -4446,10 +4446,10 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
       "position": [
-        576,
-        10608
+        3552,
+        10736
       ],
-      "id": "cb7ee048-d9df-4fbc-96a1-86ba50153c5d",
+      "id": "be4b488d-63c6-4df2-8aaa-35fb14812c9a",
       "name": "Execute WF99 (Empty Text)1",
       "notes": "Call WF99 for empty text error. Input: error_context. Output: ErrorEnvelope. WHY: ErrorPipe v1 centralized logging. NO StopAndError after!"
     },
@@ -4520,10 +4520,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        336,
-        10608
+        3312,
+        10736
       ],
-      "id": "819ad42c-ddd2-4af7-a530-03f168a0e610",
+      "id": "5aec8c81-0781-47c6-b805-4d6edcc15007",
       "name": "ERR — Prepare ErrorPipe v1 (DB Doc)1",
       "notes": "Build error_context for empty text (business error). Input: err source. Output: error_context.*. WHY includeOtherFields=false: clean envelope for WF99."
     },
@@ -4565,10 +4565,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        112,
-        10608
+        3088,
+        10736
       ],
-      "id": "d508fe0c-4a18-4fcf-8d09-e6cf0afea4ac",
+      "id": "01bd21b8-c10f-4bdd-b98e-85cc36ad7c8e",
       "name": "ERR — Source Input Guard1",
       "notes": "ErrorPipe v1: Capture error source for Input Guard failure. Input: failed item. Output: _err.* + ctx + job + original. WHY includeOtherFields=true: preserve failure data."
     }
@@ -5387,11 +5387,6 @@
         ]
       ]
     },
-    "TEST — Build Worker Requests": {
-      "main": [
-        []
-      ]
-    },
     "SWITCH — Route by File Type": {
       "main": [
         [
@@ -5855,6 +5850,11 @@
           }
         ]
       ]
+    },
+    "TEST — Build Worker Requests": {
+      "main": [
+        []
+      ]
     }
   },
   "active": true,
@@ -5866,7 +5866,7 @@
     "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "516bd7bd-3d2f-4606-8f1f-745d4accaaae",
+  "versionId": "4a32eec0-15f9-4276-b23d-16ec4b4f957a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
