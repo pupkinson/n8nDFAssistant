@@ -1,0 +1,16 @@
+# Default owner
+* @pupkinson
+
+# n8n workflows
+/workflows/ @pupkinson
+
+# Sensitive config
+/Credentials.json @pupkinson
+/SQL.txt @pupkinson
+
+# GitHub automation and templates
+/.github/ @pupkinson
+
+# Docs/canvas
+/docs/ @pupkinson
+/*.md @pupkinson
