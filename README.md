@@ -1,1 +1,1 @@
-DF Assistant Bot
+DF Assistant Bot v1
