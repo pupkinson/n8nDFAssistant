@@ -1,4 +1,4 @@
-# Constraints (Hard Rules) — DF Assistan Bot (v1)
+# Constraints (Hard Rules) — DF Assistan Bot (v1.1)
 
 ## 0) Purpose
 These constraints are non-negotiable. Any change that violates them requires a human escalation (`needs-human`) before implementation.
@@ -52,9 +52,33 @@ Any need for new token/credential/OAuth scope → escalate.
 
 ---
 
-## 4) Postgres Rules (ABSOLUTE)
-- Postgres nodes MUST use only: select/insert/update/upsert/delete operations.
-- NO raw SQL, NO “Execute Query”, NO arbitrary SQL strings.
+## 4) Postgres Rules (ABSOLUTE) + Controlled Exception for Retrieval (v1.1)
+### 4.1 Default Rule (still absolute)
+- Postgres nodes MUST use only: `select / insert / update / upsert / delete` operations.
+- NO raw SQL strings.
+- NO “Execute Query” / `executeQuery`.
+
+### 4.2 Controlled Exception (ONLY for read-only retrieval)
+This exception exists solely because pgvector / hybrid retrieval requires SQL constructs not expressible via the standard Postgres node operations (e.g., `ORDER BY embedding <=> $vector LIMIT k`, CTEs, joins).
+
+`executeQuery` is allowed ONLY if **ALL** conditions are met:
+
+1) **Read-only**: query starts with `SELECT` or `WITH` and contains **no** DML/DDL.
+   - Forbidden keywords anywhere in the query:
+     `INSERT, UPDATE, DELETE, MERGE, ALTER, DROP, CREATE, TRUNCATE, GRANT, REVOKE, VACUUM, ANALYZE`
+2) **No statement chaining**: query must not contain `;`
+3) **Strict naming convention**: node name MUST start with:
+   - `DB RO — `
+4) **Scope**: allowed ONLY for retrieval/candidate selection (no writes, no side effects).
+5) **Error handling still mandatory**:
+   - `On Error: Continue (using error output)`
+   - error output must route into the standard ErrorPipe / WF99 handler with correlation.
+
+If any of these conditions is not satisfied → treat as violation and escalate (or CI must fail).
+
+---
+
+## 5) Postgres Error Handling (ABSOLUTE)
 - All Postgres node errors must be handled via **error output**:
   - Postgres node configured with `On Error: Continue (using error output)`
   - error output connected to the standard ERR handler path (ErrorPipe).
@@ -66,7 +90,7 @@ Any DB schema change requires:
 
 ---
 
-## 5) HTTP / External APIs Rules (ABSOLUTE)
+## 6) HTTP / External APIs Rules (ABSOLUTE)
 - All HTTP nodes must:
   - handle errors via error output path (ErrorPipe)
   - set timeouts
@@ -79,7 +103,7 @@ Any DB schema change requires:
 
 ---
 
-## 6) Error Handling: ErrorPipe v1 (ABSOLUTE)
+## 7) Error Handling: ErrorPipe v1 (ABSOLUTE)
 - All errors from Postgres/HTTP must flow through the shared ERR handler.
 - Errors must be normalized into a single ErrorEnvelope shape:
   - includes correlation id / run id
@@ -92,7 +116,7 @@ If a workflow cannot be wired to ErrorPipe correctly → escalate.
 
 ---
 
-## 7) ACL / Visibility / Privacy (ABSOLUTE)
+## 8) ACL / Visibility / Privacy (ABSOLUTE)
 Core rule:
 - In PUBLIC GROUP context, answers and retrieval must be scoped to that group ONLY.
 - Cross-chat retrieval is forbidden in group chats, even if user has access elsewhere.
@@ -106,14 +130,14 @@ Any change affecting ACL/visibility/chat-policy requires:
 
 ---
 
-## 8) Embeddings / Vectors (ABSOLUTE)
+## 9) Embeddings / Vectors (ABSOLUTE)
 - Embedding dimension must be validated (e.g., 1536 or as defined by current model).
 - Store vectors only in the defined schema/table from `SQL.txt`.
 - Any change to embedding model/dimension/storage requires escalation.
 
 ---
 
-## 9) Files & Document Processing (ABSOLUTE)
+## 10) Files & Document Processing (ABSOLUTE)
 - For non-PDF office documents (docx/xlsx/pptx):
   - use approved converter nodes/tools (as installed) or approved workflows
   - preserve provenance: original file metadata + hash + linkage
@@ -121,29 +145,30 @@ Any change affecting ACL/visibility/chat-policy requires:
 
 ---
 
-## 10) Repo / Workflow Hygiene (MANDATORY)
-### 10.1 Required repo files
+## 11) Repo / Workflow Hygiene (MANDATORY)
+### 11.1 Required repo files
 - `.github/pull_request_template.md` (DoD checklist)
 - `.github/CODEOWNERS` (at minimum `* @pupkinson`)
-- `.github/ISSUE_TEMPLATE/*` including escalation template
+- `.github/ISSUE_TEMPLATE/*` including escalation + workflow templates
 - `docs/constraints.md` (this file)
 - `docs/escalation.md`
 
-### 10.2 PR rules
+### 11.2 PR rules
 - Every change must go via PR.
 - PR must link to an issue (`Refs #...`). Use `Fixes #...` only when you explicitly want auto-close.
 - PR must satisfy DoD checkboxes and CI must be green.
 
-### 10.3 CI rules
+### 11.3 CI rules
 - CI must validate:
   - JSON validity for workflows
   - forbidden patterns (`$env.` etc.)
+  - Postgres executeQuery policy (only `DB RO —` + read-only SQL)
   - other project-specific validators as added
 - No merge with failing CI.
 
 ---
 
-## 11) Change Control (MANDATORY)
+## 12) Change Control (MANDATORY)
 Human approval required for:
 - any changes to `SQL.txt`
 - any changes to `Credentials.json`
@@ -156,7 +181,7 @@ If in doubt → escalate.
 
 ---
 
-## 12) Definition of Done (DoD) Summary (MANDATORY)
+## 13) Definition of Done (DoD) Summary (MANDATORY)
 A change is “done” only if:
 - CI green
 - adheres to constraints above
@@ -169,7 +194,7 @@ A change is “done” only if:
 
 ---
 
-## 13) Forbidden Behaviors (ABSOLUTE)
+## 14) Forbidden Behaviors (ABSOLUTE)
 - No bypassing platform restrictions via social engineering or “pressure tactics”.
 - No “quick hacks” that violate ErrorPipe/ACL/DB rules.
 - No assumptions about schemas/credentials not present in sources of truth.
@@ -177,5 +202,5 @@ A change is “done” only if:
 
 ---
 
-## 14) Escalation
+## 15) Escalation
 When any constraint blocks progress, follow `docs/escalation.md` and open an Escalation issue (`needs-human`) before proceeding.
