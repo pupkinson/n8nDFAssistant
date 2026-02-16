@@ -1,0 +1,126 @@
+name: Auto-label PR by touched files and intent
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply smart labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pr = context.payload.pull_request.number;
+
+            // ----- Helpers -----
+            async function listAllFiles() {
+              return await github.paginate(github.rest.pulls.listFiles, {
+                owner, repo, pull_number: pr, per_page: 100
+              });
+            }
+
+            function hasAnyPath(changed, patterns) {
+              return changed.some(p => patterns.some(rx => rx.test(p)));
+            }
+
+            function fileNameOnly(p) {
+              return p.split("/").pop();
+            }
+
+            function isWorkflowJson(p) {
+              return /^workflows\/.+\.json$/i.test(p);
+            }
+
+            function isBugIntent(text) {
+              if (!text) return false;
+              const t = text.toLowerCase();
+              // Russian + English heuristics
+              const kw = [
+                "fix", "bug", "hotfix", "regression", "crash", "error",
+                "ошиб", "баг", "фикс", "почин", "краш", "регресс"
+              ];
+              return kw.some(k => t.includes(k));
+            }
+
+            async function getExistingLabels() {
+              const res = await github.rest.issues.listLabelsOnIssue({
+                owner, repo, issue_number: pr
+              });
+              return new Set(res.data.map(l => l.name));
+            }
+
+            async function addLabels(labels) {
+              if (!labels.length) return;
+              await github.rest.issues.addLabels({
+                owner, repo, issue_number: pr, labels
+              });
+              core.info("Added labels: " + labels.join(", "));
+            }
+
+            // ----- Read PR data -----
+            const files = await listAllFiles();
+            const changed = files.map(f => f.filename);
+
+            const prTitle = context.payload.pull_request.title || "";
+            const prBody = context.payload.pull_request.body || "";
+            const intentBug = isBugIntent(prTitle + "\n" + prBody);
+
+            // ----- Determine labels -----
+            const labelsToAdd = new Set();
+
+            // SQL / Credentials
+            if (changed.includes("SQL.txt")) {
+              labelsToAdd.add("db-change");
+            }
+            if (changed.includes("Credentials.json")) {
+              labelsToAdd.add("critical-credentials");
+              labelsToAdd.add("needs-human"); // reinforce
+            }
+
+            // ACL-sensitive workflows by filename
+            const aclSensitiveNames = new Set([
+              "WF00c — Context Loader (ACL + Chat Policy + Visibility).json",
+              "WF50  Query Orchestrator (ACL-first retrieval).json",
+              "WF51 — Answerer (Answer with citations).json"
+            ]);
+
+            const touchedAcl = changed
+              .filter(p => isWorkflowJson(p))
+              .map(fileNameOnly)
+              .some(fn => aclSensitiveNames.has(fn) || /^WF00c\b/i.test(fn) || /^WF50\b/i.test(fn) || /^WF51\b/i.test(fn));
+
+            if (touchedAcl) {
+              labelsToAdd.add("acl-change");
+              labelsToAdd.add("needs-human"); // ACL changes should be human-reviewed
+            }
+
+            // Any workflow JSON touched
+            const touchedAnyWorkflow = changed.some(isWorkflowJson);
+            if (touchedAnyWorkflow) {
+              // If looks like bugfix -> type:bug else type:feature
+              labelsToAdd.add(intentBug ? "type:bug" : "type:feature");
+            }
+
+            // If SQL or ACL changed, also mark as tracked (so it lands in Project auto-add if you use label:tracked)
+            if (labelsToAdd.has("db-change") || labelsToAdd.has("acl-change") || labelsToAdd.has("critical-credentials")) {
+              labelsToAdd.add("tracked");
+            }
+
+            // ----- Apply labels (only missing) -----
+            const existing = await getExistingLabels();
+            const final = [...labelsToAdd].filter(l => !existing.has(l));
+
+            if (!final.length) {
+              core.info("No new labels to add.");
+              return;
+            }
+
+            await addLabels(final);
