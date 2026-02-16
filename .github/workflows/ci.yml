@@ -5,15 +5,26 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Guard critical files (needs-human label required)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/ci-guard-needs-human.sh
 
       - name: Validate workflows (n8n rules)
         run: node scripts/validate-workflows.mjs

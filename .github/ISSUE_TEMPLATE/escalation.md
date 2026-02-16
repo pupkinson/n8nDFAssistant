@@ -2,7 +2,7 @@
 name: Escalation (needs human)
 about: Use when work must stop and needs a human decision/access/approval.
 title: "[ESCALATION] "
-labels: ["needs-human"]
+labels: ["tracked","needs-human"]
 ---
 
 ## Reason (what happened)
