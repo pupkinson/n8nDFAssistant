@@ -109,7 +109,7 @@ function main() {
       continue;
     }
 
-    checkPostgresNoExecuteQuery(file, wf);
+    checkPostgresExecutePolicy(file, wf);
   }
 
   if (process.exitCode) process.exit(1);
