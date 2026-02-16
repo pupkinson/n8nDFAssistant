@@ -38,22 +38,54 @@ function checkForbiddenStrings(file, text) {
   }
 }
 
-function checkPostgresNoExecuteQuery(file, wf) {
+function isReadOnlySql(sql) {
+  if (!sql || typeof sql !== "string") return false;
+  const s = sql.trim();
+
+  // Must start with SELECT or WITH
+  if (!/^(select|with)\b/i.test(s)) return false;
+
+  // No statement chaining
+  if (s.includes(";")) return false;
+
+  // No write / ddl keywords
+  if (/\b(insert|update|delete|merge|alter|drop|create|truncate|grant|revoke|vacuum|analyze)\b/i.test(s)) {
+    return false;
+  }
+
+  return true;
+}
+
+function checkPostgresExecutePolicy(file, wf) {
   const nodes = wf?.nodes ?? [];
   for (const n of nodes) {
     const type = n?.type ?? "";
-    // эвристика: Postgres node
-    if (type.includes("postgres")) {
-      const params = n?.parameters ?? {};
-      const op = params?.operation ?? "";
-      const query = params?.query ?? params?.options?.query ?? "";
-      if (String(op).toLowerCase().includes("execute")) {
-        fail(`[FAIL] ${file}: postgres node "${n.name}" uses operation "${op}" (executeQuery forbidden)`);
-      }
-      if (typeof query === "string" && query.trim().length > 0) {
-        // если вы вообще запрещаете произвольный SQL — включите это правило
-        // fail(`[FAIL] ${file}: postgres node "${n.name}" contains raw SQL in parameters (forbidden)`);
-      }
+    if (!type.includes("postgres")) continue;
+
+    const name = n?.name ?? "";
+    const params = n?.parameters ?? {};
+    const op = String(params?.operation ?? "").trim();
+    const query =
+      params?.query ??
+      params?.options?.query ??
+      params?.executeQuery ??
+      params?.sql ??
+      "";
+
+    const isExecute = op.toLowerCase().includes("execute");
+
+    if (!isExecute) continue;
+
+    // Allow only DB RO — nodes with read-only SQL
+    const allowedByName = name.startsWith("DB RO —");
+    if (!allowedByName) {
+      fail(`[FAIL] ${file}: postgres node "${name}" uses operation "${op}" but node name is not prefixed with "DB RO —"`);
+      continue;
+    }
+
+    if (!isReadOnlySql(String(query))) {
+      fail(`[FAIL] ${file}: postgres node "${name}" uses executeQuery but SQL is not read-only SELECT/WITH (or contains forbidden patterns)`);
+      continue;
     }
   }
 }
