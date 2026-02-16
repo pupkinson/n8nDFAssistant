@@ -1,6 +1,3 @@
-# Default owner
-* @pupkinson
-
 # n8n workflows
 /workflows/ @pupkinson
 
@@ -14,3 +11,12 @@
 # Docs/canvas
 /docs/ @pupkinson
 /*.md @pupkinson
+
+# Critical files require owner review
+SQL.txt            @pupkinson
+Credentials.json   @pupkinson
+/workflows/        @pupkinson
+.github/workflows/ @pupkinson
+scripts/           @pupkinson
+docs/              @pupkinson
+
