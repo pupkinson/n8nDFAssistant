@@ -2,28 +2,20 @@
   "name": "WF50  Query Orchestrator (ACL-first retrieval)",
   "nodes": [
     {
-      "id": "n1",
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "2b55242a-e9bf-4812-b39c-cdddf4e5d415",
       "name": "IN ? Execute Workflow Trigger",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1800,
-        260
+        -656,
+        144
       ],
-      "parameters": {
-        "inputSource": "passthrough"
-      },
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n2",
-      "name": "Set ? Normalize Input",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1580,
-        260
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -94,17 +86,17 @@
           "dotNotation": true
         }
       },
+      "id": "f613f91a-90d8-424b-9bf4-dfd4565fa706",
+      "name": "Set ? Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -448,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n3",
-      "name": "IF ? Guard job_type",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -1360,
-        260
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -125,17 +117,17 @@
         },
         "options": {}
       },
+      "id": "e0f7fee8-bc03-4202-b34b-6d06e74edcab",
+      "name": "IF ? Guard job_type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n4",
-      "name": "OUT ? ManagedFailure 400 Wrong Job Type",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1140,
-        120
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -175,17 +167,17 @@
           "dotNotation": true
         }
       },
+      "id": "d8711d7d-36e3-4ebc-8892-8520855647ee",
+      "name": "OUT ? ManagedFailure 400 Wrong Job Type",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n5",
-      "name": "IF ? Guard Required Fields",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -1140,
-        260
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -260,17 +252,17 @@
         },
         "options": {}
       },
+      "id": "b2a3a7a4-11e8-4254-b54d-cb9a47a64822",
+      "name": "IF ? Guard Required Fields",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n6",
-      "name": "OUT ? ManagedFailure 400 Missing Fields",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -920,
-        420
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -310,17 +302,17 @@
           "dotNotation": true
         }
       },
-      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
-    },
-    {
-      "id": "n7",
-      "name": "CTX ? Prepare WF00c Input",
+      "id": "4b90a41c-2ebf-4e45-a3ed-40e77cbd5aff",
+      "name": "OUT ? ManagedFailure 400 Missing Fields",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -920,
-        260
+        224,
+        304
       ],
+      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
+    },
+    {
       "parameters": {
         "assignments": {
           "assignments": [
@@ -421,18 +413,17 @@
           "dotNotation": true
         }
       },
+      "id": "ec5fa474-5d1c-4dd9-b78b-e5726f8f1f16",
+      "name": "CTX ? Prepare WF00c Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n8",
-      "name": "CTX ? Execute WF00c",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        -700,
-        260
-      ],
-      "onError": "continueErrorOutput",
       "parameters": {
         "workflowId": {
           "__rl": true,
@@ -446,17 +437,18 @@
           "waitForSubWorkflow": true
         }
       },
+      "id": "473dd85a-6da5-40c5-af99-32c0c7ccce16",
+      "name": "CTX ? Execute WF00c",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        336
+      ],
+      "onError": "continueErrorOutput",
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n9",
-      "name": "CTX ? Canonicalize + Scope",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -480,
-        260
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -514,40 +506,17 @@
           "dotNotation": true
         }
       },
+      "id": "f4d1796b-e149-4191-b5fe-50b0824c2643",
+      "name": "CTX ? Canonicalize + Scope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n10",
-      "name": "DB ? Build Allowed Chat Scope",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        -260,
-        260
-      ],
-      "onError": "continueErrorOutput",
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "={{ `WITH x AS (SELECT '${$json._ctx.tenant_id || $json.ctx?.tenant_id || ''}'::uuid tenant_id, ${Number($json.req.chat_id || 0)}::bigint origin_chat_id, ${Number($json.req.tg_user_id || 0)}::bigint actor_user_id, '${String($json.access_scope.channel || 'dm').replace(/'/g, \"''\")}'::text ch, ${$json.access_scope.is_admin ? 'true' : 'false'}::boolean is_admin) SELECT x.ch AS channel, x.origin_chat_id, x.actor_user_id AS dm_owner_user_id, x.is_admin, CASE WHEN x.ch='group' THEN ARRAY[x.origin_chat_id]::bigint[] WHEN x.is_admin THEN (SELECT COALESCE(array_agg(tc.chat_id), ARRAY[]::bigint[]) FROM core.tenant_chats tc WHERE tc.tenant_id=x.tenant_id AND tc.is_enabled=true) ELSE (SELECT COALESCE(array_agg(m.chat_id), ARRAY[]::bigint[]) FROM tg.chat_memberships_current m WHERE m.tenant_id=x.tenant_id AND m.tg_user_id=x.actor_user_id AND LOWER(COALESCE(m.status,'')) NOT IN ('left','kicked')) END AS allowed_chat_ids, CASE WHEN x.ch='group' THEN EXISTS(SELECT 1 FROM tg.chat_memberships_current gm WHERE gm.tenant_id=x.tenant_id AND gm.chat_id=x.origin_chat_id AND gm.tg_user_id=x.actor_user_id AND LOWER(COALESCE(gm.status,'')) NOT IN ('left','kicked')) ELSE true END AS scope_ok FROM x;` }}",
-        "options": {}
-      },
-      "credentials": {
-        "postgres": {
-          "id": "yckAFBLpmdhsPaDZ",
-          "name": "Postgres DF Assistant"
-        }
-      },
-      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
-    },
-    {
-      "id": "n11",
-      "name": "IF ? ACL Allowed + Scope OK",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -40,
-        260
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -577,17 +546,17 @@
         },
         "options": {}
       },
+      "id": "3436429d-476d-43f9-8a31-b2370193aab1",
+      "name": "IF ? ACL Allowed + Scope OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1104,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n12",
-      "name": "OUT ? ManagedFailure 403 ACL Denied",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        180,
-        420
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -627,17 +596,17 @@
           "dotNotation": true
         }
       },
+      "id": "ab64fa42-811d-469c-97ef-f830af4d4ca4",
+      "name": "OUT ? ManagedFailure 403 ACL Denied",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        304
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n13",
-      "name": "IF ? Chat Policy Allows Embedding?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        180,
-        260
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -658,17 +627,17 @@
         },
         "options": {}
       },
+      "id": "b3d3ae73-0078-4021-941d-2df5bd9fec59",
+      "name": "IF ? Chat Policy Allows Embedding?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1328,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n14",
-      "name": "Set ? Empty Candidates",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        400,
-        420
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -732,17 +701,17 @@
           "dotNotation": true
         }
       },
-      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
-    },
-    {
-      "id": "n15",
-      "name": "EMB ? Prepare Query Request",
+      "id": "b74c0476-cd63-4cf0-8de8-bb4a575fbcaa",
+      "name": "Set ? Empty Candidates",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        400,
-        260
+        1552,
+        304
       ],
+      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
+    },
+    {
       "parameters": {
         "assignments": {
           "assignments": [
@@ -812,18 +781,17 @@
           "dotNotation": true
         }
       },
+      "id": "7a62a130-0f74-4c5a-b07a-9b140d818e00",
+      "name": "EMB ? Prepare Query Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n16",
-      "name": "EMB ? OpenAI Query Embedding",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        620,
-        260
-      ],
-      "onError": "continueErrorOutput",
       "parameters": {
         "method": "POST",
         "url": "https://api.openai.com/v1/embeddings",
@@ -841,23 +809,24 @@
           "timeout": 120000
         }
       },
+      "id": "2a124f9c-5fa2-42f8-b309-8be6049fe345",
+      "name": "EMB ? OpenAI Query Embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        144
+      ],
       "credentials": {
         "openAiApi": {
           "id": "LB6ntiMR8lDYKSy4",
           "name": "OpenAi account"
         }
       },
+      "onError": "continueErrorOutput",
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n17",
-      "name": "Set ? Retrieval SQL Params",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        840,
-        260
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -915,17 +884,17 @@
           "dotNotation": true
         }
       },
+      "id": "815c89b8-cdf0-476b-a402-ad93caebec24",
+      "name": "Set ? Retrieval SQL Params",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1984,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n18",
-      "name": "IF ? Embedding Dim 1536?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        1060,
-        260
-      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -946,17 +915,17 @@
         },
         "options": {}
       },
+      "id": "64ac356c-fc9e-4269-bcfc-77416a7d7ae5",
+      "name": "IF ? Embedding Dim 1536?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2208,
+        144
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n19",
-      "name": "OUT ? ManagedFailure 500 Bad Embedding Dim",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1280,
-        120
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -996,40 +965,17 @@
           "dotNotation": true
         }
       },
-      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
-    },
-    {
-      "id": "n20",
-      "name": "DB ? Retrieve Candidates Hybrid ACL-First",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        1280,
-        260
-      ],
-      "onError": "continueErrorOutput",
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "={{ `WITH scope AS ( SELECT '${$json._ctx.tenant_id}'::uuid AS tenant_id, ARRAY[${$json.retrieval.allowed_chat_ids_csv || 'NULL'}]::bigint[] AS allowed_chat_ids, ${Number($json.access_scope.origin_chat_id || 0)}::bigint AS origin_chat_id, '${String($json.access_scope.channel || 'dm').replace(/'/g, \"''\")}'::text AS channel, ${Number($json.req.tg_user_id || 0)}::bigint AS actor_user_id, ${$json.access_scope.is_admin ? 'true' : 'false'}::boolean AS is_admin, '[${($json.retrieval.query_embedding || []).join(',')}]'::vector AS query_vec, plainto_tsquery('simple', '${$json.retrieval.query_text_escaped}') AS qts ) SELECT c.id AS chunk_id, d.id AS document_id, d.chat_id AS chat_id, LEFT(c.text,600) AS snippet, ((ts_rank_cd(c.tsv, scope.qts)*0.4)+((1-(ce.embedding <=> scope.query_vec))*0.6))::double precision AS score, CONCAT(COALESCE(d.doc_type::text,''),'#',COALESCE(m.message_id::text,''),'#',COALESCE(d.file_unique_id,'')) AS source_ref FROM kg.chunk_embeddings_1536 ce JOIN kg.chunks c ON c.id=ce.chunk_id JOIN content.documents d ON d.id=c.document_id LEFT JOIN tg.message_versions mv ON mv.id=d.message_version_id LEFT JOIN tg.messages m ON m.id=mv.message_fk CROSS JOIN scope WHERE ce.model_id=1 AND d.tenant_id=scope.tenant_id AND d.chat_id = ANY(scope.allowed_chat_ids) AND (scope.channel <> 'group' OR d.chat_id = scope.origin_chat_id) AND (scope.channel <> 'dm' OR scope.is_admin OR d.visibility <> 'dm_private' OR d.dm_owner_user_id = scope.actor_user_id) ORDER BY score DESC, c.id DESC LIMIT ${Math.max(1, Number($json.retrieval.top_k || 10))};` }}",
-        "options": {}
-      },
-      "credentials": {
-        "postgres": {
-          "id": "yckAFBLpmdhsPaDZ",
-          "name": "Postgres DF Assistant"
-        }
-      },
-      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
-    },
-    {
-      "id": "n21",
-      "name": "Set ? Candidates Canonical Format",
+      "id": "a72ed99d-3967-4dec-962f-18c5a8118bfa",
+      "name": "OUT ? ManagedFailure 500 Bad Embedding Dim",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1500,
-        260
+        2464,
+        400
       ],
+      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
+    },
+    {
       "parameters": {
         "assignments": {
           "assignments": [
@@ -1069,31 +1015,29 @@
           "dotNotation": true
         }
       },
+      "id": "54c21721-07f5-4189-96ae-f1dcb5ba9f49",
+      "name": "Set ? Candidates Canonical Format",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2720,
+        112
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n22",
+      "parameters": {},
+      "id": "730da622-f1e5-4f3d-8856-991a6a8309cf",
       "name": "Merge ? Candidate Branches",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1720,
-        320
+        2864,
+        352
       ],
-      "parameters": {
-        "mode": "append"
-      },
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n23",
-      "name": "CALL ? Prepare WF51 Input",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1940,
-        320
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -1206,18 +1150,17 @@
           "dotNotation": true
         }
       },
+      "id": "64cb4f86-1047-4b81-b3ce-57382705604b",
+      "name": "CALL ? Prepare WF51 Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3088,
+        208
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n24",
-      "name": "CALL ? Execute WF51 Answerer",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        2160,
-        320
-      ],
-      "onError": "continueErrorOutput",
       "parameters": {
         "workflowId": {
           "__rl": true,
@@ -1231,17 +1174,18 @@
           "waitForSubWorkflow": true
         }
       },
+      "id": "f2c72974-08ba-4519-b75e-d0de3e5d0def",
+      "name": "CALL ? Execute WF51 Answerer",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3312,
+        208
+      ],
+      "onError": "continueErrorOutput",
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n25",
-      "name": "OUT ? SuccessEnvelope",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2380,
-        320
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -1311,31 +1255,29 @@
           "dotNotation": true
         }
       },
+      "id": "6723a8f1-34f8-4124-b6da-e7fd458c6665",
+      "name": "OUT ? SuccessEnvelope",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3632,
+        80
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n26",
+      "parameters": {},
+      "id": "78bc6ab1-b68f-4845-a5ee-8a4c67ff9c67",
       "name": "ERR ? Funnel Merge",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        620,
-        720
+        1232,
+        576
       ],
-      "parameters": {
-        "mode": "append"
-      },
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n27",
-      "name": "ERR ? Source I/O",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        840,
-        720
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -1406,17 +1348,17 @@
           "dotNotation": true
         }
       },
-      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
-    },
-    {
-      "id": "n28",
-      "name": "ERR ? Build ErrorPipe v1",
+      "id": "ca8487d3-d632-43c6-8a0a-1f3589bd1aa8",
+      "name": "ERR ? Source I/O",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1060,
-        720
+        2208,
+        832
       ],
+      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
+    },
+    {
       "parameters": {
         "assignments": {
           "assignments": [
@@ -1499,18 +1441,17 @@
           "dotNotation": true
         }
       },
+      "id": "d0b8d5b2-a89b-4231-9d78-dcd86f4c7674",
+      "name": "ERR ? Build ErrorPipe v1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2592,
+        832
+      ],
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n29",
-      "name": "ERR ? Execute WF99",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        1280,
-        720
-      ],
-      "onError": "continueErrorOutput",
       "parameters": {
         "workflowId": {
           "__rl": true,
@@ -1525,17 +1466,18 @@
           "waitForSubWorkflow": true
         }
       },
+      "id": "e598f275-e1b2-491c-a375-b08a992c7422",
+      "name": "ERR ? Execute WF99",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2816,
+        832
+      ],
+      "onError": "continueErrorOutput",
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     },
     {
-      "id": "n30",
-      "name": "OUT ? ManagedFailure 500 From WF99",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1500,
-        680
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -1581,17 +1523,17 @@
           "dotNotation": true
         }
       },
-      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
-    },
-    {
-      "id": "n31",
-      "name": "OUT ? ManagedFailure 500 WF99 Call Failed",
+      "id": "7b2d7d10-ce09-4ba1-b37a-db5d8aae2ce5",
+      "name": "OUT ? ManagedFailure 500 From WF99",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1500,
-        800
+        3024,
+        784
       ],
+      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
+    },
+    {
       "parameters": {
         "assignments": {
           "assignments": [
@@ -1637,9 +1579,64 @@
           "dotNotation": true
         }
       },
+      "id": "5a537830-181a-420c-84f9-54473a2430d5",
+      "name": "OUT ? ManagedFailure 500 WF99 Call Failed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3024,
+        912
+      ],
+      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ `WITH x AS (SELECT '${$json._ctx.tenant_id || $json.ctx?.tenant_id || ''}'::uuid tenant_id, ${Number($json.req.chat_id || 0)}::bigint origin_chat_id, ${Number($json.req.tg_user_id || 0)}::bigint actor_user_id, '${String($json.access_scope.channel || 'dm').replace(/'/g, \"''\")}'::text ch, ${$json.access_scope.is_admin ? 'true' : 'false'}::boolean is_admin) SELECT x.ch AS channel, x.origin_chat_id, x.actor_user_id AS dm_owner_user_id, x.is_admin, CASE WHEN x.ch='group' THEN ARRAY[x.origin_chat_id]::bigint[] WHEN x.is_admin THEN (SELECT COALESCE(array_agg(tc.chat_id), ARRAY[]::bigint[]) FROM core.tenant_chats tc WHERE tc.tenant_id=x.tenant_id AND tc.is_enabled=true) ELSE (SELECT COALESCE(array_agg(m.chat_id), ARRAY[]::bigint[]) FROM tg.chat_memberships_current m WHERE m.tenant_id=x.tenant_id AND m.tg_user_id=x.actor_user_id AND LOWER(COALESCE(m.status,'')) NOT IN ('left','kicked')) END AS allowed_chat_ids, CASE WHEN x.ch='group' THEN EXISTS(SELECT 1 FROM tg.chat_memberships_current gm WHERE gm.tenant_id=x.tenant_id AND gm.chat_id=x.origin_chat_id AND gm.tg_user_id=x.actor_user_id AND LOWER(COALESCE(gm.status,'')) NOT IN ('left','kicked')) ELSE true END AS scope_ok FROM x;` }}",
+        "options": {}
+      },
+      "id": "a071836c-b9a3-4d09-ba81-5fc975d3e70f",
+      "name": "DB RO — Build Allowed Chat Scope",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        880,
+        144
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ `WITH scope AS ( SELECT '${$json._ctx.tenant_id}'::uuid AS tenant_id, ARRAY[${$json.retrieval.allowed_chat_ids_csv || 'NULL'}]::bigint[] AS allowed_chat_ids, ${Number($json.access_scope.origin_chat_id || 0)}::bigint AS origin_chat_id, '${String($json.access_scope.channel || 'dm').replace(/'/g, \"''\")}'::text AS channel, ${Number($json.req.tg_user_id || 0)}::bigint AS actor_user_id, ${$json.access_scope.is_admin ? 'true' : 'false'}::boolean AS is_admin, '[${($json.retrieval.query_embedding || []).join(',')}]'::vector AS query_vec, plainto_tsquery('simple', '${$json.retrieval.query_text_escaped}') AS qts ) SELECT c.id AS chunk_id, d.id AS document_id, d.chat_id AS chat_id, LEFT(c.text,600) AS snippet, ((ts_rank_cd(c.tsv, scope.qts)*0.4)+((1-(ce.embedding <=> scope.query_vec))*0.6))::double precision AS score, CONCAT(COALESCE(d.doc_type::text,''),'#',COALESCE(m.message_id::text,''),'#',COALESCE(d.file_unique_id,'')) AS source_ref FROM kg.chunk_embeddings_1536 ce JOIN kg.chunks c ON c.id=ce.chunk_id JOIN content.documents d ON d.id=c.document_id LEFT JOIN tg.message_versions mv ON mv.id=d.message_version_id LEFT JOIN tg.messages m ON m.id=mv.message_fk CROSS JOIN scope WHERE ce.model_id=1 AND d.tenant_id=scope.tenant_id AND d.chat_id = ANY(scope.allowed_chat_ids) AND (scope.channel <> 'group' OR d.chat_id = scope.origin_chat_id) AND (scope.channel <> 'dm' OR scope.is_admin OR d.visibility <> 'dm_private' OR d.dm_owner_user_id = scope.actor_user_id) ORDER BY score DESC, c.id DESC LIMIT ${Math.max(1, Number($json.retrieval.top_k || 10))};` }}",
+        "options": {}
+      },
+      "id": "7365e895-4967-446e-bc25-486065f71d36",
+      "name": "DB RO — Retrieve Candidates Hybrid ACL-First",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2432,
+        144
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "yckAFBLpmdhsPaDZ",
+          "name": "Postgres DF Assistant"
+        }
+      },
+      "onError": "continueErrorOutput",
       "notes": "PURPOSE: WF50 step. INPUT: item. OUTPUT: item. WHY: ACL-first retrieval worker."
     }
   ],
+  "pinData": {},
   "connections": {
     "IN ? Execute Workflow Trigger": {
       "main": [
@@ -1732,27 +1729,9 @@
       "main": [
         [
           {
-            "node": "DB ? Build Allowed Chat Scope",
+            "node": "DB RO — Build Allowed Chat Scope",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "DB ? Build Allowed Chat Scope": {
-      "main": [
-        [
-          {
-            "node": "IF ? ACL Allowed + Scope OK",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "ERR ? Funnel Merge",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -1812,13 +1791,6 @@
             "type": "main",
             "index": 0
           }
-        ],
-        [
-          {
-            "node": "ERR ? Funnel Merge",
-            "type": "main",
-            "index": 2
-          }
         ]
       ]
     },
@@ -1837,7 +1809,7 @@
       "main": [
         [
           {
-            "node": "DB ? Retrieve Candidates Hybrid ACL-First",
+            "node": "DB RO — Retrieve Candidates Hybrid ACL-First",
             "type": "main",
             "index": 0
           }
@@ -1847,24 +1819,6 @@
             "node": "OUT ? ManagedFailure 500 Bad Embedding Dim",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "DB ? Retrieve Candidates Hybrid ACL-First": {
-      "main": [
-        [
-          {
-            "node": "Set ? Candidates Canonical Format",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "ERR ? Funnel Merge",
-            "type": "main",
-            "index": 3
           }
         ]
       ]
@@ -1921,13 +1875,6 @@
             "type": "main",
             "index": 0
           }
-        ],
-        [
-          {
-            "node": "ERR ? Funnel Merge",
-            "type": "main",
-            "index": 4
-          }
         ]
       ]
     },
@@ -1981,17 +1928,47 @@
           }
         ]
       ]
+    },
+    "DB RO — Build Allowed Chat Scope": {
+      "main": [
+        [
+          {
+            "node": "IF ? ACL Allowed + Scope OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR ? Funnel Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "DB RO — Retrieve Candidates Hybrid ACL-First": {
+      "main": [
+        [
+          {
+            "node": "Set ? Candidates Canonical Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "pinData": {},
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": false,
-    "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "VykeJY27VNJD_xWfy5Nx6",
-    "timeSavedMode": "fixed",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "00000000-0000-0000-0000-000000005050"
+  "versionId": "27e73bd3-013c-44e2-8724-d4a734721c1f",
+  "meta": {
+    "instanceId": "49b1b765c7a60d5365a95e5c3e2d1b2e695b21e61861bbe488c27ec04546a71d"
+  },
+  "id": "3hFKD5MFgoEB8G6R",
+  "tags": []
 }
