@@ -1,0 +1,50 @@
+﻿name: Bug
+
+description: Functional bug report
+
+title: "[BUG] "
+labels:
+  - type:bug
+  - tracked
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Expected / actual
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant logs or error snippets (no secrets).
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflows
+    attributes:
+      label: Affected workflows
+      description: List `workflows/*.json` files.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true

@@ -1,0 +1,58 @@
+﻿name: Escalation
+
+description: Blocked work that requires human decision
+
+title: "[ESCALATION] "
+labels:
+  - needs-human
+  - tracked
+body:
+  - type: textarea
+    id: blocking_reason
+    attributes:
+      label: Blocking reason
+      description: Why work cannot proceed safely.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence (logs/links)
+      description: Add concrete evidence, errors, links. No secrets.
+    validations:
+      required: true
+
+  - type: textarea
+    id: options
+    attributes:
+      label: Proposed options (A/B/C)
+      description: List options with tradeoffs.
+      placeholder: |
+        A) ...
+        B) ...
+        C) ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: recommendation
+    attributes:
+      label: Recommended option + rationale
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks_rollback
+    attributes:
+      label: Risks and rollback
+    validations:
+      required: true
+
+  - type: textarea
+    id: minimal_safe_patch
+    attributes:
+      label: Minimal safe patch
+      description: Smallest safe change that can proceed now.
+    validations:
+      required: true

@@ -1,22 +1,4 @@
-# n8n workflows
-/workflows/ @pupkinson
-
-# Sensitive config
-/Credentials.json @pupkinson
-/SQL.txt @pupkinson
-
-# GitHub automation and templates
-/.github/ @pupkinson
-
-# Docs/canvas
-/docs/ @pupkinson
-/*.md @pupkinson
-
-# Critical files require owner review
-SQL.txt            @pupkinson
-Credentials.json   @pupkinson
-/workflows/        @pupkinson
-.github/workflows/ @pupkinson
-scripts/           @pupkinson
-docs/              @pupkinson
-
+﻿# Minimal owner mapping for autonomous flow.
+# If self-approval is blocked in repository settings, either disable required approvals for owner-only repos
+# or require a second reviewer. Keep automation practical for the operating owner.
+* pupkinson

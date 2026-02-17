@@ -1,9 +1,8 @@
-name: CI
+﻿name: CI
 
 on:
   pull_request:
   push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -21,10 +20,11 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Guard critical files (needs-human label required)
+      - name: Guard critical files (PR only)
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash scripts/ci-guard-needs-human.sh
 
-      - name: Validate workflows (n8n rules)
+      - name: Validate workflows
         run: node scripts/validate-workflows.mjs

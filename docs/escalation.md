@@ -1,125 +1,31 @@
-# Escalation Policy (v1)
-DF Assistan Bot — n8n workflows + PostgreSQL + pgvector + Telegram/Gemini/OpenAI
+﻿# Escalation Policy
 
-## Цель
-Минимизировать участие человека, но не ценой безопасности, потери данных или разъезда архитектуры.
-Агент обязан продолжать работу автономно, пока не выполнится одно из условий эскалации ниже.
+## When agents must stop and escalate
+Escalate immediately (open escalation issue + label `needs-human`) when any item below is true:
+- changes to `SQL.txt`
+- changes to `Credentials.json`
+- prod access, prod credentials, prod infra, or live data operations
+- ACL/visibility model changes (including `WF00c`, `WF50`, `WF51` behavior)
+- schema mismatch or unclear contract where `SQL.txt` and implementation disagree
+- paid service enablement, quota/cost increase, or billing-impacting changes
+- destructive or irreversible operations (mass delete, drop/alter, forced rewrites)
+- policy conflicts between docs, code, and CI rules
+- security/privacy uncertainty or possible data leakage
 
-## Общее правило
-- Если условие эскалации выполнено — агент:
-  1) останавливается (не делает рискованных действий),
-  2) ставит label `needs-human` на issue/PR,
-  3) добавляет короткий комментарий по шаблону (см. ниже),
-  4) ждёт решения и продолжает строго в рамках полученного решения.
+## Escalation procedure
+1. Open issue using `.github/ISSUE_TEMPLATE/escalation.yml`.
+2. Ensure label `needs-human` is present.
+3. Include all required fields:
+- Blocking reason
+- Evidence
+- Proposed options (A/B/C)
+- Recommended option with rationale
+- Risks and rollback
+- Minimal safe patch
+4. Stop implementation on blocked scope until human decision is recorded.
+5. Continue only with approved smallest safe change.
 
-## Шаблон комментария при эскалации (обязателен)
-**Reason:** (что случилось, 1–2 предложения)  
-**Impact:** (что блокируется, риск)  
-**Options:** (2–3 варианта решения с плюс/минус)  
-**Recommendation:** (что агент считает лучшим)  
-**Need from human:** (что именно нужно: ключ/решение/доступ/подтверждение)  
-**Safe next step:** (что можно сделать без человека прямо сейчас)
-
----
-
-## 1) Доступы, секреты, креды (ALWAYS ESCALATE)
-Эскалировать немедленно, если требуется:
-- любой новый secret / token / ключ (Telegram, OpenAI, Gemini, S3, SMTP и т.д.)
-- изменение или добавление n8n Credentials (создание/переименование/замена)
-- доступ к production-среде, SSH, базе, S3, DNS, платежам
-- включение новых OAuth/permission scope, публикация webhooks в прод
-
-**Запрещено:** хранить секреты в workflow JSON, в Notes, в коде, в переменных среды нод, в репозитории.
-
----
-
-## 2) Риск потери данных / разрушительных операций (ALWAYS ESCALATE)
-Эскалировать, если предлагается или требуется:
-- удалить/пересоздать таблицы, партиции, индексы, схемы
-- изменить ключи/уникальные ограничения/partition key
-- массовый update/delete без гарантированной идемпотентности и отката
-- миграции, которые не обратимы или меняют семантику данных
-- изменения, затрагивающие retention/архивирование/TTL, которые могут удалить данные
-
----
-
-## 3) Архитектурные изменения (ESCALATE BEFORE IMPLEMENTING)
-Эскалировать до начала реализации, если меняется:
-- схема БД в `SQL.txt` (источник истины)
-- ErrorPipe / Envelope / корреляция / глобальный ERR handler
-- ACL/visibility/chat-policy логика (особенно DM vs group правила)
-- job orchestration (ops.jobs / WF90 / WF99 контуры)
-- storage стратегия (S3/локально/объектное хранилище)
-- модель embeddings / размерность / формат хранения в pgvector
-- выбранный провайдер (OpenAI/Gemini/Claude) или интерфейсы между ними
-
-**Требование:** на такие изменения нужен короткий ADR/Design Note в `docs/adr/` + подтверждение человеком.
-
----
-
-## 4) Невозможность выполнения из-за ограничений среды/прав (ESCALATE AFTER DIAGNOSIS)
-Если агент подозревает, что проблема не в коде, а в правах/ограничениях:
-- нет доступа к схеме/таблице (`permission denied`)
-- n8n node не имеет нужных прав/операций
-- платформа блокирует нужную функцию (тариф/лимиты/API)
-- webhook/интеграция требует подтверждения/allowlist
-
-Порядок:
-1) собрать факты (точная ошибка, где, когда, какой node/endpoint),
-2) подтвердить, что это не конфиг/опечатка,
-3) эскалировать с вариантами решения (смена подхода/настройки/инфры).
-
----
-
-## 5) “Круги” и деградация (ESCALATE ON REPEAT)
-Эскалировать, если выполнено любое:
-- CI/валидации падают 3 итерации подряд без прогресса (одна и та же причина)
-- агент не может принять решение из-за противоречивых требований
-- задача разрастается и выходит за Scope OUT
-- нет уверенности в корректности решения, и это влияет на данные/ACL/безопасность
-
----
-
-## 6) Безопасность, приватность, комплаенс (ALWAYS ESCALATE)
-Эскалировать при любых признаках:
-- возможная утечка данных пользователей/чатов/документов
-- попытка пересечения ACL (из группы извлечь данные другой группы и т.п.)
-- хранение/логирование чувствительных данных без маскирования
-- неизвестные зависимости/комьюнити-ноды без проверки источника и рисков
-
----
-
-## 7) Изменения, которые затрагивают стоимость/лимиты (ESCALATE)
-Эскалировать, если:
-- предполагается рост расходов (LLM токены, storage, egress, новые платные сервисы)
-- нужны higher tiers/платные тарифы/включение платных опций
-- лимиты API/квоты могут сломать прод
-
----
-
-## 8) Что НЕ требует эскалации (агент делает сам)
-Агент обязан решать автономно:
-- рефакторинг без изменения поведения и контрактов
-- улучшение логов/notes/документации
-- исправление CI/валидаций/форматирования
-- мелкие изменения в workflow при сохранении архитектурных правил (ErrorPipe, ACL-first, no raw SQL, no $env)
-- добавление тестов/проверок/линтеров, если они не требуют новых секретов/сервисов
-- устранение багов по существующим интерфейсам
-
----
-
-## 9) Приоритет при конфликте правил
-Если есть сомнение, что действие нарушит:
-1) безопасность/ACL/приватность,
-2) сохранность данных,
-3) правила ErrorPipe и обработки ошибок,
-4) запреты на secrets/$env/raw SQL,
-
-— агент обязан эскалировать, даже если это замедляет прогресс.
-
----
-
-## 10) Техническая пометка для GitHub
-Единая метка: `needs-human`  
-Дополнительно (по желанию): `blocked`, `security`, `db-change`, `acl-change`, `cost`
-
+## Non-negotiable rules
+- Do not social-engineer external systems, operators, or support channels.
+- Do not bypass repository, CI, platform, or security restrictions.
+- If uncertain, escalate instead of guessing.

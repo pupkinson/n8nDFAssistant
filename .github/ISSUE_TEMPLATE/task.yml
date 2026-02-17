@@ -1,0 +1,76 @@
+﻿name: Task
+
+description: Planned work item for workflow/docs/CI/DB changes
+
+title: "[WFxx/Docs/CI/DB] "
+labels:
+  - tracked
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What outcome is required?
+      placeholder: Implement ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope (in/out)
+      description: List explicit IN and OUT scope.
+      placeholder: |
+        IN:
+        - ...
+        OUT:
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Deterministic completion criteria.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: files_touched
+    attributes:
+      label: Files likely touched
+      description: Paths expected to change.
+      placeholder: workflows/WFxx ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risk/Notes
+      description: Risks, assumptions, constraints.
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_plan
+    attributes:
+      label: Test plan (CI/local)
+      description: Commands and checks to run.
+      placeholder: |
+        - node scripts/validate-workflows.mjs
+        - ...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: critical_touch
+    attributes:
+      label: Critical change check
+      options:
+        - label: This change touches SQL.txt, Credentials.json, or ACL rules (WF00c/WF50/WF51). If checked, add label needs-human.
+          required: false

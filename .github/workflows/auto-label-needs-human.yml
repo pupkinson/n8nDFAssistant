@@ -1,4 +1,4 @@
-name: Auto-label needs-human on critical file changes
+﻿name: Auto-label needs-human on critical file changes
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ jobs:
   label:
     runs-on: ubuntu-latest
     steps:
-      - name: Label PR if SQL.txt or Credentials.json changed
+      - name: Add needs-human when SQL.txt or Credentials.json changes
         uses: actions/github-script@v7
         with:
           script: |
@@ -20,35 +20,37 @@ jobs:
             const repo = context.repo.repo;
             const pr = context.payload.pull_request.number;
 
-            // List files changed in PR
             const files = await github.paginate(github.rest.pulls.listFiles, {
-              owner, repo, pull_number: pr, per_page: 100
+              owner,
+              repo,
+              pull_number: pr,
+              per_page: 100,
             });
 
-            const changed = files.map(f => f.filename);
-            const critical = new Set(["SQL.txt", "Credentials.json"]);
-            const touched = changed.some(f => critical.has(f));
+            const changed = files.map((f) => f.filename);
+            const touchedCritical = changed.includes('SQL.txt') || changed.includes('Credentials.json');
 
-            if (!touched) {
-              core.info("No critical files changed. Skipping labeling.");
+            if (!touchedCritical) {
+              core.info('No SQL.txt/Credentials.json change.');
               return;
             }
 
-            const label = "needs-human";
-
-            // Get existing labels on PR
             const existing = await github.rest.issues.listLabelsOnIssue({
-              owner, repo, issue_number: pr
+              owner,
+              repo,
+              issue_number: pr,
             });
 
-            const has = existing.data.some(l => l.name === label);
-            if (has) {
-              core.info(`PR already has label "${label}".`);
+            if (existing.data.some((l) => l.name === 'needs-human')) {
+              core.info('needs-human already present.');
               return;
             }
 
             await github.rest.issues.addLabels({
-              owner, repo, issue_number: pr, labels: [label]
+              owner,
+              repo,
+              issue_number: pr,
+              labels: ['needs-human'],
             });
 
-            core.info(`Added label "${label}" because critical file changed.`);
+            core.info('Added needs-human label.');
